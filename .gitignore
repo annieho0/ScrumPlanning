@@ -1,0 +1,6 @@
+# ignores the python venv - Everyone is to create their own local venv for the projects and synchronise it with "requirements.txt"
+venv
+
+# ignore vscode and jetbrain IDE directories
+.idea/
+.vscode/
