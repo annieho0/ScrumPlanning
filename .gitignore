@@ -4,3 +4,4 @@ venv
 # ignore vscode and jetbrain IDE directories
 .idea/
 .vscode/
+__pycache__/
