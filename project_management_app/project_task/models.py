@@ -51,11 +51,11 @@ class Task(models.Model):
     # Fields for the Task model.
     name = models.CharField(max_length=200)
     description = models.CharField(max_length=500)
-    type = models.CharField(max_length=3, choices=TYPE_CHOICES, default=STORY)
-    status = models.CharField(max_length=3, choices=STATUS_CHOICES, default=NOT_STARTED)
+    type = models.CharField(max_length=5, choices=TYPE_CHOICES, default=STORY)
+    status = models.CharField(max_length=7, choices=STATUS_CHOICES, default=NOT_STARTED)
     priority = models.CharField(max_length=3, choices=PRIORITY_CHOICES)
     stage = models.CharField(max_length=3, choices=STAGE_CHOICES)
-    tags = models.ManyToManyField('Tag', not_null=True)
+    tags = models.ManyToManyField('Tag', blank=True)
     story_point = models.PositiveIntegerField(max_length=10, null=True, blank=True)
     # TODO: Assignee is a string for now. Need to connect to user model to get the user name in future sprint
     assignee = models.CharField(max_length=200, null=True, blank=True)
