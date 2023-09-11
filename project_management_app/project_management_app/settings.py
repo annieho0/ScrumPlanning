@@ -37,7 +37,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    "project_task.apps.ProjectTaskConfig",
+    'project_task.apps.ProjectTaskConfig',
+    # form bootstrap
+    'crispy_forms',
+    'crispy_bootstrap4',
+    'django_select2',
 
 ]
 
@@ -123,3 +127,8 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# crispy forms
+CRISPY_TEMPLATE_PACK = "bootstrap4"
+SELECT2_JS = 'django_select2/js/select2.full.min.js'
+SELECT2_CSS = 'django_select2/css/select2.min.css'
