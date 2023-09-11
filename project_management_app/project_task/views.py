@@ -4,7 +4,7 @@ from django.shortcuts import render, redirect
 # Create your views here.
 def home(response):
     """This view renders the home page"""
-    return render(response, "project_task/Home.html", {"name": "Home"})
+    return render(response, "project_task/Home.html", {"name": "home"})
 
 
 def home_redirect(response):
@@ -14,4 +14,4 @@ def home_redirect(response):
 
 def project_backlog(response):
     """This view renders the project backlog page"""
-    return render(response, "project_task/project_backlog.html", {"name": "Project Backlog"})
+    return render(response, "project_task/project_backlog.html", {"name": "project_backlog"})
