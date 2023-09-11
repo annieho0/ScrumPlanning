@@ -14,4 +14,4 @@ def home_redirect(response):
 
 def project_backlog(response):
     """This view renders the project backlog page"""
-    return render(response, "project_task/project_backlog.html", {"name": "project_backlog"})
+    return render(response, "project_task/project_backlog.html", {"name": "project-backlog"})
