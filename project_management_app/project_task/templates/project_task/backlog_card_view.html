@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Backlog</title>
+    <style>
+        /* Styles for the card view */
+        .card {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin: 10px;
+            display: inline-block;
+            width: calc(33.33% - 20px); /* Adjust the width as needed */
+            box-sizing: border-box;
+            vertical-align: top;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            display: none; /* Initially hide the container */
+            justify-content: space-between;
+        }
+
+        .section {
+            border: 1px solid #ccc;
+            padding: 10px;
+            width: 30%;
+            height: 500px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Product Backlog</h1>
+
+    <!-- View options -->
+    <label for="view">View:</label>
+
+    <select id="view" onchange="redirectToPage()">
+	<option value="card">Card View</option>
+        <option value="down_list.html">List View</option>
+    </select>
+
+    <!-- Sort options -->
+    <label for="sort">Sort By:</label>
+    <select id="sort">
+        <option value="priority">Priority</option>
+        <option value="date">Date</option>
+    </select>
+
+    <!-- Backlog container -->
+    <div id="backlog">
+        <!-- Backlog items will be dynamically added here -->
+    </div>
+
+    <!-- Card View Section -->
+    <div class="container">
+        <div class="section" id="todo" ondrop="drop(event)" ondragover="allowDrop(event)">
+            <h2>Incomplete</h2>
+        </div>
+        <div class="section" id="inprogress" ondrop="drop(event)" ondragover="allowDrop(event)">
+            <h2>In Progress</h2>
+        </div>
+        <div class="section" id="complete" ondrop="drop(event)" ondragover="allowDrop(event)">
+            <h2>Complete</h2>
+        </div>
+    </div>
+
+    <script>
+        // Sample data for the product backlog
+        const backlogData = [
+            { id: 1, title: "Task 1", priority: "2", date: "2023-09-10", completed: false, section: "todo" },
+            { id: 2, title: "Task 2", priority: "2", date: "2023-09-12", completed: false, section: "todo" },
+            { id: 3, title: "Task 3", priority: "3", date: "2023-09-15", completed: false, section: "todo" },
+            { id: 4, title: "Task 4", priority: "1", date: "2023-09-15", completed: false, section: "todo" },
+        ];
+
+        // Function to render backlog items
+        function renderBacklog() {
+            const view = document.getElementById("view").value;
+            const sort = document.getElementById("sort").value;
+            const backlogContainer = document.getElementById("backlog");
+
+            // Clear existing sections
+            document.getElementById("todo").innerHTML = "<h2>Incomplete</h2>";
+            document.getElementById("inprogress").innerHTML = "<h2>In Progress</h2>";
+            document.getElementById("complete").innerHTML = "<h2>Complete</h2>";
+
+            // Filter and sort the backlog data
+            const filteredData = backlogData.slice();
+            filteredData.sort((a, b) => {
+                if (sort === "priority") {
+                    return a.priority.localeCompare(b.priority);
+                } else {
+                    return new Date(a.date) - new Date(b.date);
+                }
+            });
+
+            // Render backlog items in sections based on the selected view
+            if (view === "card") {
+                filteredData.forEach(item => {
+                    const cardItem = document.createElement("div");
+                    cardItem.classList.add("card");
+                    cardItem.id = `card-${item.id}`;
+                    cardItem.setAttribute("draggable", "true");
+                    cardItem.setAttribute("ondragstart", "drag(event)");
+                    cardItem.innerHTML = `
+                        <h3>${item.title}</h3>
+                        <p>Priority: ${item.priority}</p>
+                        <p>Date: ${item.date}</p>
+                        <button onclick="deleteTask(${item.id})">Delete</button>
+                    `;
+
+                    if (item.completed) {
+                        // Place completed tasks in the "Complete" section
+                        document.getElementById("complete").appendChild(cardItem);
+
+                    } else {
+                        // Place non-completed tasks in their respective sections
+                        const targetSection = document.getElementById(item.section);
+                        if (targetSection) {
+                            targetSection.appendChild(cardItem);
+                        }
+                    }
+                });
+
+                // Show the container in card view
+                document.querySelector('.container').style.display = 'flex';
+            }
+        }
+
+        // Function to delete a task
+        function deleteTask(id) {
+            // Remove the task from the backlogData array
+            const index = backlogData.findIndex(item => item.id === id);
+            if (index !== -1) {
+                backlogData.splice(index, 1);
+                renderBacklog(); // Re-render the backlog after deleting
+                const cardElement = document.getElementById(`card-${id}`);
+                if (cardElement) {
+                    cardElement.remove();
+                }
+            }
+        }
+
+        // Function to allow dropping cards
+        function allowDrop(event) {
+            event.preventDefault();
+        }
+
+        // Function to handle card dragging
+        function drag(event) {
+            event.dataTransfer.setData("text", event.target.id);
+        }
+
+        // Function to handle card dropping
+        function drop(event) {
+            event.preventDefault();
+            var data = event.dataTransfer.getData("text");
+            var target = event.target;
+
+            // Check if the target is a section
+            if (target.classList.contains("section")) {
+                target.appendChild(document.getElementById(data));
+		        if (target.id === "complete") {
+                    const taskId = data.replace("card-", "");
+                    deleteTask(parseInt(taskId));
+                }
+                // Update the task's section in the data
+                const taskId = data.replace("card-", "");
+                const taskIndex = backlogData.findIndex(item => item.id === parseInt(taskId));
+                if (taskIndex !== -1) {
+                    backlogData[taskIndex].section = target.id;
+		
+                }
+		
+            }
+        }
+
+        function redirectToPage() {
+            var selectedPage = document.getElementById("view").value;
+            if (selectedPage !== "") {
+                window.location.href = selectedPage;
+            }
+        }
+
+        // Initial render
+        renderBacklog();
+
+        // Attach event listeners to update the view
+        document.getElementById("view").addEventListener("change", renderBacklog);
+        document.getElementById("sort").addEventListener("change", renderBacklog);
+    </script>
+</body>
+</html>
