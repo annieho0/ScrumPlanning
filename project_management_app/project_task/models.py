@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 
 class Task(models.Model):
@@ -56,7 +57,8 @@ class Task(models.Model):
     priority = models.CharField(max_length=3, choices=PRIORITY_CHOICES)
     stage = models.CharField(max_length=3, choices=STAGE_CHOICES)
     tags = models.ManyToManyField('Tag', blank=True)
-    story_point = models.PositiveIntegerField(max_length=10, null=True, blank=True)
+    story_point = models.PositiveIntegerField(validators=[MinValueValidator(0), MaxValueValidator(10)], null=True,
+                                              blank=True)
     # TODO: Assignee is a string for now. Need to connect to user model to get the user name in future sprint
     assignee = models.CharField(max_length=200, null=True, blank=True)
     # TODO: Sprint is a string for now. Need to connect to sprint model to get the sprint name in future sprint
@@ -74,4 +76,3 @@ class Tag(models.Model):
 
     def __str__(self):
         return self.name
-
