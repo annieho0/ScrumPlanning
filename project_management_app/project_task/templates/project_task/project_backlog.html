@@ -1,9 +1,133 @@
 {% extends "project_task/base.html" %}
 
 {% block title %}
-    <title>Project Backlog</title>
+<title>Project Backlog</title>
 {% endblock %}
 
 {% block content %}
-    <h1>Project Backlog</h1>
+<h1>Project Backlog</h1>
+
+<!-- View options -->
+<label for="view">View:</label>
+<select id="view" onchange="changeView()">
+    <option value="listView">List View</option>
+    <option value="cardView">Card View</option>
+</select>
+
+<!-- List view -->
+<div class="container-fluid" id="listView">
+    <table class="table table-striped table-bordered">
+        <thead class="thead-light">
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Priority</th>
+                <th>Story Point</th>
+                <th>Assignee</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="backlogTable">
+            <!-- Rows will be dynamically added here -->
+            {% for task in tasks%}
+            <tr>
+                <td>{{task.name}}</td>
+                <td>{{task.type}}</td>
+                <td>{{task.priority}}</td>
+                <td>{{task.story_point}}</td>
+                <td>{{task.assignee}}</td>
+                <td>{{task.status}}</td>
+                <td><button type="button" class="btn btn-danger" id="delete-task">Delete</button></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Card View Section -->
+
+<!-- Card View Section -->
+<div class="container-fluid" id="cardView" style="display: none;">
+    <div class="row">
+        <!-- Incomplete Column -->
+        <div class="col-sm-4">
+            <div class="card">
+                <div class="card-header"><h2>Incomplete</h2></div>
+                <div class="card-body">
+                    {% for task in tasks %}
+                    {% if task.status == "NOT" %}
+                        <div class="card mb-3" style="width: 10rem;">
+                            <div class="card-body">
+                                <h5 class="card-title">{{task.name}}</h5>
+                                <h6 class="card-subtitle mb-2 text-muted">{{task.type}}</h6>
+                                <p class="card-text">{{task.description}}</p>
+                                <a href="#" class="card-link">Delete</a>
+                            </div>
+                        </div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- In Progress Column -->
+        <div class="col-sm-4">
+            <div class="card">
+                <div class="card-header"><h2>In Progress</h2></div>
+                <div class="card-body">
+                    {% for task in tasks %}
+                    {% if task.status == "IN_PROG" %}
+                        <div class="card mb-3" style="width: 10rem;">
+                            <div class="card-body">
+                                <h5 class="card-title">{{task.name}}</h5>
+                                <h6 class="card-subtitle mb-2 text-muted">{{task.type}}</h6>
+                                <p class="card-text">{{task.description}}</p>
+                                <a href="#" class="card-link">Delete</a>
+                            </div>
+                        </div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Complete Column -->
+        <div class="col-sm-4">
+            <div class="card">
+                <div class="card-header"><h2>Complete</h2></div>
+                <div class="card-body">
+                    {% for task in tasks %}
+                    {% if task.status == "COM" %}
+                        <div class="card mb-3" style="width: 10rem;">
+                            <div class="card-body">
+                                <h5 class="card-title">{{task.name}}</h5>
+                                <h6 class="card-subtitle mb-2 text-muted">{{task.type}}</h6>
+                                <p class="card-text">{{task.description}}</p>
+                                <a href="#" class="card-link">Delete</a>
+                            </div>
+                        </div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div> <!-- End of row -->
+</div> <!-- End of container -->
+
+{% endblock %}
+
+{% block js %}
+    <script>
+        function changeView() {
+            const selectedView = document.getElementById("view").value;
+            if (selectedView === "listView") {
+                document.getElementById("listView").style.display = "block";
+                document.getElementById("cardView").style.display = "none";
+            } else if (selectedView === "cardView") {
+                document.getElementById("listView").style.display = "none";
+                document.getElementById("cardView").style.display = "block";
+            }
+        }
+    </script>
 {% endblock %}
