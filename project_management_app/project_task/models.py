@@ -56,7 +56,7 @@ class Task(models.Model):
     status = models.CharField(max_length=7, choices=STATUS_CHOICES, default=NOT_STARTED)
     priority = models.CharField(max_length=3, choices=PRIORITY_CHOICES)
     stage = models.CharField(max_length=3, choices=STAGE_CHOICES)
-    tags = models.ManyToManyField('Tag', blank=True)
+    tags = models.ManyToManyField('Tag', blank=False, null=False)
     story_point = models.PositiveIntegerField(validators=[MinValueValidator(0), MaxValueValidator(10)], null=True,
                                               blank=True)
     # TODO: Assignee is a string for now. Need to connect to user model to get the user name in future sprint
