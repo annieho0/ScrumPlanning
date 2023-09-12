@@ -1,17 +1,45 @@
 from django.shortcuts import render, redirect
+from django.urls import reverse
+from .models import Tag, Task
+from .forms import CreateNewTaskForm
 
 
 # Create your views here.
 def home(response):
     """This view renders the home page"""
-    return render(response, "project_task/Home.html", {"name": "home"})
+    form = CreateNewTaskForm()
+    create_new_task(response)
+    return render(response, "project_task/home.html", {"name": "home", "form": form})
 
 
 def home_redirect(response):
     """This view redirects the user to the home page when they visit the root URL"""
-    return redirect("home/")
+    return home(response)
 
 
 def project_backlog(response):
     """This view renders the project backlog page"""
-    return render(response, "project_task/project_backlog.html", {"name": "project_backlog"})
+    tasks = Task.objects.all().filter(sprint=None)
+    return render(response, "project_task/project_backlog.html", {"name": "project-backlog", "tasks": tasks})
+
+
+def create_new_task(response):
+    """This view renders the create new task page"""
+    if response.method == "POST":
+        # check and add tags to DB before creating the forms
+        tags = response.POST.getlist('tags')
+        for tag in tags:
+            Tag.objects.get_or_create(name=tag)
+
+        form = CreateNewTaskForm(response.POST)
+        if form.is_valid():
+            # Get the task instance but don't save to DB yet
+            task = form.save(commit=False)
+
+            # Now save the task to DB
+            task.save()
+            form.save_m2m()
+            print("----------------- Sucessfully saved task -----------------")
+            return redirect(reverse('project_backlog'))
+        else:
+            print("Form is not valid:", form.errors)
