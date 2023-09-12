@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect
+from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from .models import Tag, Task
 from .forms import CreateNewTaskForm
@@ -20,7 +21,8 @@ def home_redirect(response):
 def project_backlog(response):
     """This view renders the project backlog page"""
     tasks = Task.objects.all().filter(sprint=None)
-    return render(response, "project_task/project_backlog.html", {"name": "project-backlog", "tasks": tasks})
+    statuses = [('NOT', 'Incomplete'), ('IN_PROG', 'In Progress'), ('COM', 'Complete')]
+    return render(response, "project_task/project_backlog.html", {"name": "project-backlog", "tasks": tasks, "statuses": statuses})
 
 
 def create_new_task(response):
@@ -43,3 +45,12 @@ def create_new_task(response):
             return redirect(reverse('project_backlog'))
         else:
             print("Form is not valid:", form.errors)
+
+
+def delete_task(response, task_id):
+    """
+    This view deletes a task from the database
+    """
+    task = get_object_or_404(Task, id=task_id)
+    task.delete()
+    return redirect(reverse('project_backlog'))
