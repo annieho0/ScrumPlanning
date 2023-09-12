@@ -46,74 +46,34 @@
 </div>
 
 <!-- Card View Section -->
-
-<!-- Card View Section -->
 <div class="container-fluid" id="cardView" style="display: none;">
     <div class="row">
-        <!-- Incomplete Column -->
-        <div class="col-sm-4">
-            <div class="card">
-                <div class="card-header"><h2>Incomplete</h2></div>
-                <div class="card-body">
-                    {% for task in tasks %}
-                    {% if task.status == "NOT" %}
-                        <div class="card mb-3" style="width: 10rem;">
-                            <div class="card-body">
-                                <h5 class="card-title">{{task.name}}</h5>
-                                <h6 class="card-subtitle mb-2 text-muted">{{task.type}}</h6>
-                                <p class="card-text">{{task.description}}</p>
-                                <a href="{% url 'delete_task' task.id %}" class="card-link btn btn-danger" onclick="return confirm('Are you sure you want to delete this task?')">Delete</a>
+        {% for status_title in statuses %}
+            <!-- {{ status_title.1 }} Column -->
+            <div class="col-sm-4">
+                <div class="card">
+                    <div class="card-header"><h2>{{ status_title.1 }}</h2></div>
+                    <div class="card-body">
+                        {% for task in tasks %}
+                        {% if task.status == status_title.0 %}
+                            <div class="card mb-3" style="width: 10rem;">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{task.name}}</h5>
+                                    <h6 class="card-subtitle mb-2 text-muted">{{task.type}}</h6>
+                                    <p class="card-text">{{task.description}}</p>
+                                    <a href="{% url 'delete_task' task.id %}" class="card-link btn btn-danger" onclick="return confirm('Are you sure you want to delete this task?')">Delete</a>
+                                </div>
                             </div>
-                        </div>
-                    {% endif %}
-                    {% endfor %}
+                        {% endif %}
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
-        </div>
+        {% endfor %}
 
-        <!-- In Progress Column -->
-        <div class="col-sm-4">
-            <div class="card">
-                <div class="card-header"><h2>In Progress</h2></div>
-                <div class="card-body">
-                    {% for task in tasks %}
-                    {% if task.status == "IN_PROG" %}
-                        <div class="card mb-3" style="width: 10rem;">
-                            <div class="card-body">
-                                <h5 class="card-title">{{task.name}}</h5>
-                                <h6 class="card-subtitle mb-2 text-muted">{{task.type}}</h6>
-                                <p class="card-text">{{task.description}}</p>
-                                <a href="{% url 'delete_task' task.id %}" class="card-link btn btn-danger" onclick="return confirm('Are you sure you want to delete this task?')">Delete</a>
-                            </div>
-                        </div>
-                    {% endif %}
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
-
-        <!-- Complete Column -->
-        <div class="col-sm-4">
-            <div class="card">
-                <div class="card-header"><h2>Complete</h2></div>
-                <div class="card-body">
-                    {% for task in tasks %}
-                    {% if task.status == "COM" %}
-                        <div class="card mb-3" style="width: 10rem;">
-                            <div class="card-body">
-                                <h5 class="card-title">{{task.name}}</h5>
-                                <h6 class="card-subtitle mb-2 text-muted">{{task.type}}</h6>
-                                <p class="card-text">{{task.description}}</p>
-                                <a href="{% url 'delete_task' task.id %}" class="card-link btn btn-danger" onclick="return confirm('Are you sure you want to delete this task?')">Delete</a>
-                            </div>
-                        </div>
-                    {% endif %}
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
     </div> <!-- End of row -->
 </div> <!-- End of container -->
+
 
 {% endblock %}
 

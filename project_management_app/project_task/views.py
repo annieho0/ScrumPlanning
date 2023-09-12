@@ -21,7 +21,8 @@ def home_redirect(response):
 def project_backlog(response):
     """This view renders the project backlog page"""
     tasks = Task.objects.all().filter(sprint=None)
-    return render(response, "project_task/project_backlog.html", {"name": "project-backlog", "tasks": tasks})
+    statuses = [('NOT', 'Incomplete'), ('IN_PROG', 'In Progress'), ('COM', 'Complete')]
+    return render(response, "project_task/project_backlog.html", {"name": "project-backlog", "tasks": tasks, "statuses": statuses})
 
 
 def create_new_task(response):
