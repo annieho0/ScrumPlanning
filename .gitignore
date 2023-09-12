@@ -5,3 +5,8 @@ venv
 .idea/
 .vscode/
 __pycache__/
+**/migrations/
+*.pyc
+*.pyo
+*.db
+db.sqlite3
