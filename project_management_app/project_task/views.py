@@ -8,9 +8,7 @@ from .forms import CreateNewTaskForm
 # Create your views here.
 def home(response):
     """This view renders the home page"""
-    form = CreateNewTaskForm()
-    create_new_task(response)
-    return render(response, "project_task/home.html", {"name": "home", "form": form})
+    return render(response, "project_task/home.html", {"name": "home"})
 
 
 def home_redirect(response):
@@ -20,9 +18,10 @@ def home_redirect(response):
 
 def project_backlog(response):
     """This view renders the project backlog page"""
+    form = CreateNewTaskForm()
+    create_new_task(response)
     tasks = Task.objects.all().filter(sprint=None)
-    statuses = [('NOT', 'Incomplete'), ('IN_PROG', 'In Progress'), ('COM', 'Complete')]
-    return render(response, "project_task/project_backlog.html", {"name": "project-backlog", "tasks": tasks, "statuses": statuses})
+    return render(response, "project_task/project_backlog.html", {"name": "project-backlog", "tasks": tasks, "form": form});
 
 
 def create_new_task(response):
@@ -37,12 +36,10 @@ def create_new_task(response):
         if form.is_valid():
             # Get the task instance but don't save to DB yet
             task = form.save(commit=False)
-
             # Now save the task to DB
             task.save()
             form.save_m2m()
-            print("----------------- Sucessfully saved task -----------------")
-            return redirect(reverse('project_backlog'))
+            print("Successfully saved task!")
         else:
             print("Form is not valid:", form.errors)
 
