@@ -1,0 +1,28 @@
+<!-- Card View Section -->
+<div class="container-fluid" id="cardView">
+    <div class="row">
+        {% for task in tasks %}
+            <div class="col-sm-3">
+                <div class="card mb-3" style="height: 13rem;">
+                    <div class="card-body">
+                        <h4 class="card-title">{{task.name}}</h4>
+                        <h6 class="card-subtitle mb-2 text-muted"><strong>Story Point</strong>: {{task.story_point}}</h6>
+                        <h6 class="card-subtitle mb-2 text-muted"><strong>Priority</strong>: {{task.priority}}</h6>
+                        <div class="d-flex flex-wrap align-items-start">
+                            <h6 class="card-subtitle mb-2 text-muted mr-2 tags-container">
+                                <strong>Tags</strong>:
+                                {% for tag in task.tags.all %}
+                                    <span class="badge badge-info m-0">{{tag}}</span>
+                                {% endfor %}
+                                <span class="more-tags">...</span>
+                            </h6>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <a href="{% url 'delete_task' task.id %}" class="card-link btn btn-danger" onclick="return confirm('Are you sure you want to delete this task?')">Delete</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+    </div> <!-- End of row -->
+</div> <!-- End of container -->
