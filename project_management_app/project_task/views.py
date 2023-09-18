@@ -163,6 +163,19 @@ class TaskDeleteView(DeleteView):
         return self.delete(request, *args, **kwargs)
 
     def delete(self, request, *args, **kwargs):
-        self.object = self.get_object()
-        self.object.delete()
-        return JsonResponse({'status': 'success'})
+        try:
+            self.object = self.get_object()
+            task_name = self.object.name  # Capture the task name for the feedback message
+            self.object.delete()
+            # Send success feedback
+            return JsonResponse({
+                'status': 'success',
+                'message': f"Task '{task_name}' was successfully deleted!"
+            })
+        except Exception as e:
+            # Handle any error during deletion and send error feedback
+            return JsonResponse({
+                'status': 'error',
+                'message': f"Error deleting task: {str(e)}"
+            })
+
