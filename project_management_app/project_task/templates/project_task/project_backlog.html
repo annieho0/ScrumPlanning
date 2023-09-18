@@ -176,45 +176,74 @@
         });
 
         // Show the creation task modal and focus on the first input
-        $('#createNewTask').on('shown.bs.modal', function () {
-            // Focus on first field
-            $('#taskForm input:first').trigger('focus');
-            // Alert messages
-            let formData = $("#taskForm").serialize();
-            let createTaskUrl = $("#taskForm").attr('action');
+        // Handle form submission inside the modal
+        $('#taskForm').submit(function (event) {
+            event.preventDefault();  // Prevent the default form submission
+
+            let formData = $(this).serialize();
+            let createTaskUrl = $(this).attr('action');
+
             $.ajax({
                 url: createTaskUrl,
                 type: 'POST',
                 data: formData,
                 dataType: 'json',
                 success: function (response) {
+
+                    // This will add the new task to the list without refreshing the page//
+                    // Construct the list view HTML
+                    let tagsHtml = '';
+                    response.task.tags.forEach(tag => {
+                        tagsHtml += `<span class="badge badge-info m-1">${tag}</span>`;
+                    });
+                    let listViewHtml = `
+                    <tr>
+                        <td>${response.task.name}</td>
+                        <td>${response.task.story_point}</td>
+                        <td>${response.task.priority}</td>
+                        <td>${tagsHtml}</td>
+                        <td><a href="/delete_task/${response.task.id}/" class="btn btn-danger delete-btn">Delete</a></td>
+                    </tr>`;
+                    // Append the new row to the table
+                    $('#backlogTable').append(listViewHtml);
+
+                    // Construct the card view HTML
+                    let cardViewHtml = `
+                    <div class="col-sm-3">
+                        <div class="card mb-3" style="height: 13rem;">
+                            <div class="card-body">
+                                <h4 class="card-title">${response.task.name}</h4>
+                                <h6 class="card-subtitle mb-2 text-muted"><strong>Story Point</strong>: ${response.task.story_point}</h6>
+                                <h6 class="card-subtitle mb-2 text-muted"><strong>Priority</strong>: ${response.task.priority}</h6>
+                                <div class="d-flex flex-wrap align-items-start">
+                                    <h6 class="card-subtitle mb-2 text-muted mr-2 tags-container">
+                                        <strong>Tags</strong>: ${tagsHtml}
+                                        <span class="more-tags">...</span>
+                                    </h6>
+                                </div>
+                            </div>
+                            <div class="card-footer">
+                                <a href="/delete_task/${response.task.id}/" class="btn btn-danger delete-btn">Delete</a>
+                            </div>
+                        </div>
+                    </div>`;
+                    // Append the new card to the card view container
+                    $('#cardView .row').append(cardViewHtml);
+
+                    // show the success alert message
                     if (response.status === 'success') {
-                        // Display the success message from the server
-                        var successMessage = '<div class="alert alert-success fade in alert-dismissible show" role="alert">' +
-                            '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
-                            '<span aria-hidden="true" style="font-size:20px">×</span></button>' +
-                            response.message + '</div>';
-                        $('#messages-container').prepend(successMessage);
-
-                        // set the time-out to hide the message after 3 seconds.
-                        setTimeout(function () {
-                            $('.alert').fadeOut('slow');
-                        }, 3000);  // Message will fade out after 3 seconds
-
+                        displayMessage('success', response.message);
                     } else {
-                        // Display the error message from the server
-                        var errorMessage = '<div class="alert alert-danger fade in alert-dismissible show">' +
-                            '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
-                            '<span aria-hidden="true" style="font-size:20px">×</span></button>' +
-                            response.message + '</div>';
-                        $('#messages-container').prepend(errorMessage);
-
-                        // set the time-out to hide the message after 3 seconds.
-                        setTimeout(function () {
-                            $('.alert').fadeOut('slow');
-                        }, 3000);  // Message will fade out after 3 seconds
+                        displayMessage('danger', response.message);
                     }
+
+                    // Reset the form and hide the modal
+                    $('#createNewTask').modal('hide');
+                    $('#taskForm').trigger("reset");
                 },
+                error: function (response) {
+                    displayMessage('danger', response.message);
+                }
             });
         });
 
@@ -242,47 +271,34 @@
                         let taskElement = $('.delete-btn[href="' + deleteUrl + '"]').closest('tr, .col-sm-3');  // Use the captured deleteUrl
                         taskElement.remove();
                         // Display the success message from the server
-                        var successMessage =
-                            '<div class="alert alert-success fade in alert-dismissible show" role="alert">' +
-                            '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
-                            '<span aria-hidden="true">&times;</span></button>' +
-                            response.message + '</div>';
-                        $('#messages-container').prepend(successMessage);
-
-                        // set the time-out to hide the message after 3 seconds.
-                        setTimeout(function () {
-                            $('.alert').fadeOut('slow');
-                        }, 3000);  // Message will fade out after 3 seconds
+                        displayMessage('success', response.message);
 
                     } else {
                         // Display the error message from the server
-                        var errorMessage = '<div class="alert alert-danger fade in alert-dismissible show">' +
-                            '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
-                            '<span aria-hidden="true" style="font-size:20px">×</span></button>' +
-                            response.message + '</div>';
-                        $('#messages-container').prepend(errorMessage);
-
-                        // set the time-out to hide the message after 3 seconds.
-                        setTimeout(function () {
-                            $('.alert').fadeOut('slow');
-                        }, 3000);  // Message will fade out after 3 seconds
+                        displayMessage('danger', response.message);
                     }
                 },
                 error: function (response) {
                     // Handle other errors like network issues
-                    var errorMessage = '<div class="alert alert-danger fade in alert-dismissible show">' +
-                            '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
-                            '<span aria-hidden="true" style="font-size:20px">×</span></button>' +
-                            response.message + '</div>';
-                    $('#messages-container').prepend(errorMessage);
-
-                    // set the time-out to hide the message after 3 seconds.
-                    setTimeout(function () {
-                        $('.alert').fadeOut('slow');
-                    }, 3000);  // Message will fade out after 3 seconds
+                    displayMessage('success', response.message);
                 }
             });
         });
+
+        // Helper function to display messages
+        function displayMessage(type, message) {
+            let alertMessage =
+                '<div class="alert alert-' + type + ' fade in alert-dismissible show" role="alert">' +
+                '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
+                '<span aria-hidden="true" style="font-size:20px">×</span></button>' +
+                message + '</div>';
+            $('#messages-container').prepend(alertMessage);
+
+            // set the time-out to hide the message after 3 seconds.
+            setTimeout(function () {
+                $('.alert').fadeOut('slow');
+            }, 3000);  // Message will fade out after 3 seconds
+        }
     });
 </script>
 {% endblock %}

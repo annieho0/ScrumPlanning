@@ -3,11 +3,13 @@ from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.views import View
 from django.views.generic.edit import DeleteView
-from django.urls import reverse_lazy
 from .models import Tag, Task
 from .forms import CreateNewTaskForm
 from django.db.models import Case, When, Value, IntegerField
+import logging
 
+# Set up logging
+logger = logging.getLogger(__name__)
 
 class TaskManager:
     """
@@ -15,25 +17,19 @@ class TaskManager:
     """
 
     @staticmethod
-    def create_task(data):
+    def create_task(cleaned_data):
         """
         This method creates a new task.
         """
-        tags = data.getlist('tags')
-        tag_objects = []
-        for tag_name in tags:
-            tag, created = Tag.objects.get_or_create(name=tag_name)
-            tag_objects.append(tag)
 
-        form = CreateNewTaskForm(data)
-        if form.is_valid():
-            task = form.save(commit=False)
-            task.save()
-            for tag in tag_objects:
-                task.tags.add(tag)
-            return True, "Task successfully created!"
-        else:
-            return False, form.errors
+        tags = cleaned_data.get('tags', [])  # Directly use 'get' for dictionaries
+        tag_objects = [Tag.objects.get_or_create(name=tag_name)[0] for tag_name in tags]
+
+        task = CreateNewTaskForm(cleaned_data).save(commit=False)
+        task.save()
+        for tag in tag_objects:
+            task.tags.add(tag)
+        return True, f"Task '{str(task)}' successfully created!"
 
     @staticmethod
     def read_task(task_id):
@@ -57,7 +53,7 @@ class TaskManager:
         form = CreateNewTaskForm(data, instance=task)
         if form.is_valid():
             form.save()
-            return True, "Task successfully updated!"
+            return True, f"Task '{str(task)}' successfully updated!"
         else:
             return False, form.errors
 
@@ -139,18 +135,19 @@ class ProjectBacklogView(View):
         """
         form = CreateNewTaskForm(self.request.POST)
         if form.is_valid():
-            success, message = TaskManager.create_task(self.request.POST)
+            success, message = TaskManager.create_task(form.cleaned_data)
             if success:
-                messages.success(self.request, message)
+                return JsonResponse({'status': 'success', 'message': message})
             else:
-                for error in message:
-                    messages.error(self.request, message[error][0])
+                if isinstance(message, dict):  # If errors are returned as a dict
+                    error_message = '; '.join([': '.join([key, val[0]]) for key, val in message.items()])
+                else:
+                    error_message = message
+                return JsonResponse({'status': 'error', 'message': error_message})
         else:
-            # This will handle form validation errors
-            for field, errors in form.errors.items():
-                for error in errors:
-                    messages.error(self.request, f"{field}: {error}")
-        return redirect('project_backlog')
+            error_message = 'There were errors in your submission. Please correct them and try again.'
+            logger.error(f"Form submission errors: {form.errors}")  # Log the errors for debugging
+            return JsonResponse({'status': 'error', 'message': error_message})
 
 
 class TaskDeleteView(DeleteView):
@@ -160,9 +157,21 @@ class TaskDeleteView(DeleteView):
     model = Task
 
     def get(self, request, *args, **kwargs):
+        # TODO: Uncomment this section to enable backend check authenticated user for deletion
+        """
+        # A simple backend check to ensure user has the right to delete. Adjust as needed.
+        if not request.user.has_perm('can_delete_task'):  # Assuming 'can_delete_task' is a permission
+            return JsonResponse({
+                'status': 'error',
+                'message': "You don't have permission to delete this task."
+            })
+        """
         return self.delete(request, *args, **kwargs)
 
     def delete(self, request, *args, **kwargs):
+        """
+        This method deletes a task.
+        """
         try:
             self.object = self.get_object()
             task_name = self.object.name  # Capture the task name for the feedback message
