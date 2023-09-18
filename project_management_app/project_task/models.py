@@ -1,6 +1,6 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
-
+# from django.contrib.auth import models
 
 class Task(models.Model):
     """
@@ -76,3 +76,4 @@ class Tag(models.Model):
 
     def __str__(self):
         return self.name
+   

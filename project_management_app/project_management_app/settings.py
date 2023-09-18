@@ -38,11 +38,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'project_task.apps.ProjectTaskConfig',
+    'register.apps.RegisterConfig',
     # form bootstrap
     'crispy_forms',
     'crispy_bootstrap4',
     'django_select2',
-    'user.apps.UserConfig',
 
 ]
 
@@ -133,6 +133,3 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CRISPY_TEMPLATE_PACK = "bootstrap4"
 SELECT2_JS = 'django_select2/js/select2.full.min.js'
 SELECT2_CSS = 'django_select2/css/select2.min.css'
-
-# User model
-AUTH_USER_MODEL = "user.CustomizedUser"

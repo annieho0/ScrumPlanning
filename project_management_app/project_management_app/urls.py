@@ -16,8 +16,9 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-
+from register import views as register_view
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('project_task.urls')),
+    path('register/', register_view.register, name='register'),
 ]
