@@ -45,7 +45,7 @@
             </select>
 
         </div>
-        <!-- Button trigger modal -->
+        <!-- Create New Task Button trigger modal -->
         <div class="col-sm-2 text-right" id="create-task-listview">
             <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#createNewTask">create new task</button>
         </div>
@@ -61,7 +61,7 @@
     {% include "project_task/pb_card_view.html" %}
 {% endif %}
 
-<!-- Modal -->
+<!-- Create New Task Modal -->
 <div class="modal fade" id="createNewTask" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
      aria-hidden="true">
     <div class="modal-dialog" role="document">
@@ -101,6 +101,28 @@
         </div>
     </div>
 </div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirm Deletion</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete this task?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <a href="#" id="confirmDelete" class="btn btn-danger">Delete</a>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block js %}
@@ -111,7 +133,6 @@
         function changeViewType(viewType) {
             // Update the URL with the selected view type
             window.location.href = updateURLParameter(window.location.href, 'view', viewType);
-
         }
 
         // Function to update the URL
@@ -134,14 +155,9 @@
             return baseURL + "?" + newAdditionalURL + rowsTxt;
         }
 
-        // AJax code to trigger the modal
-        $('#createNewTask').on('shown.bs.modal', function () {
-            // Focus on the first input of the form when the modal is shown
-            $('#taskForm input:first').trigger('focus')
-        })
-
         // Select2 modules for Tags input
         $(document).ready(function () {
+            // Select2 modules for Tags input
             $('#id_tags').select2({
                 tags: true,
                 tokenSeparators: [','],
@@ -149,6 +165,67 @@
                 placeholder: 'Select tag(s)',
                 theme: 'bootstrap',
             });
+
+            // AJax code to trigger the modal
+            $('#createNewTask').on('shown.bs.modal', function () {
+                // Focus on the first input of the form when the modal is shown
+                $('#taskForm input:first').trigger('focus')
+            });
+        });
+
+        // When a delete button is clicked
+        $('.delete-btn').on('click', function(e) {
+            e.preventDefault();
+            let deleteUrl = $(this).attr('href');
+            $('#confirmDelete').data('href', deleteUrl); // Store the URL in data attribute
+            $('#deleteModal').modal('show');
+        });
+
+        $(document).ready(function() {
+            // Show the creation task modal and focus on the first input
+            $('#createNewTask').on('shown.bs.modal', function () {
+                $('#taskForm input:first').trigger('focus');
+            });
+
+            // Using event delegation for the delete button click
+            $(document).on('click', '.delete-btn', function(e) {
+                e.preventDefault();
+                let deleteUrl = $(this).attr('href');
+                $('#confirmDelete').data('href', deleteUrl);
+                $('#deleteModal').modal('show');
+            });
+
+            $('#confirmDelete').on('click', function(e) {
+                e.preventDefault();
+                let deleteUrl = $(this).data('href');  // Capture the href value here
+
+                $.ajax({
+                    url: deleteUrl,
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(response) {
+                        if(response.status === 'success') {
+                            $('#deleteModal').modal('hide');
+                            let taskElement = $('.delete-btn[href="'+ deleteUrl +'"]').closest('tr, .col-sm-3');  // Use the captured deleteUrl
+                            taskElement.remove();
+
+                            // Display success message using Bootstrap
+                            var successMessage = '<div class="alert alert-success" role="alert">Task successfully deleted!</div>';
+                            $('#messages-container').prepend(successMessage);
+                        } else {
+                            // Handle unexpected server responses
+                            var errorMessage = '<div class="alert alert-danger" role="alert">An error occurred. Please try again.</div>';
+                            $('#messages-container').prepend(errorMessage);
+                        }
+                    },
+                    error: function() {
+                        // Handle other errors like network issues
+                        var errorMessage = '<div class="alert alert-danger" role="alert">An error occurred. Please try again.</div>';
+                        $('#messages-container').prepend(errorMessage);
+                    }
+                });
+            });
+
         });
     </script>
 {% endblock %}
