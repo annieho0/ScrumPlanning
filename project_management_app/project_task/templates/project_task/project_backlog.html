@@ -7,28 +7,33 @@
 {% endblock %}
 
 {% block extra_styles %}
-    <style>
-        .tags-container {
-            max-height: 1.5em; /* This might need adjustment based on your badge height */
-            overflow: hidden;
-            position: relative;
-        }
+<style>
+    .tags-container {
+        max-height: 1.5em; /* This might need adjustment based on your badge height */
+        overflow: hidden;
+        position: relative;
+    }
 
-        .tags-container::after {
-            content: "...";
-            position: absolute;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(to right, transparent, white 50%);
-            padding-left: 10px;
-            pointer-events: none; /* Prevent the pseudo-element from being clickable */
-        }
-    </style>
+    .tags-container::after {
+        content: "...";
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(to right, transparent, white 50%);
+        padding-left: 10px;
+        pointer-events: none; /* Prevent the pseudo-element from being clickable */
+    }
+</style>
 {% endblock %}
 
 {% block content %}
 <h1>Project Backlog</h1>
 
+<!-- Alert Message container -->
+<div id="messages-container"></div>
+
+
+<!-- View options and Create New Task button -->
 <div class="container-fluid mb-4 mt-4">
     <div class="row">
         <!-- View options -->
@@ -47,18 +52,20 @@
         </div>
         <!-- Create New Task Button trigger modal -->
         <div class="col-sm-2 text-right" id="create-task-listview">
-            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#createNewTask">create new task</button>
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#createNewTask">create new
+                task
+            </button>
         </div>
     </div>
 </div>
 
 <!-- View templates -->
 {% if current_view == 'list_view' %}
-    <!-- List view -->
-    {% include "project_task/pb_list_view.html" %}
+<!-- List view -->
+{% include "project_task/pb_list_view.html" %}
 {% elif current_view == 'card_view' %}
-    <!-- Card View Section -->
-    {% include "project_task/pb_card_view.html" %}
+<!-- Card View Section -->
+{% include "project_task/pb_card_view.html" %}
 {% endif %}
 
 <!-- Create New Task Modal -->
@@ -95,7 +102,7 @@
                 <div class="modal-footer">
                     <!-- Action button -->
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save changes</button>
+                    <button type="submit" class="btn btn-primary" id="saveChanges">Save changes</button>
                 </div>
             </form>
         </div>
@@ -103,7 +110,8 @@
 </div>
 
 <!-- Delete Confirmation Modal -->
-<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
+<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel"
+     aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
@@ -126,106 +134,155 @@
 {% endblock %}
 
 {% block js %}
-    <!-- jQuery Library -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script>
-        // Function to change the view type
-        function changeViewType(viewType) {
-            // Update the URL with the selected view type
-            window.location.href = updateURLParameter(window.location.href, 'view', viewType);
-        }
+<!-- jQuery Library -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    // Function to change the view type
+    function changeViewType(viewType) {
+        // Update the URL with the selected view type
+        window.location.href = updateURLParameter(window.location.href, 'view', viewType);
+    }
 
-        // Function to update the URL
-        function updateURLParameter(url, param, paramVal) {
-            let newAdditionalURL = "";
-            let tempArray = url.split("?");
-            let baseURL = tempArray[0];
-            let additionalURL = tempArray[1];
-            let temp = "";
-            if (additionalURL) {
-                tempArray = additionalURL.split("&");
-                for (let i = 0; i < tempArray.length; i++) {
-                    if (tempArray[i].split('=')[0] !== param) {
-                        newAdditionalURL += temp + tempArray[i];
-                        temp = "&";
-                    }
+    // Function to update the URL
+    function updateURLParameter(url, param, paramVal) {
+        let newAdditionalURL = "";
+        let tempArray = url.split("?");
+        let baseURL = tempArray[0];
+        let additionalURL = tempArray[1];
+        let temp = "";
+        if (additionalURL) {
+            tempArray = additionalURL.split("&");
+            for (let i = 0; i < tempArray.length; i++) {
+                if (tempArray[i].split('=')[0] !== param) {
+                    newAdditionalURL += temp + tempArray[i];
+                    temp = "&";
                 }
             }
-            let rowsTxt = temp + "" + param + "=" + paramVal;
-            return baseURL + "?" + newAdditionalURL + rowsTxt;
         }
+        let rowsTxt = temp + "" + param + "=" + paramVal;
+        return baseURL + "?" + newAdditionalURL + rowsTxt;
+    }
+
+    // Select2 modules for Tags input
+    $(document).ready(function () {
 
         // Select2 modules for Tags input
-        $(document).ready(function () {
-            // Select2 modules for Tags input
-            $('#id_tags').select2({
-                tags: true,
-                tokenSeparators: [','],
-                allowClear: true,
-                placeholder: 'Select tag(s)',
-                theme: 'bootstrap',
-            });
+        $('#id_tags').select2({
+            tags: true,
+            tokenSeparators: [','],
+            allowClear: true,
+            placeholder: 'Select tag(s)',
+            theme: 'bootstrap',
+        });
 
-            // AJax code to trigger the modal
-            $('#createNewTask').on('shown.bs.modal', function () {
-                // Focus on the first input of the form when the modal is shown
-                $('#taskForm input:first').trigger('focus')
+        // Show the creation task modal and focus on the first input
+        $('#createNewTask').on('shown.bs.modal', function () {
+            // Focus on first field
+            $('#taskForm input:first').trigger('focus');
+            // Alert messages
+            let formData = $("#taskForm").serialize();
+            let createTaskUrl = $("#taskForm").attr('action');
+            $.ajax({
+                url: createTaskUrl,
+                type: 'POST',
+                data: formData,
+                dataType: 'json',
+                success: function (response) {
+                    if (response.status === 'success') {
+                        // Display the success message from the server
+                        var successMessage = '<div class="alert alert-success fade in alert-dismissible show" role="alert">' +
+                            '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
+                            '<span aria-hidden="true" style="font-size:20px">×</span></button>' +
+                            response.message + '</div>';
+                        $('#messages-container').prepend(successMessage);
+
+                        // set the time-out to hide the message after 3 seconds.
+                        setTimeout(function () {
+                            $('.alert').fadeOut('slow');
+                        }, 3000);  // Message will fade out after 3 seconds
+
+                    } else {
+                        // Display the error message from the server
+                        var errorMessage = '<div class="alert alert-danger fade in alert-dismissible show">' +
+                            '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
+                            '<span aria-hidden="true" style="font-size:20px">×</span></button>' +
+                            response.message + '</div>';
+                        $('#messages-container').prepend(errorMessage);
+
+                        // set the time-out to hide the message after 3 seconds.
+                        setTimeout(function () {
+                            $('.alert').fadeOut('slow');
+                        }, 3000);  // Message will fade out after 3 seconds
+                    }
+                },
             });
         });
 
-        // When a delete button is clicked
-        $('.delete-btn').on('click', function(e) {
+        // Using event delegation for the delete button click
+        $(document).on('click', '.delete-btn', function (e) {
             e.preventDefault();
             let deleteUrl = $(this).attr('href');
-            $('#confirmDelete').data('href', deleteUrl); // Store the URL in data attribute
+            $('#confirmDelete').data('href', deleteUrl);
             $('#deleteModal').modal('show');
         });
 
-        $(document).ready(function() {
-            // Show the creation task modal and focus on the first input
-            $('#createNewTask').on('shown.bs.modal', function () {
-                $('#taskForm input:first').trigger('focus');
-            });
+        // When the confirm delete button is clicked
+        $('#confirmDelete').on('click', function (e) {
+            e.preventDefault();
+            let deleteUrl = $(this).data('href');  // Capture the href value here
 
-            // Using event delegation for the delete button click
-            $(document).on('click', '.delete-btn', function(e) {
-                e.preventDefault();
-                let deleteUrl = $(this).attr('href');
-                $('#confirmDelete').data('href', deleteUrl);
-                $('#deleteModal').modal('show');
-            });
+            // Check response and show alert
+            $.ajax({
+                url: deleteUrl,
+                type: 'GET',
+                dataType: 'json',
+                success: function (response) {
+                    $('#deleteModal').modal('hide');
+                    if (response.status === 'success') {
+                        let taskElement = $('.delete-btn[href="' + deleteUrl + '"]').closest('tr, .col-sm-3');  // Use the captured deleteUrl
+                        taskElement.remove();
+                        // Display the success message from the server
+                        var successMessage =
+                            '<div class="alert alert-success fade in alert-dismissible show" role="alert">' +
+                            '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
+                            '<span aria-hidden="true">&times;</span></button>' +
+                            response.message + '</div>';
+                        $('#messages-container').prepend(successMessage);
 
-            $('#confirmDelete').on('click', function(e) {
-                e.preventDefault();
-                let deleteUrl = $(this).data('href');  // Capture the href value here
+                        // set the time-out to hide the message after 3 seconds.
+                        setTimeout(function () {
+                            $('.alert').fadeOut('slow');
+                        }, 3000);  // Message will fade out after 3 seconds
 
-                $.ajax({
-                    url: deleteUrl,
-                    type: 'GET',
-                    dataType: 'json',
-                    success: function(response) {
-                        if(response.status === 'success') {
-                            $('#deleteModal').modal('hide');
-                            let taskElement = $('.delete-btn[href="'+ deleteUrl +'"]').closest('tr, .col-sm-3');  // Use the captured deleteUrl
-                            taskElement.remove();
-
-                            // Display success message using Bootstrap
-                            var successMessage = '<div class="alert alert-success" role="alert">Task successfully deleted!</div>';
-                            $('#messages-container').prepend(successMessage);
-                        } else {
-                            // Handle unexpected server responses
-                            var errorMessage = '<div class="alert alert-danger" role="alert">An error occurred. Please try again.</div>';
-                            $('#messages-container').prepend(errorMessage);
-                        }
-                    },
-                    error: function() {
-                        // Handle other errors like network issues
-                        var errorMessage = '<div class="alert alert-danger" role="alert">An error occurred. Please try again.</div>';
+                    } else {
+                        // Display the error message from the server
+                        var errorMessage = '<div class="alert alert-danger fade in alert-dismissible show">' +
+                            '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
+                            '<span aria-hidden="true" style="font-size:20px">×</span></button>' +
+                            response.message + '</div>';
                         $('#messages-container').prepend(errorMessage);
-                    }
-                });
-            });
 
+                        // set the time-out to hide the message after 3 seconds.
+                        setTimeout(function () {
+                            $('.alert').fadeOut('slow');
+                        }, 3000);  // Message will fade out after 3 seconds
+                    }
+                },
+                error: function (response) {
+                    // Handle other errors like network issues
+                    var errorMessage = '<div class="alert alert-danger fade in alert-dismissible show">' +
+                            '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
+                            '<span aria-hidden="true" style="font-size:20px">×</span></button>' +
+                            response.message + '</div>';
+                    $('#messages-container').prepend(errorMessage);
+
+                    // set the time-out to hide the message after 3 seconds.
+                    setTimeout(function () {
+                        $('.alert').fadeOut('slow');
+                    }, 3000);  // Message will fade out after 3 seconds
+                }
+            });
         });
-    </script>
+    });
+</script>
 {% endblock %}
