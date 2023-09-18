@@ -159,6 +159,9 @@ class TaskDeleteView(DeleteView):
     """
     model = Task
 
+    def get(self, request, *args, **kwargs):
+        return self.delete(request, *args, **kwargs)
+
     def delete(self, request, *args, **kwargs):
         self.object = self.get_object()
         self.object.delete()
