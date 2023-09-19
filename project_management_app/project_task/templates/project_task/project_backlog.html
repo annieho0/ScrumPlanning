@@ -134,39 +134,52 @@
 {% endblock %}
 
 {% block js %}
-<!-- jQuery Library -->
+<!-- JavaScript Libraries -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script>
-    // Function to change the view type
-    function changeViewType(viewType) {
-        // Update the URL with the selected view type
-        window.location.href = updateURLParameter(window.location.href, 'view', viewType);
-    }
 
-    // Function to update the URL
-    function updateURLParameter(url, param, paramVal) {
-        let newAdditionalURL = "";
-        let tempArray = url.split("?");
-        let baseURL = tempArray[0];
-        let additionalURL = tempArray[1];
-        let temp = "";
-        if (additionalURL) {
-            tempArray = additionalURL.split("&");
-            for (let i = 0; i < tempArray.length; i++) {
-                if (tempArray[i].split('=')[0] !== param) {
-                    newAdditionalURL += temp + tempArray[i];
-                    temp = "&";
+{% block js %}
+<!-- JavaScript Libraries -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        /**
+         * Change the current view type and update the URL accordingly.
+         * @param {string} viewType - The desired view type.
+         */
+        function changeViewType(viewType) {
+            window.location.href = updateURLParameter(window.location.href, 'view', viewType);
+        }
+
+        /**
+         * Update or add a parameter to the provided URL.
+         * @param {string} url - The original URL.
+         * @param {string} param - The parameter name to update/add.
+         * @param {string} paramVal - The value for the parameter.
+         * @returns {string} - The updated URL.
+         */
+        function updateURLParameter(url, param, paramVal) {
+            let newAdditionalURL = "";
+            let tempArray = url.split("?");
+            let baseURL = tempArray[0];
+            let additionalURL = tempArray[1];
+            let temp = "";
+
+            if (additionalURL) {
+                tempArray = additionalURL.split("&");
+                for (let i = 0; i < tempArray.length; i++) {
+                    if (tempArray[i].split('=')[0] !== param) {
+                        newAdditionalURL += temp + tempArray[i];
+                        temp = "&";
+                    }
                 }
             }
+
+            let rowsTxt = temp + "" + param + "=" + paramVal;
+            return baseURL + "?" + newAdditionalURL + rowsTxt;
         }
-        let rowsTxt = temp + "" + param + "=" + paramVal;
-        return baseURL + "?" + newAdditionalURL + rowsTxt;
-    }
 
-    // Select2 modules for Tags input
-    $(document).ready(function () {
-
-        // Select2 modules for Tags input
+        // Initialize Select2 for Tags input
         $('#id_tags').select2({
             tags: true,
             tokenSeparators: [','],
@@ -175,71 +188,113 @@
             theme: 'bootstrap',
         });
 
-        // Show the creation task modal and focus on the first input
-        // Handle form submission inside the modal
+        /**
+         * Handle the form submission for creating a new task.
+         * On success, update the UI with the new task.
+         */
         $('#taskForm').submit(function (event) {
-            event.preventDefault();  // Prevent the default form submission
+            event.preventDefault();
 
-            let formData = $(this).serialize();
-            let createTaskUrl = $(this).attr('action');
+            const formData = $(this).serialize();
+            const createTaskUrl = $(this).attr('action');
 
+            // AJAX request to create a new task
             $.ajax({
                 url: createTaskUrl,
                 type: 'POST',
                 data: formData,
                 dataType: 'json',
                 success: function (response) {
+                    // Display success alert
+                    displayMessage('success', response.message);
 
-                    // This will add the new task to the list without refreshing the page//
-                    // Construct the list view HTML
-                    let tagsHtml = '';
-                    response.task.tags.forEach(tag => {
-                        tagsHtml += `<span class="badge badge-info m-1">${tag}</span>`;
-                    });
-                    let listViewHtml = `
-                    <tr>
-                        <td>${response.task.name}</td>
-                        <td>${response.task.story_point}</td>
-                        <td>${response.task.priority}</td>
-                        <td>${tagsHtml}</td>
-                        <td><a href="/delete_task/${response.task.id}/" class="btn btn-danger delete-btn">Delete</a></td>
-                    </tr>`;
-                    // Append the new row to the table
-                    $('#backlogTable').append(listViewHtml);
-
-                    // Construct the card view HTML
-                    let cardViewHtml = `
-                    <div class="col-sm-3">
-                        <div class="card mb-3" style="height: 13rem;">
-                            <div class="card-body">
-                                <h4 class="card-title">${response.task.name}</h4>
-                                <h6 class="card-subtitle mb-2 text-muted"><strong>Story Point</strong>: ${response.task.story_point}</h6>
-                                <h6 class="card-subtitle mb-2 text-muted"><strong>Priority</strong>: ${response.task.priority}</h6>
-                                <div class="d-flex flex-wrap align-items-start">
-                                    <h6 class="card-subtitle mb-2 text-muted mr-2 tags-container">
-                                        <strong>Tags</strong>: ${tagsHtml}
-                                        <span class="more-tags">...</span>
-                                    </h6>
-                                </div>
-                            </div>
-                            <div class="card-footer">
-                                <a href="/delete_task/${response.task.id}/" class="btn btn-danger delete-btn">Delete</a>
-                            </div>
-                        </div>
-                    </div>`;
-                    // Append the new card to the card view container
-                    $('#cardView .row').append(cardViewHtml);
-
-                    // show the success alert message
-                    if (response.status === 'success') {
-                        displayMessage('success', response.message);
-                    } else {
-                        displayMessage('danger', response.message);
-                    }
-
-                    // Reset the form and hide the modal
+                    // Reset the form, hide the modal, and update the UI
                     $('#createNewTask').modal('hide');
                     $('#taskForm').trigger("reset");
+
+                    // Construct and append the new task to the UI
+                    addTaskToUI(response.task);
+                },
+                error: function (response) {
+                    // Display error message
+                    displayMessage('danger', response.message);
+                }
+            });
+        });
+
+        /**
+         * Add the provided task to the UI.
+         * @param {Object} task - The task data.
+         */
+        function addTaskToUI(task) {
+            let tagsHtml = '';
+            task.tags.forEach(tag => {
+                tagsHtml += `<span class="badge badge-info m-1">${tag}</span>`;
+            });
+
+            // HTML for list view
+            const listViewHtml = `
+                <tr>
+                    <td>${task.name}</td>
+                    <td>${task.story_point}</td>
+                    <td>${task.priority}</td>
+                    <td>${tagsHtml}</td>
+                    <td><a href="/delete_task/${task.id}/" class="btn btn-danger delete-btn">Delete</a></td>
+                </tr>`;
+            $('#backlogTable').append(listViewHtml);
+
+            // HTML for card view
+            const cardViewHtml = `
+                <div class="col-sm-3">
+                    <div class="card mb-3" style="height: 13rem;">
+                        <div class="card-body">
+                            <h4 class="card-title">${task.name}</h4>
+                            <h6 class="card-subtitle mb-2 text-muted"><strong>Story Point</strong>: ${task.story_point}</h6>
+                            <h6 class="card-subtitle mb-2 text-muted"><strong>Priority</strong>: ${task.priority}</h6>
+                            <div class="d-flex flex-wrap align-items-start">
+                                <h6 class="card-subtitle mb-2 text-muted mr-2 tags-container">
+                                    <strong>Tags</strong>: ${tagsHtml}
+                                    <span class="more-tags">...</span>
+                                </h6>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <a href="/delete_task/${task.id}/" class="btn btn-danger delete-btn">Delete</a>
+                        </div>
+                    </div>
+                </div>`;
+            $('#cardView .row').append(cardViewHtml);
+        }
+
+        /**
+         * Handle delete button clicks using event delegation.
+         * Open a confirmation modal.
+         */
+        $(document).on('click', '.delete-btn', function (e) {
+            e.preventDefault();
+            const deleteUrl = $(this).attr('href');
+            $('#confirmDelete').data('href', deleteUrl);
+            $('#deleteModal').modal('show');
+        });
+
+        /**
+         * Confirm deletion of a task.
+         * Use AJAX to request task deletion and update the UI.
+         */
+        $('#confirmDelete').on('click', function (e) {
+            e.preventDefault();
+            const deleteUrl = $(this).data('href');
+
+            // AJAX request to delete the task and update the UI
+            $.ajax({
+                url: deleteUrl,
+                type: 'GET',
+                dataType: 'json',
+                success: function (response) {
+                    $('#deleteModal').modal('hide');
+                    const taskElement = $('.delete-btn[href="' + deleteUrl + '"]').closest('tr, .col-sm-3');
+                    taskElement.remove();
+                    displayMessage(response.status, response.message);
                 },
                 error: function (response) {
                     displayMessage('danger', response.message);
@@ -247,58 +302,26 @@
             });
         });
 
-        // Using event delegation for the delete button click
-        $(document).on('click', '.delete-btn', function (e) {
-            e.preventDefault();
-            let deleteUrl = $(this).attr('href');
-            $('#confirmDelete').data('href', deleteUrl);
-            $('#deleteModal').modal('show');
-        });
-
-        // When the confirm delete button is clicked
-        $('#confirmDelete').on('click', function (e) {
-            e.preventDefault();
-            let deleteUrl = $(this).data('href');  // Capture the href value here
-
-            // Check response and show alert
-            $.ajax({
-                url: deleteUrl,
-                type: 'GET',
-                dataType: 'json',
-                success: function (response) {
-                    $('#deleteModal').modal('hide');
-                    if (response.status === 'success') {
-                        let taskElement = $('.delete-btn[href="' + deleteUrl + '"]').closest('tr, .col-sm-3');  // Use the captured deleteUrl
-                        taskElement.remove();
-                        // Display the success message from the server
-                        displayMessage('success', response.message);
-
-                    } else {
-                        // Display the error message from the server
-                        displayMessage('danger', response.message);
-                    }
-                },
-                error: function (response) {
-                    // Handle other errors like network issues
-                    displayMessage('success', response.message);
-                }
-            });
-        });
-
-        // Helper function to display messages
+        /**
+         * Display an alert message on the page.
+         * @param {string} type - The type of the message (e.g., 'success', 'danger').
+         * @param {string} message - The message content.
+         */
         function displayMessage(type, message) {
-            let alertMessage =
-                '<div class="alert alert-' + type + ' fade in alert-dismissible show" role="alert">' +
-                '<button type="button" class="close" data-dismiss="alert" aria-label="Close">' +
-                '<span aria-hidden="true" style="font-size:20px">×</span></button>' +
-                message + '</div>';
+            const alertMessage = `
+                <div class="alert alert-${type} fade in alert-dismissible show" role="alert">
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true" style="font-size:20px">×</span>
+                    </button>
+                    ${message}
+                </div>`;
             $('#messages-container').prepend(alertMessage);
 
-            // set the time-out to hide the message after 3 seconds.
             setTimeout(function () {
                 $('.alert').fadeOut('slow');
-            }, 3000);  // Message will fade out after 3 seconds
+            }, 3000);
         }
     });
 </script>
 {% endblock %}
+

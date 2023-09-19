@@ -1,3 +1,4 @@
+import json
 from django.contrib import messages
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
@@ -10,6 +11,7 @@ import logging
 
 # Set up logging
 logger = logging.getLogger(__name__)
+
 
 class TaskManager:
     """
@@ -119,8 +121,6 @@ class ProjectBacklogView(View):
         sort_by = request.GET.get('sort_by', 'priority')
         current_view = request.GET.get('view', 'list_view')  # Default to 'listView' if 'view' is not in the URL
         tasks = TaskManager.list_tasks(filter_criteria={"sprint": None}, sort_by=sort_by)
-        print("The current view is " + current_view)
-        print("The sort_by parameter is " + str(sort_by))
         return render(request, self.template_name, {
             "name": "project-backlog",
             "tasks": tasks,
@@ -137,7 +137,8 @@ class ProjectBacklogView(View):
         if form.is_valid():
             success, message = TaskManager.create_task(form.cleaned_data)
             if success:
-                return JsonResponse({'status': 'success', 'message': message})
+                tags_list = [str(tag) for tag in form.cleaned_data['tags']]
+                return JsonResponse({'status': 'success', 'message': message, 'task': {**form.cleaned_data, 'tags': tags_list}})
             else:
                 if isinstance(message, dict):  # If errors are returned as a dict
                     error_message = '; '.join([': '.join([key, val[0]]) for key, val in message.items()])
@@ -148,6 +149,19 @@ class ProjectBacklogView(View):
             error_message = 'There were errors in your submission. Please correct them and try again.'
             logger.error(f"Form submission errors: {form.errors}")  # Log the errors for debugging
             return JsonResponse({'status': 'error', 'message': error_message})
+
+    @staticmethod
+    def form2json(data):
+        """
+        This method converts form data to JSON.
+        """
+        json_data = {}
+        for key, value in data.items():
+            if key == 'tags':
+                json_data[key] = value.split(',')
+            else:
+                json_data[key] = value
+        return json_data
 
 
 class TaskDeleteView(DeleteView):
@@ -187,4 +201,3 @@ class TaskDeleteView(DeleteView):
                 'status': 'error',
                 'message': f"Error deleting task: {str(e)}"
             })
-
