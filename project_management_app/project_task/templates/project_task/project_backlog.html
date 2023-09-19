@@ -137,10 +137,7 @@
 <!-- JavaScript Libraries -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-{% block js %}
-<!-- JavaScript Libraries -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
+<!-- Custom JavaScript -->
 <script>
     $(document).ready(function () {
         /**
@@ -148,11 +145,13 @@
          * @param {string} viewType - The desired view type.
          */
         function changeViewType(viewType) {
+            // Update the URL with the new view type
             window.location.href = updateURLParameter(window.location.href, 'view', viewType);
         }
 
         /**
          * Update or add a parameter to the provided URL.
+         * E.g., view=list_view&sort=asc
          * @param {string} url - The original URL.
          * @param {string} param - The parameter name to update/add.
          * @param {string} paramVal - The value for the parameter.
@@ -179,7 +178,7 @@
             return baseURL + "?" + newAdditionalURL + rowsTxt;
         }
 
-        // Initialize Select2 for Tags input
+        // Initialize Select2 for Tags multiselect input
         $('#id_tags').select2({
             tags: true,
             tokenSeparators: [','],
