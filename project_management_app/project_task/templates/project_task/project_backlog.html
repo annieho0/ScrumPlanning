@@ -37,9 +37,9 @@
 <div class="container-fluid mb-4 mt-4">
     <div class="row">
         <!-- View options -->
-        <div class="col-sm-10">
+        <div class="col-sm-2">
             <label for="view">View:</label>
-            <select id="view" onchange="changeViewType(this.value)">
+            <select id="view" onchange="updateSortAndFilter()">
                 {% if current_view == 'list_view' %}
                 <option value="list_view" selected>List View</option>
                 <option value="card_view">Card View</option>
@@ -48,8 +48,22 @@
                 <option value="card_view" selected>Card View</option>
                 {% endif %}
             </select>
-
         </div>
+
+        <!-- Priority Sort options -->
+        <div class="col-sm-8">
+            <label for="priority_sort">Priority:</label>
+            <select id="priority_sort" onchange="updateSortAndFilter()">
+                {% if priority_sort == 'priority_ascending' %}
+                <option value="priority_ascending" selected>Ascending</option>
+                <option value="priority_descending">Descending</option>
+                {% else %}
+                <option value="priority_ascending">Ascending</option>
+                <option value="priority_descending" selected>Descending</option>
+                {% endif %}
+            </select>
+        </div>
+
         <!-- Create New Task Button trigger modal -->
         <div class="col-sm-2 text-right" id="create-task-listview">
             <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#createNewTask">create new
@@ -137,44 +151,65 @@
 
 <!-- Custom JavaScript -->
 <script>
-    $(document).ready(function () {
-        /**
-         * Change the current view type and update the URL accordingly.
-         * @param {string} viewType - The desired view type.
-         */
-        function changeViewType(viewType) {
-            // Update the URL with the new view type
-            window.location.href = updateURLParameter(window.location.href, 'view', viewType);
-        }
 
-        /**
-         * Update or add a parameter to the provided URL.
-         * E.g., view=list_view&sort=asc
-         * @param {string} url - The original URL.
-         * @param {string} param - The parameter name to update/add.
-         * @param {string} paramVal - The value for the parameter.
-         * @returns {string} - The updated URL.
-         */
-        function updateURLParameter(url, param, paramVal) {
-            let newAdditionalURL = "";
-            let tempArray = url.split("?");
-            let baseURL = tempArray[0];
-            let additionalURL = tempArray[1];
-            let temp = "";
+    /**
+     * Change the current view type and update the URL accordingly.
+     * @param {string} viewType - The desired view type.
+     */
+    function updateSortAndFilter() {
+        let config = {
+            'view': true,
+            'priority_sort': true
+            // ... add more filters and sorts here in the future
+        };
 
-            if (additionalURL) {
-                tempArray = additionalURL.split("&");
-                for (let i = 0; i < tempArray.length; i++) {
-                    if (tempArray[i].split('=')[0] !== param) {
-                        newAdditionalURL += temp + tempArray[i];
-                        temp = "&";
-                    }
+        let updatedURL = window.location.href;
+
+        // Iterate over each filter and sort in the config object
+        for (let key in config) {
+            if (config.hasOwnProperty(key)) {
+                let element = document.getElementById(key);
+                if (element) {
+                    let value = element.value;
+                    updatedURL = updateURLParameter(updatedURL, key, value);
                 }
             }
-
-            let rowsTxt = temp + "" + param + "=" + paramVal;
-            return baseURL + "?" + newAdditionalURL + rowsTxt;
         }
+
+        // Update the URL
+        window.location.href = updatedURL;
+    }
+
+    /**
+     * Update or add a parameter to the provided URL.
+     * E.g., view=list_view&sort=asc
+     * @param {string} url - The original URL.
+     * @param {string} param - The parameter name to update/add.
+     * @param {string} paramVal - The value for the parameter.
+     * @returns {string} - The updated URL.
+     */
+    function updateURLParameter(url, param, paramVal) {
+        let newAdditionalURL = "";
+        let tempArray = url.split("?");
+        let baseURL = tempArray[0];
+        let additionalURL = tempArray[1];
+        let temp = "";
+
+        if (additionalURL) {
+            tempArray = additionalURL.split("&");
+            for (let i = 0; i < tempArray.length; i++) {
+                if (tempArray[i].split('=')[0] !== param) {
+                    newAdditionalURL += temp + tempArray[i];
+                    temp = "&";
+                }
+            }
+        }
+
+        let rowsTxt = temp + "" + param + "=" + paramVal;
+        return baseURL + "?" + newAdditionalURL + rowsTxt;
+    }
+
+    $(document).ready(function () {
 
         // Initialize Select2 for Tags multiselect input
         $('#id_tags').select2({

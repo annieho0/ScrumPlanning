@@ -81,13 +81,24 @@ class TaskManager:
         """
         tasks = Task.objects.filter(**filter_criteria) if filter_criteria else Task.objects.all()
 
-        if sort_by == "priority":
+        if sort_by == "priority_ascending":
             tasks = tasks.annotate(
                 custom_priority_order=Case(
                     When(priority="LOW", then=Value(0)),
                     When(priority="MED", then=Value(1)),
                     When(priority="IMP", then=Value(2)),
                     When(priority="URG", then=Value(3)),
+                    default=Value(4),
+                    output_field=IntegerField()
+                )
+            ).order_by("custom_priority_order")
+        elif sort_by == "priority_descending":
+            tasks = tasks.annotate(
+                custom_priority_order=Case(
+                    When(priority="LOW", then=Value(3)),
+                    When(priority="MED", then=Value(2)),
+                    When(priority="IMP", then=Value(1)),
+                    When(priority="URG", then=Value(0)),
                     default=Value(4),
                     output_field=IntegerField()
                 )
@@ -118,7 +129,7 @@ class ProjectBacklogView(View):
 
     def get(self, request, *args, **kwargs):
         form = CreateNewTaskForm()
-        sort_by = request.GET.get('sort_by', 'priority')
+        sort_by = request.GET.get('priority_sort', 'priority_ascending')
         current_view = request.GET.get('view', 'list_view')  # Default to 'listView' if 'view' is not in the URL
         tasks = TaskManager.list_tasks(filter_criteria={"sprint": None}, sort_by=sort_by)
         return render(request, self.template_name, {
@@ -126,7 +137,7 @@ class ProjectBacklogView(View):
             "tasks": tasks,
             "form": form,
             "current_view": current_view,  # Pass the current view to the template
-            "sort_by": sort_by  # Pass the sort_by parameter to the template
+            "priority_sort": sort_by  # Pass the sort_by parameter to the template
         })
 
     def post(self, *args, **kwargs):
@@ -149,19 +160,6 @@ class ProjectBacklogView(View):
             error_message = 'There were errors in your submission. Please correct them and try again.'
             logger.error(f"Form submission errors: {form.errors}")  # Log the errors for debugging
             return JsonResponse({'status': 'error', 'message': error_message})
-
-    @staticmethod
-    def form2json(data):
-        """
-        This method converts form data to JSON.
-        """
-        json_data = {}
-        for key, value in data.items():
-            if key == 'tags':
-                json_data[key] = value.split(',')
-            else:
-                json_data[key] = value
-        return json_data
 
 
 class TaskDeleteView(DeleteView):
