@@ -10,7 +10,7 @@ class CreateNewTaskForm(forms.ModelForm):
     tags = forms.ModelMultipleChoiceField(
         queryset=Tag.objects.all(),
         widget=forms.SelectMultiple(attrs={'class': 'form-control'}),
-        required=False
+        required=True
     )
 
     class Meta:
@@ -21,10 +21,8 @@ class CreateNewTaskForm(forms.ModelForm):
             "priority",
             "description",
             "story_point",
-            "assignee",
             "tags",
             "status",
-            "stage",
         ]
 
     def __init__(self, *args, **kwargs):
