@@ -72,16 +72,22 @@ class TaskManager:
         return True, "Task successfully deleted!"
 
     @staticmethod
-    def list_tasks(filter_criteria=None, sort_by=None):
+    def list_tasks(filter_criteria=None, priority_sort_value=None, tag_filter_value=[]):
         """
         List tasks based on some filtering criteria and sorting parameters.
         :param filter_criteria: A dictionary with model fields as keys.
-        :param sort_by: A string representing the model field to sort by.
+        :param priority_sort_value: A string representing the model field to sort by.
+        :param tag_filter_value: A list of tag names to filter by.
         :return: A queryset of matching tasks.
         """
         tasks = Task.objects.filter(**filter_criteria) if filter_criteria else Task.objects.all()
 
-        if sort_by == "priority_ascending":
+        # Filter by tags
+        if tag_filter_value:
+            tasks = tasks.filter(tags__name__in=tag_filter_value).distinct()
+
+        # Sort by priority
+        if priority_sort_value == "priority_ascending":
             tasks = tasks.annotate(
                 custom_priority_order=Case(
                     When(priority="LOW", then=Value(0)),
@@ -92,7 +98,7 @@ class TaskManager:
                     output_field=IntegerField()
                 )
             ).order_by("custom_priority_order")
-        elif sort_by == "priority_descending":
+        elif priority_sort_value == "priority_descending":
             tasks = tasks.annotate(
                 custom_priority_order=Case(
                     When(priority="LOW", then=Value(3)),
@@ -103,8 +109,8 @@ class TaskManager:
                     output_field=IntegerField()
                 )
             ).order_by("custom_priority_order")
-        elif sort_by:
-            tasks = tasks.order_by(sort_by)
+        elif priority_sort_value:
+            tasks = tasks.order_by(priority_sort_value)
         return tasks
 
 
@@ -129,15 +135,28 @@ class ProjectBacklogView(View):
 
     def get(self, request, *args, **kwargs):
         form = CreateNewTaskForm()
-        sort_by = request.GET.get('priority_sort', 'priority_ascending')
-        current_view = request.GET.get('view', 'list_view')  # Default to 'listView' if 'view' is not in the URL
-        tasks = TaskManager.list_tasks(filter_criteria={"sprint": None}, sort_by=sort_by)
+
+        priority_sort = request.GET.get('priority_sort', 'priority_ascending')
+        current_view = request.GET.get('view', 'list_view')
+
+        # Filter Tags that is in use currently from the database
+        used_tags_ids = Task.objects.values_list('tags', flat=True).distinct()
+        tags = Tag.objects.filter(id__in=used_tags_ids)
+        # Clean up the selected tags passed by the URL
+        selected_tags_string = request.GET.get('tags_filter', '')
+        selected_tags = selected_tags_string.split(",") if selected_tags_string else []
+
+        print(selected_tags)
+        tasks = TaskManager.list_tasks(filter_criteria={"sprint": None}, priority_sort_value=priority_sort,
+                                       tag_filter_value=selected_tags)
         return render(request, self.template_name, {
             "name": "project-backlog",
             "tasks": tasks,
+            "tags": tags,  # Pass the tags to the template
             "form": form,
             "current_view": current_view,  # Pass the current view to the template
-            "priority_sort": sort_by  # Pass the sort_by parameter to the template
+            "priority_sort": priority_sort,  # Pass the sort_by parameter to the template
+            "selected_tags": selected_tags  # Pass the selected tags to the template
         })
 
     def post(self, *args, **kwargs):
@@ -149,7 +168,8 @@ class ProjectBacklogView(View):
             success, message = TaskManager.create_task(form.cleaned_data)
             if success:
                 tags_list = [str(tag) for tag in form.cleaned_data['tags']]
-                return JsonResponse({'status': 'success', 'message': message, 'task': {**form.cleaned_data, 'tags': tags_list}})
+                return JsonResponse(
+                    {'status': 'success', 'message': message, 'task': {**form.cleaned_data, 'tags': tags_list}})
             else:
                 if isinstance(message, dict):  # If errors are returned as a dict
                     error_message = '; '.join([': '.join([key, val[0]]) for key, val in message.items()])

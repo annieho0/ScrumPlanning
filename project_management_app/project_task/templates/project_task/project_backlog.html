@@ -51,7 +51,7 @@
         </div>
 
         <!-- Priority Sort options -->
-        <div class="col-sm-8">
+        <div class="col-sm-2">
             <label for="priority_sort">Priority:</label>
             <select id="priority_sort" onchange="updateSortAndFilter()">
                 {% if priority_sort == 'priority_ascending' %}
@@ -61,6 +61,20 @@
                 <option value="priority_ascending">Ascending</option>
                 <option value="priority_descending" selected>Descending</option>
                 {% endif %}
+            </select>
+        </div>
+
+        <!-- Tags Filter options -->
+        <div class="col-sm-6 d-flex justify-content-start">
+            <label for="tags_filter">Tags:</label>
+            <select id="tags_filter" multiple="multiple" style="width: 50%" onchange="updateSortAndFilter()">
+                {% for tag in tags %}
+                {% if tag.name in selected_tags %}
+                <option value="{{ tag.name }}" selected>{{ tag.name }}</option>
+                {% else %}
+                <option value="{{ tag.name }}">{{ tag.name }}</option>
+                {% endif %}
+                {% endfor %}
             </select>
         </div>
 
@@ -159,7 +173,8 @@
     function updateSortAndFilter() {
         let config = {
             'view': true,
-            'priority_sort': true
+            'priority_sort': true,
+            'tags_filter': true,
             // ... add more filters and sorts here in the future
         };
 
@@ -170,8 +185,14 @@
             if (config.hasOwnProperty(key)) {
                 let element = document.getElementById(key);
                 if (element) {
-                    let value = element.value;
-                    updatedURL = updateURLParameter(updatedURL, key, value);
+                    // Handle multi-value fields
+                    if (key === 'tags_filter' && element.multiple) {
+                        let selectedValues = Array.from(element.selectedOptions).map(option => option.value);
+                        updatedURL = updateURLParameter(updatedURL, key, selectedValues.join(','));
+                    } else {
+                        let value = element.value;
+                        updatedURL = updateURLParameter(updatedURL, key, value);
+                    }
                 }
             }
         }
@@ -179,6 +200,7 @@
         // Update the URL
         window.location.href = updatedURL;
     }
+
 
     /**
      * Update or add a parameter to the provided URL.
@@ -214,6 +236,15 @@
         // Initialize Select2 for Tags multiselect input
         $('#id_tags').select2({
             tags: true,
+            tokenSeparators: [','],
+            allowClear: true,
+            placeholder: 'Select tag(s)',
+            theme: 'bootstrap',
+        });
+
+        // Initialize Select2 for Tags filter multiselect input
+        $('#tags_filter').select2({
+            tags: false,
             tokenSeparators: [','],
             allowClear: true,
             placeholder: 'Select tag(s)',
