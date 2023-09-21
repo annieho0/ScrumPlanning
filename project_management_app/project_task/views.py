@@ -26,44 +26,156 @@ class TaskManager:
         It will also create the tags if they don't exist.
         """
 
-        # Create a new task based on the form data
+        # Initialize the form with the data
         task_form = CreateNewTaskForm(data)
 
         # validate the form
         if task_form.is_valid():
-            # Create the task
+
+            # Get the cleaned data by calling the 'cleaned_data' method
             cleaned_data = task_form.cleaned_data
 
             # Get the tags from the form data and create them if they don't exist
-            tags = cleaned_data.get('tags', [])  # Directly use 'get' for dictionaries
-            tag_objects = [Tag.objects.get_or_create(name=tag_name)[0] for tag_name in tags]
+            tag_objects = TaskManager._create_tags(cleaned_data.get('tags', []))
 
-            # Create the task but don't save it yet
+            # Create the task without saving it yet
             task = CreateNewTaskForm(cleaned_data).save(commit=False)
 
-            # Add the tags to the task
-            for tag in tag_objects:
-                task.tags.add(tag)
+            # Update tags for the task. This will automatically remove any tags that are not in `tag_objects`
+            task.tags.set(tag_objects)
 
-            # Save the task and return success message
+            # Save the task and return feedback
             task.save()
             return True, f"Task '{str(task)}' successfully created!"
-
         else:
             # error can be a dictionary if more than one error or a string if only one error
             # If the error message is a dictionary, convert it to a string
-            if isinstance(task_form.errors, dict):  # If errors are returned as a dict
+            if isinstance(task_form.errors, dict):
                 error_message = '; '.join([': '.join([key, val[0]]) for key, val in task_form.errors.items()])
             else:
                 error_message = task_form.errors
 
-            # Return error message
+            # return feedback
             return False, error_message
 
     @staticmethod
-    def read_task(task_id):
+    def update_task(task_id, data):
         """
-        This method reads a task.
+        This method updates an existing task.
+        It will first check if the task exists, then use the `EditTaskForm` to validate and update the data.
+        Tags associated with the task will be created (if they don't exist) and linked to the task.
+        """
+
+        # Check if the task exists
+        task = TaskManager._read_task(task_id)
+        if not task:
+            return False, "The Task does not exist"
+
+        # Use the EditTaskForm to populate the task with the given data
+        update_form = EditTaskForm(data, instance=task)
+
+        # Validate the form data
+        if update_form.is_valid():
+
+            # get the cleaned data
+            cleaned_data = update_form.cleaned_data
+
+            # Get the tags from the form data and create them if they don't exist
+            tag_objects = TaskManager._create_tags(cleaned_data.get('tags', []))
+            # Update tags for the task. This will automatically remove any tags that are not in `tag_objects`
+            task.tags.set(tag_objects)
+
+            # Save the task and return success message
+            task = update_form.save()
+            return True, f"Task '{str(task)}' successfully created!"
+        else:
+            return False, update_form.errors
+
+    @staticmethod
+    def delete_task(task_id):
+        """
+        This method deletes an existing task.
+        It checks if the task exists, saves the name for feedback, then deletes the task.
+        """
+
+        # Check if the task exists
+        task = TaskManager._read_task(task_id)
+        if not task:
+            return False, "Task not found for deletion"
+
+        # Save the task name for feedback
+        task_name = task.name
+
+        # Delete the task
+        task.delete()
+
+        return True, f"Task '{task_name}' was successfully deleted!"
+
+    @staticmethod
+    def list_tasks(tag_filter=None, priority_sort='descending', date_created_sort='ascending'):
+        """
+        List tasks based on the provided filtering and sorting criteria.
+        :param tag_filter: A list of tag names to filter by.
+        :param priority_sort: A string indicating how to sort by priority ("ascending" or "descending").
+        :param date_created_sort: A string indicating how to sort by creation date ("ascending" or "descending").
+        :return: A queryset of matching tasks.
+        """
+
+        # Fetch all tasks initially
+        tasks = Task.objects.all()
+
+        # Apply tag filter if provided
+        if tag_filter:
+            tasks = tasks.filter(tags__name__in=tag_filter).distinct()
+
+        # Apply priority sort if provided
+        if priority_sort:
+            if priority_sort == "ascending":
+                tasks = tasks.annotate(
+                    custom_priority_order=Case(
+                        When(priority="LOW", then=Value(0)),
+                        When(priority="MED", then=Value(1)),
+                        When(priority="IMP", then=Value(2)),
+                        When(priority="URG", then=Value(3)),
+                        default=Value(4),
+                        output_field=IntegerField()
+                    )
+                ).order_by("custom_priority_order")
+            elif priority_sort == "descending":
+                tasks = tasks.annotate(
+                    custom_priority_order=Case(
+                        When(priority="LOW", then=Value(3)),
+                        When(priority="MED", then=Value(2)),
+                        When(priority="IMP", then=Value(1)),
+                        When(priority="URG", then=Value(0)),
+                        default=Value(4),
+                        output_field=IntegerField()
+                    )
+                ).order_by("custom_priority_order")
+
+        # Apply date_created_sort if provided
+        if date_created_sort:
+            # Assuming that there's a "created_at" field in the Task model
+            if date_created_sort == "ascending":
+                tasks = tasks.order_by("created_at")
+            elif date_created_sort == "descending":
+                tasks = tasks.order_by("-created_at")
+
+        return tasks
+
+    ### Utilities Methods ###
+
+    @staticmethod
+    def _create_tags(tags):
+        """
+        Utility method to create or get tags.
+        """
+        return [Tag.objects.get_or_create(name=tag_name)[0] for tag_name in tags]
+
+    @staticmethod
+    def _read_task(task_id):
+        """
+        Utility method reads a task.
         If the task does not exist, it will return None instead of raising an error.
         If the task exists, it will return the task object.
         """
@@ -71,110 +183,6 @@ class TaskManager:
             return Task.objects.get(id=task_id)
         except Task.DoesNotExist:
             return None
-
-    @staticmethod
-    def update_task(task_id, data):
-        """
-        This method updates a task.
-        """
-
-        # Check if the task exists
-        task = TaskManager.read_task(task_id)
-        if not task:
-            return False, "The Task does not exist"
-
-        # Validate the task data is valid
-        update_form = EditTaskForm(data, instance=task)
-
-        if update_form.is_valid():
-
-            # get the cleaned data
-            cleaned_data = update_form.cleaned_data
-
-            # Get the tags from the form data and create them if they don't exist
-            tags = cleaned_data.get('tags', [])  # Directly use 'get' for dictionaries
-            tag_objects = [Tag.objects.get_or_create(name=tag_name)[0] for tag_name in tags]
-
-            # Add the tags to the task
-            for tag in tag_objects:
-                task.tags.add(tag)
-
-            # Save the task and return success message
-            task.save()
-            return True, f"Task '{str(task)}' successfully created!"
-
-            form.save()
-            return True, f"Task '{str(task)}' successfully updated!"
-        else:
-            return False, form.errors
-
-    @staticmethod
-    def delete_task(task_id):
-        """
-        This method deletes a task.
-        """
-
-        # Check if the task exists
-        task = TaskManager.read_task(task_id)
-        if not task:
-            return False, "Task not found for deletion"
-
-        # Get the task name for the feedback message
-        task_name = task.name
-
-        # Delete the task
-        task.delete()
-
-        return True, f"Task '{task_name}'successfully deleted!"
-
-    @staticmethod
-    def list_tasks(tag_filter_criteria=None, priority_sort_value=None, tag_filter_value=None):
-        """
-        List tasks based on some filtering criteria and sorting parameters.
-        :param tag_filter_criteria: A dictionary with model fields as keys.
-        :param priority_sort_value: A string representing the model field to sort by.
-        :param tag_filter_value: A list of tag names to filter by.
-        :return: A queryset of matching tasks.
-        """
-
-        # Set tag filter criteria
-        if tag_filter_value is None:
-            tag_filter_value = []
-        tasks = Task.objects.filter(**tag_filter_criteria) if tag_filter_criteria else Task.objects.all()
-
-        # Filter by user selected tags
-        if tag_filter_value:
-            tasks = tasks.filter(tags__name__in=tag_filter_value).distinct()
-
-        # Sort by user selected priority
-        # sort by priority ascending
-        if priority_sort_value == "priority_ascending":
-            tasks = tasks.annotate(
-                custom_priority_order=Case(
-                    When(priority="LOW", then=Value(0)),
-                    When(priority="MED", then=Value(1)),
-                    When(priority="IMP", then=Value(2)),
-                    When(priority="URG", then=Value(3)),
-                    default=Value(4),
-                    output_field=IntegerField()
-                )
-            ).order_by("custom_priority_order")
-        # sort by priority descending
-        elif priority_sort_value == "priority_descending":
-            tasks = tasks.annotate(
-                custom_priority_order=Case(
-                    When(priority="LOW", then=Value(3)),
-                    When(priority="MED", then=Value(2)),
-                    When(priority="IMP", then=Value(1)),
-                    When(priority="URG", then=Value(0)),
-                    default=Value(4),
-                    output_field=IntegerField()
-                )
-            ).order_by("custom_priority_order")
-        elif priority_sort_value:
-            tasks = tasks.order_by(priority_sort_value)
-
-        return tasks
 
 
 class HomeView(View):
@@ -299,7 +307,7 @@ class EditTaskView(UpdateView):
         task_id = self.kwargs.get('pk')  # 'pk' is the default name for the primary key field
 
         # Get the task
-        task = TaskManager.read_task(task_id)
+        task = TaskManager._read_task(task_id)
 
         # Check if the task exists
         if not task:
