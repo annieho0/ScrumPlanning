@@ -6,7 +6,9 @@
         <div class="col-sm-3">
             <div class="card mb-3" style="height: 13rem;">
                 <div class="card-body">
-                    <h4 class="card-title">{{task.name}}</h4>
+                    <h4 class="card-title">
+                        <a href="#" data-toggle="modal" data-target="#editTask" data-task-id="{{ task.id }}">{{task.name}}</a>
+                    </h4>
                     <h6 class="card-subtitle mb-2 text-muted"><strong>Story Point</strong>: {{task.story_point}}</h6>
                     <h6 class="card-subtitle mb-2 text-muted"><strong>Priority</strong>: {{task.priority}}</h6>
                     <div class="d-flex flex-wrap align-items-start">
