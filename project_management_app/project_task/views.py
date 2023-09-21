@@ -1,16 +1,9 @@
-import json
-from django.contrib import messages
 from django.http import JsonResponse
-from django.shortcuts import render, redirect
-from django.views import View
-from django.views.generic.edit import DeleteView, UpdateView, CreateView
+from django.shortcuts import render
+from django.views.generic.edit import View
 from .models import Tag, Task
 from .forms import CreateNewTaskForm, EditTaskForm
 from django.db.models import Case, When, Value, IntegerField
-import logging
-
-# Set up logging
-logger = logging.getLogger(__name__)
 
 
 class TaskManager:
@@ -163,6 +156,37 @@ class TaskManager:
 
         return tasks
 
+    @staticmethod
+    def get_task_details(task_id):
+        """
+        This method fetches the details of a specific task given its ID.
+        If the task exists, it will return its details as a dictionary.
+        If the task does not exist, it will return None.
+        """
+
+        # Fetch the task object using the provided ID
+        task = TaskManager._read_task(task_id)
+        if not task:
+            return False, f"Task {task_id} not found", None
+
+        # Convert the task details to a dictionary
+        task_details = {
+            'id': task.id,
+            'name': task.name,
+            'description': task.description,
+            'type': task.type,
+            'priority': task.priority,
+            'stage': task.stage,
+            'tags': [tag.name for tag in task.tags.all()],
+            'story_point': task.story_point,
+            'assignee': task.assignee,
+            'status': task.status,
+            'sprint': task.sprint,
+            # ... add any other necessary fields here ...
+        }
+
+        return True, f'Fetching Task {task_id}', task_details
+
     ### Utilities Methods ###
 
     @staticmethod
@@ -185,28 +209,20 @@ class TaskManager:
             return None
 
 
-class HomeView(View):
+class TaskListView(View):
     """
-    This class-based view renders the home page.
+    This view handles listing tasks and create new ones in product backlog page.
     """
+    template_name = 'project_task/project_backlog.html'
 
-    def get(self, request, *args, **kwargs):
+    def get(self, request):
         """
-        This method renders the home page.
+        This method handles GET requests to the view for Listing tasks.
+        It will fetch the tasks and other filter/sort context for listing, then render the template.
         """
-        return render(request, "project_task/home.html", {"name": "home"})
-
-
-class ProjectBacklogView(View):
-    """
-    This class-based view renders the project backlog page.
-    """
-    template_name = "project_task/project_backlog.html"
-
-    def get(self, request, *args, **kwargs):
 
         # Generate an empty form
-        form = CreateNewTaskForm()
+        create_new_task_form = CreateNewTaskForm()
 
         # Get the sorting and view parameters from the URL, if empty, use default values
         priority_sort = request.GET.get('priority_sort', 'priority_ascending')
@@ -225,111 +241,105 @@ class ProjectBacklogView(View):
                                        priority_sort_value=priority_sort,
                                        tag_filter_value=selected_tags)
 
-        # Render the template with the tasks and tags
-        return render(request, self.template_name, {
+        # Create the context for the template
+        context = {
             "name": "project-backlog",
             "tasks": tasks,
             "tags": tags,  # Pass the tags to the template
-            "form": form,
+            "form": create_new_task_form,
             "current_view": current_view,  # Pass the current view to the template
             "priority_sort": priority_sort,  # Pass the sort_by parameter to the template
             "selected_tags": selected_tags  # Pass the selected tags to the template
-        })
+        }
 
-    def post(self, *args, **kwargs):
+        # Render the template with the tasks and tags
+        return render(request, self.template_name, context)
+
+    def post(self, request):
         """
-        This method handles the task creation.
-        """
-
-        # Create a new task based on the form data
-        form = CreateNewTaskForm(self.request.POST)
-
-        # Check if the form is valid
-        if form.is_valid():
-            # Create the task
-            success, message = TaskManager.create_task(form.cleaned_data)
-            # Send success feedback to the user
-            tags_list = [str(tag) for tag in form.cleaned_data['tags']]
-
-            return JsonResponse({'status': 'success', 'message': message,
-                                 'task': {**form.cleaned_data, 'tags': tags_list}})
-
-        # Send error feedback to the user
-        else:
-            # If the error message is a dictionary, convert it to a string
-            if isinstance(form.errors, dict):  # If errors are returned as a dict
-                error_message = '; '.join([': '.join([key, val[0]]) for key, val in form.errors.items()])
-            else:
-                error_message = form.errors
-
-            return JsonResponse({'status': 'error', 'message': error_message})
-
-
-class TaskDeleteView(DeleteView):
-    """
-    This class-based view deletes a task.
-    """
-    model = Task
-
-    def get(self, *args, **kwargs):
-        # TODO: Uncomment this section to enable backend check authenticated user for deletion
-        """
-        # A simple backend check to ensure user has the right to delete. Adjust as needed.
-        if not request.user.has_perm('can_delete_task'):  # Assuming 'can_delete_task' is a permission
-            return JsonResponse({
-                'status': 'error',
-                'message': "You don't have permission to delete this task."
-            })
+        This method handles POST requests to the view for Creating new tasks.
+        It will validate the form, create the task, and return a JSON response.
+        This does not render a template (refresh the page). Front-end JS will handle the addition of the task to UI.
         """
 
-        # Get the task id from the URL
-        task_id = self.kwargs.get('pk')  # 'pk' is the default name for the primary key field
-        # delete the task can collect feedback
-        status, message = TaskManager.delete_task(task_id)
-        if status:
-            # Send success feedback
-            return JsonResponse({'status': 'success', 'message': message})
-        else:
-            # Send error feedback
+        # Use the TaskManager.create_task method to create the task
+        success, message = TaskManager.create_task(request.POST)
+
+        # If form validation failed or there was an error during task creation
+        if not success:
             return JsonResponse({'status': 'error', 'message': message})
 
+        # If task creation was successful
+        return JsonResponse({'status': 'success', 'message': message})
 
-class EditTaskView(UpdateView):
+
+class TaskEditView(View):
     """
-    This class-based view edits a task.
+    This view handles editing tasks and updating it in the product backlog page.
+    """
+    template_name = 'project_task/edit_task.html'
+
+    def get(self, request, task_id):
+        """
+        This method handles GET requests to the view to populate the form for editing tasks.
+        """
+
+        # Use the TaskManager to update the task
+        status, message, task_data = TaskManager.get_task_details(task_id)
+
+        # If the task does not exist, return an error message
+        if status:
+            return JsonResponse({'status': 'success', 'message': message, 'task_data': task_data})
+        else:
+            return JsonResponse({'status': 'error', 'message': message, 'task_data': task_data})
+
+    def post(self, request, task_id):
+        """
+        This method handles POST requests to the view for Updating tasks.
+        """
+
+        # Use the TaskManager to update the task
+        success, message = TaskManager.update_task(task_id, request.POST)
+
+        if success:
+            return JsonResponse({'status': 'success', 'message': message})
+
+        # If form validation failed or there was an error during task update
+        return JsonResponse({'status': 'error', 'message': message})
+
+
+class TaskDeleteView(View):
+    """
+    This view handles deleting tasks and updating it in the product backlog page.
     """
 
-    def get(self, *args, **kwargs):
+    def post(self, request, task_id):
         """
-        This method renders the edit task page.
-        """
-        # Get the task id from the URL
-        task_id = self.kwargs.get('pk')  # 'pk' is the default name for the primary key field
-
-        # Get the task
-        task = TaskManager._read_task(task_id)
-
-        # Check if the task exists
-        if not task:
-            messages.error(self.request, "Task does not exist")
-            return redirect("project_task:project-backlog")
-
-        # Generate a form with the task data
-        edit_form = EditTaskForm(instance=task)
-
-        # Render the template with the form
-        return render(self.request, "project_task/edit_task.html", {
-            "name": "edit-task",
-            "edit_form": edit_form,
-            "task": task
-        })
-
-    def post(self, *args, **kwargs):
-        """
-        This method handle task edit.
+        This method handles POST requests to the view for Deleting tasks.
         """
 
-        # Get the task id from the URL
-        task_id = self.kwargs.get('pk')  # 'pk' is the default name for the primary key field
+        # Use the TaskManager to update the task
+        success, message = TaskManager.delete_task(task_id)
 
-        # edit
+        if success:
+            return JsonResponse({'status': 'success', 'message': message})
+
+        # If form validation failed or there was an error during task update
+        return JsonResponse({'status': 'error', 'message': message})
+
+
+class HomeListView(View):
+    """
+    This view handles rendering the home page.
+    """
+    template_name = 'project_task/home.html'
+
+    def get(self, request):
+        """
+        This method handles GET requests to the view for rendering the home page.
+        """
+
+        # Render the template
+        return render(request, self.template_name)
+
+
