@@ -148,7 +148,7 @@
     $(document).ready(function () {
 
         // CreateNewTaskForm Tag field Select2 initialization
-        $('#id_tags').select2({
+        $('#createNewTaskModal #id_tags').select2({
             tags: true,
             tokenSeparators: [','],
             allowClear: true,
@@ -157,7 +157,7 @@
         });
 
         // EditTaskForm Tag field Select2 initialization
-        $('#editTask #id_tags').select2({
+        $('#editTaskModal #id_tags').select2({
             tags: true,
             tokenSeparators: [','],
             allowClear: true,
@@ -178,7 +178,7 @@
          * Handle the form submission for creating a new task.
          * On success, update the UI with the new task.
          */
-        $('#taskForm').submit(function (event) {
+        $('#createNewTaskForm').submit(function (event) {
             event.preventDefault();
 
             const formData = $(this).serialize();
@@ -195,8 +195,8 @@
                     displayMessage('success', response.message);
 
                     // Reset the form, hide the modal, and update the UI
-                    $('#createNewTask').modal('hide');
-                    $('#taskForm').trigger("reset");
+                    $('#createNewTaskModal').modal('hide');
+                    $('#createNewTaskForm').trigger("reset");
 
                     // Construct and append the new task to the UI
                     addTaskToUI(response.task);
@@ -212,7 +212,7 @@
          * Handle the form field population for editing a task.
          * On success, update the UI with the selected task details.
          */
-        $('#editTask').on('shown.bs.modal', function (event) {
+        $('#editTaskModal').on('shown.bs.modal', function (event) {
             event.preventDefault();
             const taskId = $(event.relatedTarget).data('task-id');
             const taskUrl = `/project-backlog/edit_task/${taskId}/`
@@ -227,23 +227,23 @@
                     const tags = edit_task.tags;
 
                     // select the tags in the select2 field
-                    $('#editTask #id_tags option').each(function() {
+                    $('#editTaskModal #id_tags option').each(function() {
                         if(tags.includes($(this).text())) {
                             $(this).prop('selected', true);
                         }
                     });
                     // update the select2 field
-                    $('#editTask #id_tags').trigger('change');
+                    $('#editTaskModal #id_tags').trigger('change');
 
                     // Assuming the modal fields have IDs corresponding to the edit_task attributes
-                    $('#editTask #id_name').val(edit_task.name);
-                    $('#editTask #id_story_point').val(edit_task.story_point);
-                    $('#editTask #id_priority').val(edit_task.priority);
-                    $('#editTask #id_description').val(edit_task.description);
-                    $('#editTask #id_type').val(edit_task.type);
-                    $('#editTask #id_status').val(edit_task.status);
-                    $('#editTask #id_assignee').val(edit_task.assignee);
-                    $('#editTask #id_created_date').val(edit_task.created_date);
+                    $('#editTaskModal #id_name').val(edit_task.name);
+                    $('#editTaskModal #id_story_point').val(edit_task.story_point);
+                    $('#editTaskModal #id_priority').val(edit_task.priority);
+                    $('#editTaskModal #id_description').val(edit_task.description);
+                    $('#editTaskModal #id_type').val(edit_task.type);
+                    $('#editTaskModal #id_status').val(edit_task.status);
+                    $('#editTaskModal #id_assignee').val(edit_task.assignee);
+                    $('#editTaskModal #id_created_date').val(edit_task.created_date);
                 },
                 error: function() {
                     // Handle any errors, e.g., display a message to the user

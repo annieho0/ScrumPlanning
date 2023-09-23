@@ -2,11 +2,11 @@
 {% load crispy_forms_filters %}
 
 <!-- Create New Task Modal -->
-<div class="modal fade" id="createNewTask" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+<div class="modal fade" id="createNewTaskModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
      aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
-            <form id="taskForm" method="POST">
+            <form id="createNewTaskForm" method="POST">
                 {% csrf_token %}
                 <!-- Modal Header -->
                 <div class="modal-header">

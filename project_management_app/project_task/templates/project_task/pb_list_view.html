@@ -15,7 +15,7 @@
         <tbody id="backlogTable">
         {% for task in tasks%}
         <tr id="task-row-{{ task.id }}">
-            <td><a href="#" data-toggle="modal" data-target="#editTask" data-task-id="{{ task.id }}">{{task.name}}</a></td>
+            <td><a href="#" data-toggle="modal" data-target="#editTaskModal" data-task-id="{{ task.id }}">{{task.name}}</a></td>
             <td>{{task.story_point}}</td>
             <td>{{task.priority}}</td>
             <td>
