@@ -12,34 +12,30 @@ class TaskManager:
     """
 
     @staticmethod
-    def create_task(data):
+    def create_task(response_data):
         """
         This method creates a new task.
         It will validate the task and return a success or error message.
         It will also create the tags if they don't exist.
         """
 
+        # check and add tags to DB before creating the forms
+        TaskManager._create_tags(response_data.getlist('tags'))
+
         # Initialize the form with the data
-        task_form = CreateNewTaskForm(data)
+        task_form = CreateNewTaskForm(response_data)
 
         # validate the form
         if task_form.is_valid():
 
-            # Get the cleaned data by calling the 'cleaned_data' method
-            cleaned_data = task_form.cleaned_data
-
-            # Get the tags from the form data and create them if they don't exist
-            tag_objects = TaskManager._create_tags(cleaned_data.get('tags', []))
-
             # Create the task without saving it yet
-            task = CreateNewTaskForm(cleaned_data).save(commit=False)
-
-            # Update tags for the task. This will automatically remove any tags that are not in `tag_objects`
-            task.tags.set(tag_objects)
+            new_task = task_form.save(commit=False)
 
             # Save the task and return feedback
-            task.save()
-            return True, f"Task '{str(task)}' successfully created!"
+            # Now save the task to DB
+            new_task.save()
+            task_form.save_m2m()
+            return True, f"Task '{str(new_task)}' successfully created!", task_form.cleaned_data
         else:
             # error can be a dictionary if more than one error or a string if only one error
             # If the error message is a dictionary, convert it to a string
@@ -49,10 +45,10 @@ class TaskManager:
                 error_message = task_form.errors
 
             # return feedback
-            return False, error_message
+            return False, error_message, None
 
     @staticmethod
-    def update_task(task_id, data):
+    def update_task(task_id, response_data):
         """
         This method updates an existing task.
         It will first check if the task exists, then use the `EditTaskForm` to validate and update the data.
@@ -64,23 +60,23 @@ class TaskManager:
         if not task:
             return False, "The Task does not exist"
 
+        # check and add tags to DB before creating the forms
+        TaskManager._create_tags(response_data.getlist('tags'))
+
         # Use the EditTaskForm to populate the task with the given data
-        update_form = EditTaskForm(data, instance=task)
+        update_form = EditTaskForm(response_data, instance=task)
 
         # Validate the form data
         if update_form.is_valid():
 
-            # get the cleaned data
-            cleaned_data = update_form.cleaned_data
+            # Create the task without saving it yet
+            updated_task = update_form.save(commit=False)
 
-            # Get the tags from the form data and create them if they don't exist
-            tag_objects = TaskManager._create_tags(cleaned_data.get('tags', []))
-            # Update tags for the task. This will automatically remove any tags that are not in `tag_objects`
-            task.tags.set(tag_objects)
-
-            # Save the task and return success message
-            task = update_form.save()
-            return True, f"Task '{str(task)}' successfully created!"
+            # Save the task and return feedback
+            # Now save the task to DB
+            updated_task.save()
+            update_form.save_m2m()
+            return True, f"Task '{str(updated_task)}' successfully created!"
         else:
             return False, update_form.errors
 
@@ -150,9 +146,9 @@ class TaskManager:
         if date_created_sort:
             # Assuming that there's a "created_at" field in the Task model
             if date_created_sort == "ascending":
-                tasks = tasks.order_by("created_at")
+                tasks = tasks.order_by("created_date")
             elif date_created_sort == "descending":
-                tasks = tasks.order_by("-created_at")
+                tasks = tasks.order_by("-created_date")
 
         return tasks
 
@@ -194,7 +190,8 @@ class TaskManager:
         """
         Utility method to create or get tags.
         """
-        return [Tag.objects.get_or_create(name=tag_name)[0] for tag_name in tags]
+        for tag in tags:
+            Tag.objects.get_or_create(name=tag)
 
     @staticmethod
     def _read_task(task_id):
@@ -237,19 +234,18 @@ class TaskListView(View):
         selected_tags = selected_tags_string.split(",") if selected_tags_string else []
 
         # Get the tasks based on the filtering and sorting parameters
-        tasks = TaskManager.list_tasks(tag_filter_criteria={"sprint": None},
-                                       priority_sort_value=priority_sort,
-                                       tag_filter_value=selected_tags)
+        tasks = TaskManager.list_tasks(tag_filter=selected_tags,
+                                       priority_sort=priority_sort)
 
         # Create the context for the template
         context = {
             "name": "project-backlog",
             "tasks": tasks,
-            "tags": tags,  # Pass the tags to the template
-            "form": create_new_task_form,
-            "current_view": current_view,  # Pass the current view to the template
-            "priority_sort": priority_sort,  # Pass the sort_by parameter to the template
-            "selected_tags": selected_tags  # Pass the selected tags to the template
+            "tags": tags,                       # Pass the tags to the template
+            "create_new_task_form": create_new_task_form,
+            "current_view": current_view,       # Pass the current view to the template
+            "priority_sort": priority_sort,     # Pass the sort_by parameter to the template
+            "selected_tags": selected_tags      # Pass the selected tags to the template
         }
 
         # Render the template with the tasks and tags
@@ -261,16 +257,18 @@ class TaskListView(View):
         It will validate the form, create the task, and return a JSON response.
         This does not render a template (refresh the page). Front-end JS will handle the addition of the task to UI.
         """
-
         # Use the TaskManager.create_task method to create the task
-        success, message = TaskManager.create_task(request.POST)
+        success, message, task_details = TaskManager.create_task(request.POST)
 
         # If form validation failed or there was an error during task creation
         if not success:
             return JsonResponse({'status': 'error', 'message': message})
 
+        # Convert the tags to a list of strings
+        tags_list = [str(tag) for tag in task_details['tags']]
+
         # If task creation was successful
-        return JsonResponse({'status': 'success', 'message': message})
+        return JsonResponse({'status': 'success', 'message': message, 'task': {**task_details, 'tags': tags_list}})
 
 
 class TaskEditView(View):
