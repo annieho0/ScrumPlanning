@@ -40,6 +40,9 @@ class EditTaskForm(forms.ModelForm):
         required=True
     )
 
+    # set created_date to read-only
+    created_date = forms.DateTimeField(disabled=True)
+
     class Meta:
         model = Task
         fields = [
@@ -53,6 +56,7 @@ class EditTaskForm(forms.ModelForm):
             "stage",
             "assignee",
             "sprint",
+            "created_date",
         ]
 
     def __init__(self, *args, **kwargs):

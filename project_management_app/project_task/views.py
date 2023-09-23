@@ -178,6 +178,7 @@ class TaskManager:
             'assignee': task.assignee,
             'status': task.status,
             'sprint': task.sprint,
+            'created_date': task.created_date,
             # ... add any other necessary fields here ...
         }
 

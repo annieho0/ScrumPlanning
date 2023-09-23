@@ -1,3 +1,6 @@
+{% load crispy_forms_tags %}
+{% load crispy_forms_filters %}
+
 <!-- Edit Task Modal -->
 <div class="modal fade" id="editTask" tabindex="-1" role="dialog" aria-labelledby="editTaskModalLabel"
      aria-hidden="true">
@@ -16,14 +19,16 @@
                 <!-- Modal Body -->
                 <div class="modal-body">
                     <div class="d-grid gap-3 text-start">
-                        {{ form.name| as_crispy_field }}
-                        {{ form.name. |as_crispy_field}}
-                        {{ form.type| as_crispy_field}}
-                        {{ form.priority| as_crispy_field}}
-                        {{ form.description| as_crispy_field}}
-                        {{ form.story_point| as_crispy_field}}
-                        {{ form.tags| as_crispy_field}}
-                        {{ form.status| as_crispy_field}}
+                        {{ edit_task_form.name| as_crispy_field }}
+                        {{ edit_task_form.type| as_crispy_field}}
+                        {{ edit_task_form.priority| as_crispy_field}}
+                        {{ edit_task_form.description| as_crispy_field}}
+                        {{ edit_task_form.story_point| as_crispy_field}}
+                        {{ edit_task_form.tags| as_crispy_field}}
+                        {{ edit_task_form.status| as_crispy_field}}
+                        {{ edit_task_form.stage | as_crispy_field}}
+                        {{ edit_task_form.assignee | as_crispy_field}}
+                        {{ edit_task_form.created_date | as_crispy_field}}
                     </div>
                 </div>
 
@@ -31,7 +36,7 @@
                 <div class="modal-footer">
                     <!-- Action button -->
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary" id="saveChanges">Save changes</button>
+                    <button type="submit" class="btn btn-primary" id="updateChanges">Update changes</button>
                 </div>
             </form>
         </div>
