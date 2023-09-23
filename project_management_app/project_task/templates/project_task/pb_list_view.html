@@ -14,7 +14,7 @@
         <!-- Table Rows showing tasks -->
         <tbody id="backlogTable">
         {% for task in tasks%}
-        <tr>
+        <tr id="task-row-{{ task.id }}">
             <td>{{task.name}}</td>
             <td>{{task.story_point}}</td>
             <td>{{task.priority}}</td>
@@ -24,12 +24,12 @@
                 {% endfor %}
             </td>
             <td>
-                <a href="{% url 'delete_task' task.id %}" class="btn btn-danger delete-btn">Delete</a>
+                <button type="submit" class="btn btn-danger delete-btn" data-task-id="{{ task.id }}">Delete</button>
             </td>
         </tr>
         {% empty %}
         <!-- If no tasks are available -->
-        <tr>
+        <tr id="task-row-empty">
             <td colspan="6" class="text-center">No tasks available.</td>
         </tr>
         {% endfor %}
