@@ -219,8 +219,9 @@ class TaskListView(View):
         It will fetch the tasks and other filter/sort context for listing, then render the template.
         """
 
-        # Generate an empty form
+        # Generate an empty CreateNewTask form and EditTask form
         create_new_task_form = CreateNewTaskForm()
+        edit_task_form = EditTaskForm()
 
         # Get the sorting and view parameters from the URL, if empty, use default values
         priority_sort = request.GET.get('priority_sort', 'priority_ascending')
@@ -241,12 +242,13 @@ class TaskListView(View):
         # Create the context for the template
         context = {
             "name": "project-backlog",
+            "create_new_task_form": create_new_task_form,
+            "edit_task_form": edit_task_form,
             "tasks": tasks,
             "tags": tags,                       # Pass the tags to the template
-            "create_new_task_form": create_new_task_form,
             "current_view": current_view,       # Pass the current view to the template
             "priority_sort": priority_sort,     # Pass the sort_by parameter to the template
-            "selected_tags": selected_tags      # Pass the selected tags to the template
+            "selected_tags": selected_tags ,     # Pass the selected tags to the template
         }
 
         # Render the template with the tasks and tags
