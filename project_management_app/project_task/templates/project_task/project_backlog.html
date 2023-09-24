@@ -216,6 +216,8 @@
             event.preventDefault();
             const taskId = $(event.relatedTarget).data('task-id');
             const taskUrl = `/project-backlog/edit_task/${taskId}/`
+            $('#updateChanges').data('href', taskUrl);
+            $('#updateChanges').data('task-id', taskId);
 
             // Now you can use taskId to fetch or display task details in the modal
             $.ajax({
@@ -247,6 +249,41 @@
                 },
                 error: function() {
                     // Handle any errors, e.g., display a message to the user
+                }
+            });
+        });
+
+        /**
+         * Handle the form submission for creating a new task.
+         * On success, update the UI with the new task.
+         */
+        $('#editTaskForm').submit(function (event) {
+            event.preventDefault();
+
+            const formData = $(this).serialize();
+            const editUrl = $('#updateChanges').data('href');
+            console.log(editUrl);
+
+            // AJAX request to create a new task
+            $.ajax({
+                url: editUrl,
+                type: 'POST',
+                data: formData,
+                dataType: 'json',
+                success: function (response) {
+                    // Display success alert
+                    displayMessage('success', response.message);
+
+                    // Reset the form, hide the modal, and update the UI
+                    $('#editTaskModal').modal('hide');
+                    $('#createNewTaskForm').trigger("reset");
+
+                    // Construct and append the new task to the UI
+                    addTaskToUI(response.task);
+                },
+                error: function (response) {
+                    // Display error message
+                    displayMessage('danger', response.message);
                 }
             });
         });
@@ -342,7 +379,7 @@
             // Construct HTML for list view
             const listViewHtml = `
                 <tr id="task-row-{{ task.id }}">
-                    <td><a href="#" data-toggle="modal" data-target="#editTask" data-task-id="{{ task.id }}">${task.name}</a></td>
+                    <td><a href="#" data-toggle="modal" data-target="#editTaskModal" data-task-id="{{ task.id }}">${task.name}</a></td>
                     <td>${task.story_point}</td>
                     <td>${task.priority}</td>
                     <td>${tagsHtml}</td>
@@ -356,7 +393,7 @@
                 <div class="col-sm-3" id="task-card-{{ task.id }}">
                     <div class="card mb-3" style="height: 13rem;">
                         <div class="card-body">
-                            <h4 class="card-title"><a href="#" data-toggle="modal" data-target="#editTask" data-task-id="{{ task.id }}">${task.name}</a></h4>
+                            <h4 class="card-title"><a href="#" data-toggle="modal" data-target="#editTaskModal" data-task-id="{{ task.id }}">${task.name}</a></h4>
                             <h6 class="card-subtitle mb-2 text-muted"><strong>Story Point</strong>: ${task.story_point}</h6>
                             <h6 class="card-subtitle mb-2 text-muted"><strong>Priority</strong>: ${task.priority}</h6>
                             <div class="d-flex flex-wrap align-items-start">

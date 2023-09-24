@@ -76,7 +76,7 @@ class TaskManager:
             # Now save the task to DB
             updated_task.save()
             update_form.save_m2m()
-            return True, f"Task '{str(updated_task)}' successfully created!"
+            return True, f"Task '{str(updated_task)}' successfully updated!", update_form.cleaned_data
         else:
             return False, update_form.errors
 
@@ -300,7 +300,7 @@ class TaskEditView(View):
         """
 
         # Use the TaskManager to update the task
-        success, message = TaskManager.update_task(task_id, request.POST)
+        success, message, task_data = TaskManager.update_task(task_id, request.POST)
 
         if success:
             return JsonResponse({'status': 'success', 'message': message})
