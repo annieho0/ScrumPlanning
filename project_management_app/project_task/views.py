@@ -133,7 +133,7 @@ class TaskManager:
         Returns:
             QuerySet: A queryset of matching tasks.
         """
-
+        print(tag_filter, priority_sort, date_created_sort)
         # Fetch all tasks initially
         tasks = Task.objects.all()
 
@@ -143,7 +143,7 @@ class TaskManager:
 
         # Apply priority sort if provided
         if priority_sort:
-            if priority_sort == "ascending":
+            if priority_sort == "priority_ascending":
                 tasks = tasks.annotate(
                     custom_priority_order=Case(
                         When(priority="LOW", then=Value(0)),
@@ -154,7 +154,7 @@ class TaskManager:
                         output_field=IntegerField()
                     )
                 ).order_by("custom_priority_order")
-            elif priority_sort == "descending":
+            elif priority_sort == "priority_descending":
                 tasks = tasks.annotate(
                     custom_priority_order=Case(
                         When(priority="LOW", then=Value(3)),
@@ -169,9 +169,9 @@ class TaskManager:
         # Apply date_created_sort if provided
         if date_created_sort:
             # Assuming that there's a "created_at" field in the Task model
-            if date_created_sort == "ascending":
+            if date_created_sort == "date_ascending":
                 tasks = tasks.order_by("created_date")
-            elif date_created_sort == "descending":
+            elif date_created_sort == "date_descending":
                 tasks = tasks.order_by("-created_date")
 
         return tasks
@@ -276,14 +276,15 @@ class TaskListView(View):
         Returns:
             HttpResponse: Rendered project backlog page with tasks and relevant context.
         """
-
+        print(f'Request: {request.GET}')
         # Generate an empty CreateNewTask form and EditTask form
         create_new_task_form = CreateNewTaskForm()
         edit_task_form = EditTaskForm()
 
-        # Extract sorting and view parameters from the URL or use default values
+        # Extract sorting, view, and date created sort parameters from the URL or use default values
         priority_sort = request.GET.get('priority_sort', 'priority_ascending')
         current_view = request.GET.get('view', 'list_view')
+        date_sort = request.GET.get('date_sort', 'date_ascending')
 
         # Retrieve tags that are currently in use
         used_tags_ids = Task.objects.values_list('tags', flat=True).distinct()
@@ -292,9 +293,9 @@ class TaskListView(View):
         # Process the selected tags passed via the URL
         selected_tags_string = request.GET.get('tags_filter', '')
         selected_tags = selected_tags_string.split(",") if selected_tags_string else []
-
+        print(f'Data: {selected_tags, priority_sort, date_sort}')
         # Fetch tasks based on filtering and sorting parameters using TaskManager utility
-        tasks = TaskManager.list_tasks(tag_filter=selected_tags, priority_sort=priority_sort)
+        tasks = TaskManager.list_tasks(tag_filter=selected_tags, priority_sort=priority_sort, date_created_sort=date_sort)
 
         # Construct the context for the template
         context = {
@@ -306,6 +307,7 @@ class TaskListView(View):
             "current_view": current_view,
             "priority_sort": priority_sort,
             "selected_tags": selected_tags,
+            "date_sort": date_sort,
         }
 
         # Render and return the template with the prepared context
