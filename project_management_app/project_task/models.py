@@ -59,8 +59,7 @@ class Task(models.Model):
     tags = models.ManyToManyField('Tag', blank=False, null=False)
     story_point = models.PositiveIntegerField(validators=[MinValueValidator(0), MaxValueValidator(10)], null=True,
                                               blank=True)
-    # TODO: Assignee is a string for now. Need to connect to user model to get the user name in future sprint
-    assignee = models.CharField(max_length=200, null=True, blank=True)
+    assignee = models.ForeignKey("register.CustomizedUser", on_delete=models.CASCADE)
     # TODO: Sprint is a string for now. Need to connect to sprint model to get the sprint name in future sprint
     sprint = models.CharField(max_length=200, null=True, blank=True)
 

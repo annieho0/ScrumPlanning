@@ -1,6 +1,6 @@
 from django import forms
 from .models import Task, Tag
-
+from register.models import CustomizedUser
 
 class CreateNewTaskForm(forms.ModelForm):
     """
@@ -9,8 +9,14 @@ class CreateNewTaskForm(forms.ModelForm):
     # For the tags, use Django's built-in SelectMultiple widget
     tags = forms.ModelMultipleChoiceField(
         queryset=Tag.objects.all(),
-        widget=forms.SelectMultiple(attrs={'class': 'form-control'}),
-        required=False
+        # widget=forms.SelectMultiple(attrs={'class': 'form-control'}),
+        required=True,
+    )
+
+    assignee = forms.ChoiceField(
+        choices=enumerate(CustomizedUser.objects.all().iterator()),
+        # widget=forms.SelectMultiple(attrs={'class': 'form-control'}),
+        required=True,
     )
 
     class Meta:

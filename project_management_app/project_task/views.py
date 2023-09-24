@@ -3,8 +3,8 @@ from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from .models import Tag, Task
 from .forms import CreateNewTaskForm
-
-
+from register.models import CustomizedUser
+from django.http import HttpRequest
 # Create your views here.
 def home(response):
     """This view renders the home page"""
@@ -25,13 +25,18 @@ def project_backlog(response):
     return render(response, "project_task/project_backlog.html", {"name": "project-backlog", "tasks": tasks, "statuses": statuses})
 
 
-def create_new_task(response):
+def create_new_task(response: HttpRequest):
     """This view renders the create new task page"""
     if response.method == "POST":
         # check and add tags to DB before creating the forms
-        tags = response.POST.getlist('tags')
-        for tag in tags:
+        data = dict(response.POST.items())
+        for tag in data['tags']:
             Tag.objects.get_or_create(name=tag)
+
+        user = response.POST.values('assignee')
+        print(user)
+
+
 
         form = CreateNewTaskForm(response.POST)
         if form.is_valid():
