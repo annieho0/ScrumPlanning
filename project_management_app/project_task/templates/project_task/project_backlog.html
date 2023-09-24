@@ -80,6 +80,9 @@
 
 <!-- Custom JavaScript -->
 <script>
+    const editTaskBaseUrl = "{% url 'edit_task' task_id=0 %}".replace("0/", "");
+    const deleteTaskBaseUrl = "{% url 'delete_task' task_id=0 %}".replace("0/", "");
+
 
     /**
      * Change the current view type and update the URL accordingly.
@@ -147,24 +150,6 @@
 
     $(document).ready(function () {
 
-        // CreateNewTaskForm Tag field Select2 initialization
-        $('#createNewTaskModal #id_tags').select2({
-            tags: true,
-            tokenSeparators: [','],
-            allowClear: true,
-            placeholder: 'Select tag(s)',
-            theme: 'bootstrap',
-        });
-
-        // EditTaskForm Tag field Select2 initialization
-        $('#editTaskModal #id_tags').select2({
-            tags: true,
-            tokenSeparators: [','],
-            allowClear: true,
-            placeholder: 'Select tag(s)',
-            theme: 'bootstrap',
-        });
-
         // View Tag Filter Tag field Select2 initialization
         $('#tags_filter').select2({
             tags: false,
@@ -173,6 +158,15 @@
             placeholder: 'Select tag(s)',
             theme: 'bootstrap',
         });
+
+        // CreateNewTaskForm Tag field Select2 initialization
+            $('#createNewTaskModal #id_tags').select2({
+                tags: true,
+                tokenSeparators: [','],
+                allowClear: true,
+                placeholder: 'Select tag(s)',
+                theme: 'bootstrap',
+            });
 
         /**
          * Handle the form submission for creating a new task.
@@ -214,8 +208,18 @@
          */
         $('#editTaskModal').on('shown.bs.modal', function (event) {
             event.preventDefault();
+
+            // EditTaskForm Tag field Select2 initialization
+            $('#editTaskModal #id_tags').select2({
+                tags: true,
+                tokenSeparators: [','],
+                allowClear: true,
+                placeholder: 'Select tag(s)',
+                theme: 'bootstrap',
+            });
+
             const taskId = $(event.relatedTarget).data('task-id');
-            const taskUrl = `/project-backlog/edit_task/${taskId}/`
+            const taskUrl = editTaskBaseUrl + taskId + '/'
             $('#updateChanges').data('href', taskUrl);
             $('#updateChanges').data('task-id', taskId);
 
@@ -246,6 +250,7 @@
                     $('#editTaskModal #id_status').val(edit_task.status);
                     $('#editTaskModal #id_assignee').val(edit_task.assignee);
                     $('#editTaskModal #id_created_date').val(edit_task.created_date);
+                    $('#editTaskModal #id_stage').val(edit_task.stage);
                 },
                 error: function() {
                     // Handle any errors, e.g., display a message to the user
@@ -262,7 +267,7 @@
 
             const formData = $(this).serialize();
             const editUrl = $('#updateChanges').data('href');
-            console.log(editUrl);
+            const taskId = $('#updateChanges').data('task-id');
 
             // AJAX request to create a new task
             $.ajax({
@@ -277,9 +282,8 @@
                     // Reset the form, hide the modal, and update the UI
                     $('#editTaskModal').modal('hide');
                     $('#createNewTaskForm').trigger("reset");
-
-                    // Construct and append the new task to the UI
-                    addTaskToUI(response.task);
+                    // Update Task UI
+                    updateTaskInUI(response.task_data[2]);
                 },
                 error: function (response) {
                     // Display error message
@@ -295,7 +299,7 @@
         $(document).on('click', '.delete-btn', function (e) {
             e.preventDefault();
             const taskId = $(this).data('task-id');
-            const deleteUrl = `/project-backlog/delete_task/${taskId}/`
+            const deleteUrl = deleteTaskBaseUrl + taskId + '/'
             $('#confirmDelete').data('href', deleteUrl);
             $('#confirmDelete').data('task-id', taskId);
             $('#deleteModal').modal('show');
@@ -444,6 +448,52 @@
             }
         }
 
+        /**
+         * Update the UI for a given task.
+         * @param {Object} task - The updated task data.
+         */
+        function updateTaskInUI(task) {
+            // Construct the HTML for the tags
+            let tagsHtml = '';
+            task.tags.forEach(tag => {
+                tagsHtml += `<span class="badge badge-info m-1">${tag}</span>`;
+            });
+
+            // Construct HTML for list view
+            const listViewHtml = `
+                <td><a href="#" data-toggle="modal" data-target="#editTaskModal" data-task-id="${task.id}">${task.name}</a></td>
+                <td>${task.story_point}</td>
+                <td>${task.priority}</td>
+                <td>${tagsHtml}</td>
+                <td><a href="/delete_task/${task.id}/" class="btn btn-danger delete-btn">Delete</a></td>
+            `;
+
+            // Update the table UI for the task
+            $('#task-row-' + task.id).html(listViewHtml);
+
+            // Construct HTML for card view
+            const cardViewHtml = `
+                <div class="card mb-3" style="height: 13rem;">
+                    <div class="card-body">
+                        <h4 class="card-title"><a href="#" data-toggle="modal" data-target="#editTaskModal" data-task-id="${task.id}">${task.name}</a></h4>
+                        <h6 class="card-subtitle mb-2 text-muted"><strong>Story Point</strong>: ${task.story_point}</h6>
+                        <h6 class="card-subtitle mb-2 text-muted"><strong>Priority</strong>: ${task.priority}</h6>
+                        <div class="d-flex flex-wrap align-items-start">
+                            <h6 class="card-subtitle mb-2 text-muted mr-2 tags-container">
+                                <strong>Tags</strong>: ${tagsHtml}
+                                <span class="more-tags">...</span>
+                            </h6>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <a href="/delete_task/${task.id}/" class="btn btn-danger delete-btn">Delete</a>
+                    </div>
+                </div>
+            `;
+
+            // Update the card view UI for the task
+            $('#task-card-' + task.id).html(cardViewHtml);
+        }
     });
 </script>
 {% endblock %}

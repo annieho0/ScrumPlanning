@@ -76,7 +76,11 @@ class TaskManager:
             # Now save the task to DB
             updated_task.save()
             update_form.save_m2m()
-            return True, f"Task '{str(updated_task)}' successfully updated!", update_form.cleaned_data
+
+            # Get the task details as dictionary
+            task_details = TaskManager.get_task_details(task_id)
+
+            return True, f"Task '{str(updated_task)}' successfully updated!", task_details
         else:
             return False, update_form.errors
 
@@ -201,6 +205,7 @@ class TaskManager:
         If the task does not exist, it will return None instead of raising an error.
         If the task exists, it will return the task object.
         """
+
         try:
             return Task.objects.get(id=task_id)
         except Task.DoesNotExist:
@@ -303,7 +308,7 @@ class TaskEditView(View):
         success, message, task_data = TaskManager.update_task(task_id, request.POST)
 
         if success:
-            return JsonResponse({'status': 'success', 'message': message})
+            return JsonResponse({'status': 'success', 'message': message, 'task_data': task_data})
 
         # If form validation failed or there was an error during task update
         return JsonResponse({'status': 'error', 'message': message})
