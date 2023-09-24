@@ -8,51 +8,59 @@ from django.db.models import Case, When, Value, IntegerField
 
 class TaskManager:
     """
-    This class provides methods to manage tasks.
+    Utility class for managing tasks.
+    Provides static methods to handle task-related operations like creation, updation, deletion, and fetching details.
     """
 
     @staticmethod
     def create_task(response_data):
         """
-        This method creates a new task.
-        It will validate the task and return a success or error message.
-        It will also create the tags if they don't exist.
+        Creates a new task based on the provided data.
+
+        Parameters:
+            response_data (dict): The data for the new task.
+
+        Returns:
+            tuple: A tuple containing:
+                - bool: Status of the task creation (True if successful, False otherwise).
+                - str: Success or error message.
+                - dict or None: Cleaned data from the form if the task was successfully created, None otherwise.
         """
 
-        # check and add tags to DB before creating the forms
+        # Check and add tags to DB before creating the forms
         TaskManager._create_tags(response_data.getlist('tags'))
 
-        # Initialize the form with the data
+        # Initialize the form with the provided data
         task_form = CreateNewTaskForm(response_data)
 
-        # validate the form
+        # Validate the form
         if task_form.is_valid():
-
             # Create the task without saving it yet
             new_task = task_form.save(commit=False)
 
-            # Save the task and return feedback
-            # Now save the task to DB
+            # Save the task to the database
             new_task.save()
             task_form.save_m2m()
             return True, f"Task '{str(new_task)}' successfully created!", task_form.cleaned_data
         else:
-            # error can be a dictionary if more than one error or a string if only one error
-            # If the error message is a dictionary, convert it to a string
-            if isinstance(task_form.errors, dict):
-                error_message = '; '.join([': '.join([key, val[0]]) for key, val in task_form.errors.items()])
-            else:
-                error_message = task_form.errors
-
-            # return feedback
+            # Convert the error messages to a string format
+            error_message = '; '.join([': '.join([key, val[0]]) for key, val in task_form.errors.items()])
             return False, error_message, None
 
     @staticmethod
     def update_task(task_id, response_data):
         """
-        This method updates an existing task.
-        It will first check if the task exists, then use the `EditTaskForm` to validate and update the data.
-        Tags associated with the task will be created (if they don't exist) and linked to the task.
+        Updates an existing task based on the provided data.
+
+        Parameters:
+            task_id (int): The ID of the task to be updated.
+            response_data (dict): The updated data for the task.
+
+        Returns:
+            tuple: A tuple containing:
+                - bool: Status of the task update (True if successful, False otherwise).
+                - str: Success or error message.
+                - dict or None: Cleaned data from the form if the task was successfully updated, None otherwise.
         """
 
         # Check if the task exists
@@ -89,6 +97,14 @@ class TaskManager:
         """
         This method deletes an existing task.
         It checks if the task exists, saves the name for feedback, then deletes the task.
+
+        Parameters:
+            task_id (int): The ID of the task to be deleted.
+
+        Returns:
+            tuple: A tuple containing:
+                - bool: Status of the task deletion (True if successful, False otherwise).
+                - str: Success or error message.
         """
 
         # Check if the task exists
@@ -105,13 +121,17 @@ class TaskManager:
         return True, f"Task '{task_name}' was successfully deleted!"
 
     @staticmethod
-    def list_tasks(tag_filter=None, priority_sort='descending', date_created_sort='ascending'):
+    def list_tasks(tag_filter=None, priority_sort=None, date_created_sort=None):
         """
         List tasks based on the provided filtering and sorting criteria.
-        :param tag_filter: A list of tag names to filter by.
-        :param priority_sort: A string indicating how to sort by priority ("ascending" or "descending").
-        :param date_created_sort: A string indicating how to sort by creation date ("ascending" or "descending").
-        :return: A queryset of matching tasks.
+
+        Parameters:
+            tag_filter (list of str, optional): A list of tag names to filter by.
+            priority_sort (str, optional): A string indicating how to sort by priority ("ascending" or "descending").
+            date_created_sort (str, optional): A string indicating how to sort by creation date ("ascending" or "descending").
+
+        Returns:
+            QuerySet: A queryset of matching tasks.
         """
 
         # Fetch all tasks initially
@@ -162,6 +182,15 @@ class TaskManager:
         This method fetches the details of a specific task given its ID.
         If the task exists, it will return its details as a dictionary.
         If the task does not exist, it will return None.
+
+        Parameters:
+            task_id (int): The ID of the task to fetch details for.
+
+        Returns:
+            tuple: A tuple containing:
+                - bool: Status of the task retrieval (True if found, False otherwise).
+                - str: Success or error message.
+                - dict or None: Task details as a dictionary if the task was found, None otherwise.
         """
 
         # Fetch the task object using the provided ID
@@ -193,7 +222,15 @@ class TaskManager:
     @staticmethod
     def _create_tags(tags):
         """
-        Utility method to create or get tags.
+        Utility method to create or retrieve tags.
+        For each tag in the provided list, the method checks if it exists in the database.
+        If it doesn't exist, the tag gets created. If it does, the tag is simply retrieved without changes.
+
+        Parameters:
+            tags (list of str): A list of tag names to either create or retrieve.
+
+        Returns:
+            None: This method doesn't return any value but may make changes to the database.
         """
         for tag in tags:
             Tag.objects.get_or_create(name=tag)
@@ -201,11 +238,14 @@ class TaskManager:
     @staticmethod
     def _read_task(task_id):
         """
-        Utility method reads a task.
-        If the task does not exist, it will return None instead of raising an error.
-        If the task exists, it will return the task object.
-        """
+        Utility method to retrieve a task based on its ID.
 
+        Parameters:
+            task_id (int): The ID of the task to fetch.
+
+        Returns:
+            Task or None: Returns the Task object if found. If the task doesn't exist, returns None.
+        """
         try:
             return Task.objects.get(id=task_id)
         except Task.DoesNotExist:
@@ -214,138 +254,209 @@ class TaskManager:
 
 class TaskListView(View):
     """
-    This view handles listing tasks and create new ones in product backlog page.
+    View class for the project backlog page.
+
+    Handles operations related to listing tasks in the product backlog and creating new tasks.
+    Attributes:
+        template_name (str): Path to the HTML template for the project backlog page.
     """
+
     template_name = 'project_task/project_backlog.html'
 
     def get(self, request):
         """
-        This method handles GET requests to the view for Listing tasks.
-        It will fetch the tasks and other filter/sort context for listing, then render the template.
+        Handles GET requests to render the product backlog page.
+
+        Fetches tasks based on filtering and sorting parameters from the URL, generates forms for task creation and
+        editing, and prepares the context for the template rendering.
+
+        Parameters:
+            request (HttpRequest): The HTTP request object.
+
+        Returns:
+            HttpResponse: Rendered project backlog page with tasks and relevant context.
         """
 
         # Generate an empty CreateNewTask form and EditTask form
         create_new_task_form = CreateNewTaskForm()
         edit_task_form = EditTaskForm()
 
-        # Get the sorting and view parameters from the URL, if empty, use default values
+        # Extract sorting and view parameters from the URL or use default values
         priority_sort = request.GET.get('priority_sort', 'priority_ascending')
         current_view = request.GET.get('view', 'list_view')
 
-        # Filter Tags that is in use currently from the database
+        # Retrieve tags that are currently in use
         used_tags_ids = Task.objects.values_list('tags', flat=True).distinct()
         tags = Tag.objects.filter(id__in=used_tags_ids)
 
-        # Clean up the selected tags passed by the URL
+        # Process the selected tags passed via the URL
         selected_tags_string = request.GET.get('tags_filter', '')
         selected_tags = selected_tags_string.split(",") if selected_tags_string else []
 
-        # Get the tasks based on the filtering and sorting parameters
-        tasks = TaskManager.list_tasks(tag_filter=selected_tags,
-                                       priority_sort=priority_sort)
+        # Fetch tasks based on filtering and sorting parameters using TaskManager utility
+        tasks = TaskManager.list_tasks(tag_filter=selected_tags, priority_sort=priority_sort)
 
-        # Create the context for the template
+        # Construct the context for the template
         context = {
             "name": "project-backlog",
             "create_new_task_form": create_new_task_form,
             "edit_task_form": edit_task_form,
             "tasks": tasks,
-            "tags": tags,                       # Pass the tags to the template
-            "current_view": current_view,       # Pass the current view to the template
-            "priority_sort": priority_sort,     # Pass the sort_by parameter to the template
-            "selected_tags": selected_tags ,     # Pass the selected tags to the template
+            "tags": tags,
+            "current_view": current_view,
+            "priority_sort": priority_sort,
+            "selected_tags": selected_tags,
         }
 
-        # Render the template with the tasks and tags
+        # Render and return the template with the prepared context
         return render(request, self.template_name, context)
 
     def post(self, request):
         """
-        This method handles POST requests to the view for Creating new tasks.
-        It will validate the form, create the task, and return a JSON response.
-        This does not render a template (refresh the page). Front-end JS will handle the addition of the task to UI.
+        Handles POST requests for creating a new task.
+
+        Validates the form data, creates the task using TaskManager utility, and responds with a JSON containing the
+        task details or error message.
+
+        Parameters:
+            request (HttpRequest): The HTTP request object containing form data.
+
+        Returns:
+            JsonResponse: A JSON response indicating the success or failure of task creation.
         """
-        # Use the TaskManager.create_task method to create the task
+
+        # Attempt to create a new task using the TaskManager utility
         success, message, task_details = TaskManager.create_task(request.POST)
 
-        # If form validation failed or there was an error during task creation
+        # Handle unsuccessful task creation (e.g., form validation errors)
         if not success:
             return JsonResponse({'status': 'error', 'message': message})
 
-        # Convert the tags to a list of strings
+        # Convert task tags into a list of strings
         tags_list = [str(tag) for tag in task_details['tags']]
 
-        # If task creation was successful
+        # Respond with a JSON indicating successful task creation and task details
         return JsonResponse({'status': 'success', 'message': message, 'task': {**task_details, 'tags': tags_list}})
 
 
 class TaskEditView(View):
     """
-    This view handles editing tasks and updating it in the product backlog page.
+    View class for the task edit page.
+
+    Handles operations related to editing tasks in the product backlog and updating them.
+
+    Attributes:
+        template_name (str): Path to the HTML template for the task edit page.
     """
+
     template_name = 'project_task/edit_task.html'
 
     def get(self, request, task_id):
         """
-        This method handles GET requests to the view to populate the form for editing tasks.
+        Handles GET requests to fetch details of a specific task for editing.
+
+        This method retrieves the details of the task, prepares the data, and sends a JSON response.
+
+        Parameters:
+            request (HttpRequest): The HTTP request object.
+            task_id (int): The ID of the task to be fetched for editing.
+
+        Returns:
+            JsonResponse: A JSON response containing the task details or an error message.
         """
 
-        # Use the TaskManager to update the task
+        # Fetch the task details using the TaskManager utility
         status, message, task_data = TaskManager.get_task_details(task_id)
 
-        # If the task does not exist, return an error message
+        # If the task was successfully fetched, send a success response
         if status:
             return JsonResponse({'status': 'success', 'message': message, 'task_data': task_data})
-        else:
-            return JsonResponse({'status': 'error', 'message': message, 'task_data': task_data})
+
+        # If the task wasn't found or there was an issue, send an error response
+        return JsonResponse({'status': 'error', 'message': message, 'task_data': task_data})
 
     def post(self, request, task_id):
         """
-        This method handles POST requests to the view for Updating tasks.
+        Handles POST requests to update a task's details.
+
+        This method validates the form data, updates the task using TaskManager utility, and responds with a JSON
+        indicating the success or failure of the update.
+
+        Parameters:
+            request (HttpRequest): The HTTP request object containing updated task data.
+            task_id (int): The ID of the task to be updated.
+
+        Returns:
+            JsonResponse: A JSON response indicating the success or failure of task update.
         """
 
-        # Use the TaskManager to update the task
+        # Attempt to update the task using the TaskManager utility
         success, message, task_data = TaskManager.update_task(task_id, request.POST)
 
+        # If the task was successfully updated, send a success response
         if success:
             return JsonResponse({'status': 'success', 'message': message, 'task_data': task_data})
 
-        # If form validation failed or there was an error during task update
+        # If there were issues during the update (e.g., form validation errors), send an error response
         return JsonResponse({'status': 'error', 'message': message})
 
 
 class TaskDeleteView(View):
     """
-    This view handles deleting tasks and updating it in the product backlog page.
+    View class for handling task deletion operations in the product backlog page.
     """
 
     def post(self, request, task_id):
         """
-        This method handles POST requests to the view for Deleting tasks.
+        Handles POST requests to delete a specific task.
+
+        This method utilizes the TaskManager utility to delete the task and sends a JSON response indicating
+        the success or failure of the operation.
+
+        Parameters:
+            request (HttpRequest): The HTTP request object.
+            task_id (int): The ID of the task to be deleted.
+
+        Returns:
+            JsonResponse: A JSON response indicating the success or failure of task deletion.
         """
 
-        # Use the TaskManager to update the task
+        # Attempt to delete the task using the TaskManager utility
         success, message = TaskManager.delete_task(task_id)
 
+        # If the task was successfully deleted, send a success response
         if success:
             return JsonResponse({'status': 'success', 'message': message})
 
-        # If form validation failed or there was an error during task update
+        # If there was an issue during deletion, send an error response
         return JsonResponse({'status': 'error', 'message': message})
 
 
 class HomeListView(View):
     """
-    This view handles rendering the home page.
+    View class for rendering the home page of the project task application.
+
+    Attributes:
+        template_name (str): Path to the HTML template for the home page.
     """
+
     template_name = 'project_task/home.html'
 
     def get(self, request):
         """
-        This method handles GET requests to the view for rendering the home page.
+        Handles GET requests to render the home page.
+
+        This method prepares the context (if necessary) and renders the home page template.
+
+        Parameters:
+            request (HttpRequest): The HTTP request object.
+
+        Returns:
+            HttpResponse: Rendered home page with any relevant context.
         """
 
-        # Render the template
+        # Render and return the home page template
         return render(request, self.template_name)
+
 
 
