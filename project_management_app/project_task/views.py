@@ -133,7 +133,7 @@ class TaskManager:
         Returns:
             QuerySet: A queryset of matching tasks.
         """
-        print(tag_filter, priority_sort, date_created_sort)
+
         # Fetch all tasks initially
         tasks = Task.objects.all()
 
@@ -170,9 +170,9 @@ class TaskManager:
         if date_created_sort:
             # Assuming that there's a "created_at" field in the Task model
             if date_created_sort == "date_ascending":
-                tasks = tasks.order_by("created_date")
+                tasks = tasks.order_by("created_datetime")
             elif date_created_sort == "date_descending":
-                tasks = tasks.order_by("-created_date")
+                tasks = tasks.order_by("-created_datetime")
 
         return tasks
 
@@ -211,7 +211,7 @@ class TaskManager:
             'assignee': task.assignee,
             'status': task.status,
             'sprint': task.sprint,
-            'created_date': task.created_date,
+            'created_datetime': task.created_datetime,
             # ... add any other necessary fields here ...
         }
 
@@ -276,7 +276,7 @@ class TaskListView(View):
         Returns:
             HttpResponse: Rendered project backlog page with tasks and relevant context.
         """
-        print(f'Request: {request.GET}')
+
         # Generate an empty CreateNewTask form and EditTask form
         create_new_task_form = CreateNewTaskForm()
         edit_task_form = EditTaskForm()
@@ -293,7 +293,7 @@ class TaskListView(View):
         # Process the selected tags passed via the URL
         selected_tags_string = request.GET.get('tags_filter', '')
         selected_tags = selected_tags_string.split(",") if selected_tags_string else []
-        print(f'Data: {selected_tags, priority_sort, date_sort}')
+
         # Fetch tasks based on filtering and sorting parameters using TaskManager utility
         tasks = TaskManager.list_tasks(tag_filter=selected_tags, priority_sort=priority_sort, date_created_sort=date_sort)
 
@@ -366,7 +366,7 @@ class TaskEditView(View):
         Returns:
             JsonResponse: A JSON response containing the task details or an error message.
         """
-
+        print(task_id)
         # Fetch the task details using the TaskManager utility
         status, message, task_data = TaskManager.get_task_details(task_id)
 

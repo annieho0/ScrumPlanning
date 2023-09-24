@@ -1,5 +1,6 @@
 from django import forms
 from .models import Task, Tag
+from django.utils import timezone
 
 
 class CreateNewTaskForm(forms.ModelForm):
@@ -13,6 +14,11 @@ class CreateNewTaskForm(forms.ModelForm):
         required=True
     )
 
+    # Set created_datetime to read-only and set its initial value to current datetime
+    created_datetime = forms.DateTimeField(
+        widget=forms.DateTimeInput(attrs={'readonly': 'readonly'}),
+    )
+
     class Meta:
         model = Task
         fields = [
@@ -23,10 +29,12 @@ class CreateNewTaskForm(forms.ModelForm):
             "story_point",
             "tags",
             "stage",
+            "created_datetime",
         ]
 
     def __init__(self, *args, **kwargs):
         super(CreateNewTaskForm, self).__init__(*args, **kwargs)
+        self.fields['created_datetime'].initial = timezone.now()
 
 
 class EditTaskForm(forms.ModelForm):
@@ -40,8 +48,10 @@ class EditTaskForm(forms.ModelForm):
         required=True
     )
 
-    # set created_date to read-only
-    created_date = forms.DateTimeField(disabled=True)
+    # Set created_datetime to read-only and set its initial value to current datetime
+    created_datetime = forms.DateTimeField(
+        widget=forms.DateTimeInput(attrs={'readonly': 'readonly'}),
+    )
 
     class Meta:
         model = Task
@@ -56,7 +66,7 @@ class EditTaskForm(forms.ModelForm):
             "stage",
             "assignee",
             "sprint",
-            "created_date",
+            "created_datetime",
         ]
 
     def __init__(self, *args, **kwargs):

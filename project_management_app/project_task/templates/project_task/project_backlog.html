@@ -262,6 +262,7 @@
                 <td>${task.story_point}</td>
                 <td>${task.priority}</td>
                 <td>${tagsHtml}</td>
+                <td>${formatDate(task.created_datetime)}</td>
                 <td><a href="/delete_task/${task.id}/" class="btn btn-danger delete-btn">Delete</a></td>
             </tr>`;
 
@@ -294,6 +295,12 @@
 
         // Add or remove the empty UI message based on the presence of tasks
         addOrRemoveEmptyUI();
+    }
+
+    function formatDate(isoString) {
+        const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+        const date = new Date(isoString);
+        return date.toLocaleDateString('en-AU', options);
     }
 
 
@@ -346,7 +353,7 @@
         $('#task-card-' + task.id).html(cardViewHtml);
     }
 
-    // Initialize the tag filter for both creation and editing modals
+    // On document ready
     $(document).ready(function () {
         // Initialize the tag filter
         initializeTagFilter('#tags_filter', false);
@@ -508,14 +515,15 @@
 
             // Set the values of other form fields based on the task data
             $('#editTaskModal #id_name').val(edit_task.name);
-            $('#editTaskModal #id_story_point').val(edit_task.story_point);
+            $('#editTaskModal #id_type').val(edit_task.type);
             $('#editTaskModal #id_priority').val(edit_task.priority);
             $('#editTaskModal #id_description').val(edit_task.description);
-            $('#editTaskModal #id_type').val(edit_task.type);
+            $('#editTaskModal #id_story_point').val(edit_task.story_point);
             $('#editTaskModal #id_status').val(edit_task.status);
-            $('#editTaskModal #id_assignee').val(edit_task.assignee);
-            $('#editTaskModal #id_created_date').val(edit_task.created_date);
             $('#editTaskModal #id_stage').val(edit_task.stage);
+            $('#editTaskModal #id_assignee').val(edit_task.assignee);
+            $('#editTaskModal #id_created_datetime').val(edit_task.created_datetime);
+
         }
     });
 
