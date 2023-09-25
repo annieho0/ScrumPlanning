@@ -74,11 +74,17 @@ class TaskManager:
         if not task:
             return False, "The Task does not exist"
 
-        # check and add tags to DB before creating the forms
-        TaskManager._create_tags(response_data.getlist('tags'))
+        # Create tags and get their IDs
+        tag_ids = TaskManager._create_tags(response_data.getlist('tags'))
+
+        # Create a mutable copy of response_data since Django QueryDict is immutable
+        mutable_data = response_data.copy()
+
+        # Update the tags in mutable_data with their corresponding IDs
+        mutable_data.setlist('tags', tag_ids)
 
         # Use the EditTaskForm to populate the task with the given data
-        update_form = EditTaskForm(response_data, instance=task)
+        update_form = EditTaskForm(mutable_data, instance=task)
 
         # Validate the form data
         if update_form.is_valid():
@@ -96,7 +102,7 @@ class TaskManager:
 
             return True, f"Task '{str(updated_task)}' successfully updated!", task_details
         else:
-            return False, update_form.errors
+            return False, update_form.errors, None
 
     @staticmethod
     def delete_task(task_id):
