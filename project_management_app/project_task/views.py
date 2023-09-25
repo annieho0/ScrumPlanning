@@ -1,9 +1,12 @@
 from django.http import JsonResponse
-from django.shortcuts import render
+from django.shortcuts import render, redirect 
+from django.contrib import messages
 from django.views.generic.edit import View
-from .models import Tag, Task
-from .forms import CreateNewTaskForm, EditTaskForm
+from .models import Tag, Task, Sprint
+from .forms import CreateNewTaskForm, EditTaskForm, CreateNewSprintForm
 from django.db.models import Case, When, Value, IntegerField
+
+
 
 
 class TaskManager:
@@ -296,6 +299,7 @@ class TaskListView(View):
         # Generate an empty CreateNewTask form and EditTask form
         create_new_task_form = CreateNewTaskForm()
         edit_task_form = EditTaskForm()
+        sprint_form = CreateNewSprintForm()
 
         # Extract sorting, view, and date created sort parameters from the URL or use default values
         priority_sort = request.GET.get('priority_sort', 'priority_ascending')
@@ -460,6 +464,8 @@ class HomeListView(View):
 
     template_name = 'project_task/home.html'
 
+
+
     def get(self, request):
         """
         Handles GET requests to render the home page.
@@ -472,9 +478,13 @@ class HomeListView(View):
         Returns:
             HttpResponse: Rendered home page with any relevant context.
         """
+        sprint_form = CreateNewSprintForm()
 
         # Render and return the home page template
-        return render(request, self.template_name)
+        return render(request, self.template_name, {"name": "home", "sprint_form": sprint_form})
+
+
+
 
 
 
