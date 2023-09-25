@@ -1,9 +1,11 @@
 from django.urls import path
-from . import views
+from .views import HomeListView, TaskListView, TaskEditView, TaskDeleteView
 
 urlpatterns = [
-    path("", views.home_redirect, name="home_redirect"),
-    path("home/", views.home, name="home"),
-    path("project-backlog/", views.project_backlog, name="project_backlog"),
-    path('project-backlog/delete_task/<int:task_id>/', views.delete_task, name='delete_task'),
+    path("", HomeListView.as_view(), name="home_redirect"),
+    path("home/", HomeListView.as_view(), name="home"),
+    path("project-backlog/", TaskListView.as_view(), name="project_backlog"),
+    path("project-backlog/edit_task/<int:task_id>/", TaskEditView.as_view(), name="edit_task"),
+    path("project-backlog/delete_task/<int:task_id>/", TaskDeleteView.as_view(), name="delete_task"),
 ]
+
