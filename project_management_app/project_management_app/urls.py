@@ -21,4 +21,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('project_task.urls')),
     path('register/', register_view.register, name='register'),
+    path('', include("django.contrib.auth.urls")),
 ]

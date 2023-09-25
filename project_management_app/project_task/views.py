@@ -29,12 +29,12 @@ def create_new_task(response: HttpRequest):
     """This view renders the create new task page"""
     if response.method == "POST":
         # check and add tags to DB before creating the forms
-        data = dict(response.POST.items())
-        for tag in data['tags']:
+        tags = response.POST.getlist('tags')
+        for tag in tags:
             Tag.objects.get_or_create(name=tag)
-
-        user = response.POST.values('assignee')
-        print(user)
+  
+        # user = response.POST.values('assignee')
+        # print(user)
 
 
 

@@ -133,3 +133,13 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CRISPY_TEMPLATE_PACK = "bootstrap4"
 SELECT2_JS = 'django_select2/js/select2.full.min.js'
 SELECT2_CSS = 'django_select2/css/select2.min.css'
+
+
+# this is to let customized user model to be able to log in and log out
+AUTH_USER_MODEL = 'register.CustomizedUser'
+
+LOGIN_REDIRECT_URL = "/"
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',  # Default backend
+]

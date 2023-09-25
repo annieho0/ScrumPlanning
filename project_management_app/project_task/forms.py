@@ -6,15 +6,20 @@ class CreateNewTaskForm(forms.ModelForm):
     """
     A form for creating a new task.
     """
+    # users = CustomizedUser.objects.all()
+    # users_choices = []
+    # for user in users:
+    #     users_choices.append((user, user.get_name()))
+
     # For the tags, use Django's built-in SelectMultiple widget
     tags = forms.ModelMultipleChoiceField(
         queryset=Tag.objects.all(),
         # widget=forms.SelectMultiple(attrs={'class': 'form-control'}),
         required=True,
     )
-
-    assignee = forms.ChoiceField(
-        choices=enumerate(CustomizedUser.objects.all().iterator()),
+    
+    assignee = forms.ModelChoiceField(
+        queryset=CustomizedUser.objects.all(),
         # widget=forms.SelectMultiple(attrs={'class': 'form-control'}),
         required=True,
     )

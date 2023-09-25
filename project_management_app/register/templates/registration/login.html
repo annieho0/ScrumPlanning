@@ -2,8 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    {% block title %}
-    {% endblock %}
+    <title>Login Here</title>
 
     {% block css %}
     <!-- Bootstrap CSS -->
@@ -28,32 +27,12 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
     <!-- Custom CSS -->
     <style>
-        .sidenav {
-            height: 100%;
-            width: 160px;
-            position: fixed;
-            z-index: 1;
-            top: 0;
-            left: 0;
-            background-color: #111;
-            overflow-x: hidden;
-            padding-top: 20px;
+        .title {
+            text-align: center;
         }
-
-        .sidenav a {
-            padding: 6px 8px 6px 16px;
-            text-decoration: none;
-            font-size: 25px;
-            color: #818181;
-            display: block;
-        }
-
-        .sidenav a:hover {
-            color: #f1f1f1;
-        }
-
         .main {
-            margin-left: 160px;
+            margin-left: 480px;
+            margin-right: 480px;
             padding: 0 10px;
         }
 
@@ -68,21 +47,20 @@
 </head>
 
 <body>
-<!-- Sidenav -->
-<div class="sidenav">
-    <a href="{% url 'home' %}">Home</a>
-    <a href="{% url 'project_backlog' %}">Project Backlog</a>
-</div>
 
 <!-- Content -->
-<div id="content" , name="content" class="main">
-    {% if user.is_authenticate %}
-        {% block content %}
-        {% endblock %}
-    {% else %}
-        <p>Login <a href="/login">Here</a></p>
-    {% endif %}
-    
+<div>
+    <h1 class="title">Project Backlog</h1>
+
+</div>
+<div id="content" name="content" class="main">
+    {% load crispy_forms_tags %}
+    <form method="post" class="from-group">
+        {% csrf_token %}
+        {{form|crispy}}
+        <button type="submit" class="btn btn-success">Login</button>
+        
+    </form>
 </div>
 </body>
 </html>
