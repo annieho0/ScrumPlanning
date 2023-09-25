@@ -2,15 +2,26 @@ from django.shortcuts import render, redirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
 from .models import Tag, Task
-from .forms import CreateNewTaskForm
+from .forms import CreateNewTaskForm, CreateNewSprintForm
+
 
 
 # Create your views here.
 def home(response):
     """This view renders the home page"""
     form = CreateNewTaskForm()
+    sprint_form = CreateNewSprintForm()
     create_new_task(response)
-    return render(response, "project_task/home.html", {"name": "home", "form": form})
+    create_new_sprint(response)
+
+    if sprint_form.is_valid():
+        sprint = sprint_form.save(commit=False)
+        sprint.save()
+        sprint_form.save_m2m()
+        return render(response, "project_task/home.html", {"name": "home", "form": form, 'sprint_form': sprint_form})
+    else:
+        print("Form is not valid:", form.errors)
+        return render(response, "project_task/home.html", {"name": "home", "form": form, 'sprint_form': sprint_form})
 
 
 def home_redirect(response):
@@ -54,3 +65,7 @@ def delete_task(response, task_id):
     task = get_object_or_404(Task, id=task_id)
     task.delete()
     return redirect(reverse('project_backlog'))
+
+
+
+

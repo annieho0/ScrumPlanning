@@ -76,3 +76,14 @@ class Tag(models.Model):
 
     def __str__(self):
         return self.name
+
+class Sprint(models.Model):
+    """
+    A model for a Sprint.
+    """
+    name = models.CharField(max_length=200, unique=True)
+    start_date = models.DateField()
+    end_date = models.DateField()
+
+    def __str__(self):
+        return self.name

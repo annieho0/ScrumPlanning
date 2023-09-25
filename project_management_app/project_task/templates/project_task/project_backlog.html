@@ -1,5 +1,8 @@
 {% extends "project_task/base.html" %}
 
+{% load crispy_forms_tags %}
+{% load crispy_forms_filters %}
+
 {% block title %}
 <title>Project Backlog</title>
 {% endblock %}
@@ -74,7 +77,6 @@
     </div> <!-- End of row -->
 </div> <!-- End of container -->
 
-
 {% endblock %}
 
 {% block js %}
@@ -90,4 +92,8 @@
             }
         }
     </script>
+
 {% endblock %}
+
+
+
