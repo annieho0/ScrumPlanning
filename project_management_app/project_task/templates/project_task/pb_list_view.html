@@ -8,7 +8,7 @@
             <th>Story Point</th>
             <th>Priority</th>
             <th>Tags</th>
-            <th>Creation DateTime</th>
+            <th>Creation Date</th>
             <th>Action</th>
         </tr>
         </thead>
@@ -24,7 +24,7 @@
                 <span class="badge badge-info m-1">{{tag}}</span>
                 {% endfor %}
             </td>
-            <td>{{task.created_datetime}}</td>
+            <td>{{task.created_date}}</td>
             <td>
                 <button type="submit" class="btn btn-danger delete-btn" data-task-id="{{ task.id }}">Delete</button>
             </td>

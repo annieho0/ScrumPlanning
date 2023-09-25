@@ -153,38 +153,37 @@ class TaskManager:
         if tag_filter:
             tasks = tasks.filter(tags__name__in=tag_filter).distinct()
 
+        # Define priority mapping
+        priority_mapping = {
+            'LOW': 0,
+            'MED': 1,
+            'IMP': 2,
+            'URG': 3
+        }
+
+        # Create a list of ordering criteria
+        order_by_list = []
+
         # Apply priority sort if provided
         if priority_sort:
+            priority_ordering = Case(
+                *[When(priority=key, then=Value(value)) for key, value in priority_mapping.items()],
+                output_field=IntegerField()
+            )
             if priority_sort == "priority_ascending":
-                tasks = tasks.annotate(
-                    custom_priority_order=Case(
-                        When(priority="LOW", then=Value(0)),
-                        When(priority="MED", then=Value(1)),
-                        When(priority="IMP", then=Value(2)),
-                        When(priority="URG", then=Value(3)),
-                        default=Value(4),
-                        output_field=IntegerField()
-                    )
-                ).order_by("custom_priority_order")
+                order_by_list.append(priority_ordering)
             elif priority_sort == "priority_descending":
-                tasks = tasks.annotate(
-                    custom_priority_order=Case(
-                        When(priority="LOW", then=Value(3)),
-                        When(priority="MED", then=Value(2)),
-                        When(priority="IMP", then=Value(1)),
-                        When(priority="URG", then=Value(0)),
-                        default=Value(4),
-                        output_field=IntegerField()
-                    )
-                ).order_by("custom_priority_order")
+                order_by_list.append(priority_ordering.desc())  # Use .desc() for descending
 
         # Apply date_created_sort if provided
         if date_created_sort:
-            # Assuming that there's a "created_at" field in the Task model
             if date_created_sort == "date_ascending":
-                tasks = tasks.order_by("created_datetime")
+                order_by_list.append('created_date')
             elif date_created_sort == "date_descending":
-                tasks = tasks.order_by("-created_datetime")
+                order_by_list.append('-created_date')
+
+        # Apply the ordering criteria
+        tasks = tasks.order_by(*order_by_list)
 
         return tasks
 
@@ -223,7 +222,7 @@ class TaskManager:
             'assignee': task.assignee,
             'status': task.status,
             'sprint': task.sprint,
-            'created_datetime': task.created_datetime,
+            'created_date': task.created_date,
             # ... add any other necessary fields here ...
         }
 

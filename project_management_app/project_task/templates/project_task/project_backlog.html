@@ -262,7 +262,7 @@
                 <td>${task.story_point}</td>
                 <td>${task.priority}</td>
                 <td>${tagsHtml}</td>
-                <td>${formatDate(task.created_datetime)}</td>
+                <td>${formatDate(task.created_date)}</td>
                 <td><a href="/delete_task/${task.id}/" class="btn btn-danger delete-btn">Delete</a></td>
             </tr>`;
 
@@ -272,7 +272,7 @@
         // Create HTML for the task in card view
         const cardViewHtml = `
             <div class="col-sm-3" id="task-card-${task.id}">
-                <div class="card mb-3" style="height: 13rem;">
+                <div class="card mb-3" style="height: 14rem;">
                     <div class="card-body">
                         <h4 class="card-title"><a href="#" data-toggle="modal" data-target="#editTaskModal" data-task-id="${task.id}">${task.name}</a></h4>
                         <h6 class="card-subtitle mb-2 text-muted"><strong>Story Point</strong>: ${task.story_point}</h6>
@@ -297,10 +297,17 @@
         addOrRemoveEmptyUI();
     }
 
+
+    /**
+     * Format the given ISO string into a localized date string.
+     *
+     * @param {string} isoString - The ISO string to format.
+     * @returns {string} The formatted date string.
+     */
     function formatDate(isoString) {
-        const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
-        const date = new Date(isoString);
-        return date.toLocaleDateString('en-AU', options);
+        const options = { year: 'numeric', month: 'short', day: 'numeric' };
+        const date = new Date(isoString); // Create a new Date object from the ISO string
+        return date.toLocaleDateString('en-AU', options); // Format the date using the specified options and locale
     }
 
 
@@ -323,35 +330,38 @@
             <td>${task.story_point}</td>
             <td>${task.priority}</td>
             <td>${tagsHtml}</td>
+            <td>${formatDate(task.created_date)}</td>
             <td><a href="/delete_task/${task.id}/" class="btn btn-danger delete-btn">Delete</a></td>
         `;
 
         // Update the HTML content of the task row in the backlog table with the updated task HTML
         $('#task-row-' + task.id).html(listViewHtml);
 
-        // Create HTML for the updated task in card view
+        // Create HTML for the task in card view
         const cardViewHtml = `
-            <div class="card mb-3" style="height: 13rem;">
-                <div class="card-body">
-                    <h4 class="card-title"><a href="#" data-toggle="modal" data-target="#editTaskModal" data-task-id="${task.id}">${task.name}</a></h4>
-                    <h6 class="card-subtitle mb-2 text-muted"><strong>Story Point</strong>: ${task.story_point}</h6>
-                    <h6 class="card-subtitle mb-2 text-muted"><strong>Priority</strong>: ${task.priority}</h6>
-                    <div class="d-flex flex-wrap align-items-start">
-                        <h6 class="card-subtitle mb-2 text-muted mr-2 tags-container">
-                            <strong>Tags</strong>: ${tagsHtml}
-                            <span class="more-tags">...</span>
-                        </h6>
+            <div class="col-sm-3" id="task-card-${task.id}">
+                <div class="card mb-3" style="height: 14rem;">
+                    <div class="card-body">
+                        <h4 class="card-title"><a href="#" data-toggle="modal" data-target="#editTaskModal" data-task-id="${task.id}">${task.name}</a></h4>
+                        <h6 class="card-subtitle mb-2 text-muted"><strong>Story Point</strong>: ${task.story_point}</h6>
+                        <h6 class="card-subtitle mb-2 text-muted"><strong>Priority</strong>: ${task.priority}</h6>
+                        <div class="d-flex flex-wrap align-items-start">
+                            <h6 class="card-subtitle mb-2 text-muted mr-2 tags-container">
+                                <strong>Tags</strong>: ${tagsHtml}
+                                <span class="more-tags">...</span>
+                            </h6>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <a href="/delete_task/${task.id}/" class="btn btn-danger delete-btn">Delete</a>
                     </div>
                 </div>
-                <div class="card-footer">
-                    <a href="/delete_task/${task.id}/" class="btn btn-danger delete-btn">Delete</a>
-                </div>
-            </div>
-        `;
+            </div>`;
 
         // Update the HTML content of the task card in the card view with the updated task HTML
         $('#task-card-' + task.id).html(cardViewHtml);
     }
+
 
     // On document ready
     $(document).ready(function () {
@@ -522,7 +532,7 @@
             $('#editTaskModal #id_status').val(edit_task.status);
             $('#editTaskModal #id_stage').val(edit_task.stage);
             $('#editTaskModal #id_assignee').val(edit_task.assignee);
-            $('#editTaskModal #id_created_datetime').val(edit_task.created_datetime);
+            $('#editTaskModal #id_created_date').val(edit_task.created_date);
 
         }
     });

@@ -14,9 +14,9 @@ class CreateNewTaskForm(forms.ModelForm):
         required=True
     )
 
-    # Set created_datetime to read-only and set its initial value to current datetime
-    created_datetime = forms.DateTimeField(
-        widget=forms.DateTimeInput(attrs={'readonly': 'readonly'}),
+    # Set created_date to read-only and set its initial value to current datetime
+    created_date = forms.DateField(
+        widget=forms.DateInput(attrs={'readonly': 'readonly'}),
     )
 
     class Meta:
@@ -29,12 +29,12 @@ class CreateNewTaskForm(forms.ModelForm):
             "story_point",
             "tags",
             "stage",
-            "created_datetime",
+            "created_date",
         ]
 
     def __init__(self, *args, **kwargs):
         super(CreateNewTaskForm, self).__init__(*args, **kwargs)
-        self.fields['created_datetime'].initial = timezone.now()
+        self.fields['created_date'].initial = timezone.now()
 
 
 class EditTaskForm(forms.ModelForm):
@@ -48,9 +48,9 @@ class EditTaskForm(forms.ModelForm):
         required=True
     )
 
-    # Set created_datetime to read-only and set its initial value to current datetime
-    created_datetime = forms.DateTimeField(
-        widget=forms.DateTimeInput(attrs={'readonly': 'readonly'}),
+    # Set created_date to read-only and set its initial value to current datetime
+    created_date = forms.DateField(
+        widget=forms.DateInput(attrs={'readonly': 'readonly'}),
     )
 
     class Meta:
@@ -66,7 +66,7 @@ class EditTaskForm(forms.ModelForm):
             "stage",
             "assignee",
             "sprint",
-            "created_datetime",
+            "created_date",
         ]
 
     def __init__(self, *args, **kwargs):
