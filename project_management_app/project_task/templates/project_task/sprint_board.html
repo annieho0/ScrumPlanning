@@ -1,0 +1,31 @@
+{% extends "project_task/base.html" %}
+{% load crispy_forms_tags %}
+{% load crispy_forms_filters %}
+
+{% block title %}
+<title>Sprint Board</title>
+{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .create-graph-btn {
+        position: fixed;
+        bottom: 20px;
+        right:20px;
+        z-index: 1000;
+    }
+</style>
+{% endblock %}
+{% block content %}
+<h1>Sprint Board</h1>
+
+<!-- Create Graph Button -->
+<button class="btn btn-primary create-graph-btn" id="createGraphButton">Create Graph</button>
+{% endblock %}
+
+{% block js %}
+<script>
+    // JavaScript for the Sprint Board will be added here
+    // Functionality to handle the Create Graph Button
+</script>
+{% endblock %}

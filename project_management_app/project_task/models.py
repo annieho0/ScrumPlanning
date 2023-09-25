@@ -78,3 +78,14 @@ class Tag(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Sprint(models.Model):
+    """
+     A temporary model for a sprint
+    """
+    name = models.CharField(max_length=100)
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.name

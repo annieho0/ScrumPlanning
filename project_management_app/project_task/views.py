@@ -1,7 +1,7 @@
 from django.http import JsonResponse
-from django.shortcuts import render
+from django.shortcuts import render, reverse, redirect
 from django.views.generic.edit import View
-from .models import Tag, Task
+from .models import Tag, Task, Sprint
 from .forms import CreateNewTaskForm, EditTaskForm
 from django.db.models import Case, When, Value, IntegerField
 
@@ -250,7 +250,6 @@ class TaskManager:
             tag_ids.append(tag.id)  # Append the tag ID to the list
         return tag_ids
 
-
     @staticmethod
     def _read_task(task_id):
         """
@@ -311,7 +310,8 @@ class TaskListView(View):
         selected_tags = selected_tags_string.split(",") if selected_tags_string else []
 
         # Fetch tasks based on filtering and sorting parameters using TaskManager utility
-        tasks = TaskManager.list_tasks(tag_filter=selected_tags, priority_sort=priority_sort, date_created_sort=date_sort)
+        tasks = TaskManager.list_tasks(tag_filter=selected_tags, priority_sort=priority_sort,
+                                       date_created_sort=date_sort)
 
         # Construct the context for the template
         context = {
@@ -472,9 +472,22 @@ class HomeListView(View):
         Returns:
             HttpResponse: Rendered home page with any relevant context.
         """
+        # Check if there's an active sprint
+        active_sprints = Sprint.objects.filter(is_active=True)
 
-        # Render and return the home page template
-        return render(request, self.template_name)
+        if active_sprints.exists():
+            # If there is an active sprint, redirect to sprint board
+            return redirect(reverse('sprint_board'))
+        else:
+            # If no active sprint, redirect to the project backlog
+            return redirect(reverse('project_backlog'))
 
 
+class SprintBoardView(View):
+    """
+    Temporary view for sprint board
+    """
+    template_name = 'sprint_board.html'
 
+    def get(self,request):
+        return render(request, 'project_task/sprint_board.html')
