@@ -1,93 +1,543 @@
 {% extends "project_task/base.html" %}
+{% load crispy_forms_tags %}
+{% load crispy_forms_filters %}
 
 {% block title %}
 <title>Project Backlog</title>
 {% endblock %}
 
+{% block extra_styles %}
+<style>
+    .tags-container {
+        max-height: 1.5em; /* This might need adjustment based on your badge height */
+        overflow: hidden;
+        position: relative;
+    }
+
+    .tags-container::after {
+        content: "...";
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(to right, transparent, white 50%);
+        padding-left: 10px;
+        pointer-events: none; /* Prevent the pseudo-element from being clickable */
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <h1>Project Backlog</h1>
 
-<!-- View options -->
-<label for="view">View:</label>
-<select id="view" onchange="changeView()">
-    <option value="listView">List View</option>
-    <option value="cardView">Card View</option>
-</select>
+<!-- Alert Message container -->
+<div id="messages-container"></div>
 
+
+<!-- View options and Create New Task button -->
+{% include "project_task/pb_view_filtersort_button.html" %}
+
+<!-- View templates -->
+{% if current_view == 'list_view' %}
 <!-- List view -->
-<div class="container-fluid" id="listView">
-    <table class="table table-striped table-bordered">
-        <thead class="thead-light">
-            <tr>
-                <th>Name</th>
-                <th>Type</th>
-                <th>Priority</th>
-                <th>Story Point</th>
-                <th>Assignee</th>
-                <th>Status</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody id="backlogTable">
-            <!-- Rows will be dynamically added here -->
-            {% for task in tasks%}
-            <tr>
-                <td>{{task.name}}</td>
-                <td>{{task.type}}</td>
-                <td>{{task.priority}}</td>
-                <td>{{task.story_point}}</td>
-                <td>{{task.assignee}}</td>
-                <td>{{task.status}}</td>
-                <td><a href="{% url 'delete_task' task.id %}" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this task?')">Delete</a></td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
-
+{% include "project_task/pb_list_view.html" %}
+{% elif current_view == 'card_view' %}
 <!-- Card View Section -->
-<div class="container-fluid" id="cardView" style="display: none;">
-    <div class="row">
-        {% for status_title in statuses %}
-            <!-- {{ status_title.1 }} Column -->
-            <div class="col-sm-4">
-                <div class="card">
-                    <div class="card-header"><h2>{{ status_title.1 }}</h2></div>
-                    <div class="card-body">
-                        {% for task in tasks %}
-                        {% if task.status == status_title.0 %}
-                            <div class="card mb-3" style="width: 10rem;">
-                                <div class="card-body">
-                                    <h5 class="card-title">{{task.name}}</h5>
-                                    <h6 class="card-subtitle mb-2 text-muted">{{task.type}}</h6>
-                                    <p class="card-text">{{task.description}}</p>
-                                    <a href="{% url 'delete_task' task.id %}" class="card-link btn btn-danger" onclick="return confirm('Are you sure you want to delete this task?')">Delete</a>
-                                </div>
-                            </div>
-                        {% endif %}
-                        {% endfor %}
-                    </div>
-                </div>
+{% include "project_task/pb_card_view.html" %}
+{% endif %}
+
+<!-- Create New Task Modal -->
+{% include "project_task/pb_create_new_task.html" %}
+
+<!-- Edit Task Modal -->
+{% include "project_task/pb_edit_task.html" %}
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirm Deletion</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
             </div>
-        {% endfor %}
-
-    </div> <!-- End of row -->
-</div> <!-- End of container -->
-
+            <div class="modal-body">
+                Are you sure you want to delete this task?
+            </div>
+            <div class="modal-footer">
+                {% csrf_token %}
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                <a href="#" id="confirmDelete" class="btn btn-danger">Delete</a>
+            </div>
+        </div>
+    </div>
+</div>
 
 {% endblock %}
 
 {% block js %}
-    <script>
-        function changeView() {
-            const selectedView = document.getElementById("view").value;
-            if (selectedView === "listView") {
-                document.getElementById("listView").style.display = "block";
-                document.getElementById("cardView").style.display = "none";
-            } else if (selectedView === "cardView") {
-                document.getElementById("listView").style.display = "none";
-                document.getElementById("cardView").style.display = "block";
+
+<!-- Custom JavaScript -->
+<script>
+    // This is the base URL for the edit and delete task views
+    const editTaskBaseUrl = "{% url 'edit_task' task_id=0 %}".replace("0/", "");
+    const deleteTaskBaseUrl = "{% url 'delete_task' task_id=0 %}".replace("0/", "");
+
+
+    /**
+     * Update the URL based on the current view, sort, and filter settings.
+     * Constructs the updated URL by iterating over each filter and sort in the config object.
+     */
+    function updateSortAndFilter() {
+
+        // this configures the view, priority_sort, tags_filter and more filters and sorts in the future
+        let config = {
+            'view': true,
+            'priority_sort': true,
+            'date_sort': true,
+            'tags_filter': true,
+            // ... add more filters and sorts here in the future
+        };
+
+        // this is the url of the current page
+        let updatedURL = window.location.href;
+
+        // this is the loop that iterate over each filter and sort in the config object
+        for (let key in config) {
+            if (config.hasOwnProperty(key)) {
+                let element = document.getElementById(key);
+                if (element) {
+                    if (key === 'tags_filter' && element.multiple) {
+                        let selectedValues = Array.from(element.selectedOptions).map(option => option.value);
+                        updatedURL = updateURLParameter(updatedURL, key, selectedValues.join(','));
+                    } else {
+                        let value = element.value;
+                        updatedURL = updateURLParameter(updatedURL, key, value);
+                    }
+                }
             }
         }
-    </script>
+
+        // this is the code that update the url
+        window.location.href = updatedURL;
+    }
+
+
+    /**
+     * Update or add a parameter to the provided URL.
+     *
+     * @param {string} url - The original URL.
+     * @param {string} param - The parameter name to update/add.
+     * @param {string} paramVal - The value for the parameter.
+     * @returns {string} - The updated URL.
+     */
+    function updateURLParameter(url, param, paramVal) {
+        // Initialize variables
+        let newAdditionalURL = ""; // Stores the updated additional URL
+        let tempArray = url.split("?"); // Split the URL into base and additional parts
+        let baseURL = tempArray[0]; // Base URL
+        let additionalURL = tempArray[1]; // Additional URL parameters
+        let temp = ""; // Temporary variable for concatenation
+
+        // Check if additionalURL exists
+        if (additionalURL) {
+            tempArray = additionalURL.split("&"); // Split additionalURL into individual parameters
+            for (let i = 0; i < tempArray.length; i++) {
+                // Check if the current parameter name is not equal to the provided param
+                if (tempArray[i].split('=')[0] !== param) {
+                    // Concatenate the current parameter to newAdditionalURL with proper delimiter
+                    newAdditionalURL += temp + tempArray[i];
+                    temp = "&"; // Update temp to "&" for future concatenation
+                }
+            }
+        }
+
+        // Create a string with the updated/added parameter
+        let rowsTxt = temp + "" + param + "=" + paramVal;
+
+        // Return the updated URL by combining the base URL, newAdditionalURL, and rowsTxt
+        return baseURL + "?" + newAdditionalURL + rowsTxt;
+    }
+
+
+    /**
+     * Initialize the tag filter using the Select2 library.
+     * This function sets up the Select2 configuration for both
+     * the task creation and task editing modals.
+     *
+     * @param {string} selector - The DOM selector for the tag input.
+     * @param {boolean} allowTagCreation - Whether to allow creating new tags or not.
+     */
+    function initializeTagFilter(selector, allowTagCreation) {
+        // Initialize the Select2 plugin on the specified selector
+        $(selector).select2({
+            tags: allowTagCreation, // Enable or disable tag creation based on the allowTagCreation parameter
+            tokenSeparators: [','], // Specify the separators used to tokenize tags
+            allowClear: true, // Allow clearing the selected tag(s)
+            placeholder: 'Select tag(s)', // Set the placeholder text for the tag input
+            theme: 'bootstrap', // Set the theme for the Select2 dropdown
+        });
+    }
+
+
+    /**
+     * Display an alert message on the page.
+     *
+     * @param {string} type - The type of the message (e.g., 'success', 'danger').
+     * @param {string} message - The message content.
+     */
+    function displayMessage(type, message) {
+        // Create an HTML string for the alert message
+        const alertMessage = `
+            <div class="alert alert-${type} fade in alert-dismissible show" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true" style="font-size:20px">×</span>
+                </button>
+                ${message}
+            </div>`;
+
+        // Prepend the alert message to the 'messages-container' element in the DOM
+        $('#messages-container').prepend(alertMessage);
+
+        // Set a timeout to fade out the alert message after 3 seconds
+        setTimeout(function () {
+            $('.alert').fadeOut('slow');
+        }, 3000);
+    }
+
+
+    /**
+     * Add or remove the UI message indicating there are no tasks.
+     * If there are no tasks, displays a message. If tasks exist, removes the message.
+     */
+    function addOrRemoveEmptyUI() {
+        // Get all the remaining tasks in the backlog table
+        const remainingTasks = $('#backlogTable tr[id^="task-row-"]');
+
+        // Check if there are no remaining tasks
+        if (remainingTasks.length === 0) {
+            // Create HTML for the empty message in card view
+            const cardViewHtml =
+                `<div class="col-12 text-center" id="task-card-empty">
+                    <p class="mt-5">No tasks available.</p>
+                </div>`;
+
+            // Append the empty message HTML to the card view row
+            $('#cardView .row').append(cardViewHtml);
+
+            // Create HTML for the empty message in list view
+            const listViewHtml =
+                `<tr id="task-row-empty">
+                    <td colspan="6" class="text-center">No tasks available.</td>
+                </tr>`;
+
+            // Append the empty message HTML to the backlog table
+            $('#backlogTable').append(listViewHtml);
+        } else {
+            // Remove the empty message HTML from both card view and list view
+            $('#task-row-empty').remove();
+            $('#task-card-empty').remove();
+        }
+    }
+
+
+    /**
+     * Construct and add the provided task to the UI.
+     * Adds the task both to the list view and the card view.
+     *
+     * @param {Object} task - The task data.
+     */
+    function addTaskToUI(task) {
+        let tagsHtml = '';
+        // Iterate over each tag in the task and construct HTML for tags
+        task.tags.forEach(tag => {
+            tagsHtml += `<span class="badge badge-info m-1">${tag}</span>`;
+        });
+
+        // Create HTML for the task in list view
+        const listViewHtml = `
+            <tr id="task-row-${task.id}">
+                <td><a href="#" data-toggle="modal" data-target="#editTaskModal" data-task-id="${task.id}">${task.name}</a></td>
+                <td>${task.story_point}</td>
+                <td>${task.priority}</td>
+                <td>${tagsHtml}</td>
+                <td>${formatDate(task.created_date)}</td>
+                <td><a href="/delete_task/${task.id}/" class="btn btn-danger delete-btn">Delete</a></td>
+            </tr>`;
+
+        // Append the task HTML to the backlog table in list view
+        $('#backlogTable').append(listViewHtml);
+
+        // Create HTML for the task in card view
+        const cardViewHtml = `
+            <div class="col-sm-3" id="task-card-${task.id}">
+                <div class="card mb-3" style="height: 14rem;">
+                    <div class="card-body">
+                        <h4 class="card-title"><a href="#" data-toggle="modal" data-target="#editTaskModal" data-task-id="${task.id}">${task.name}</a></h4>
+                        <h6 class="card-subtitle mb-2 text-muted"><strong>Story Point</strong>: ${task.story_point}</h6>
+                        <h6 class="card-subtitle mb-2 text-muted"><strong>Priority</strong>: ${task.priority}</h6>
+                        <div class="d-flex flex-wrap align-items-start">
+                            <h6 class="card-subtitle mb-2 text-muted mr-2 tags-container">
+                                <strong>Tags</strong>: ${tagsHtml}
+                                <span class="more-tags">...</span>
+                            </h6>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <a href="/delete_task/${task.id}/" class="btn btn-danger delete-btn">Delete</a>
+                    </div>
+                </div>
+            </div>`;
+
+        // Append the task HTML to the card view row
+        $('#cardView .row').append(cardViewHtml);
+
+        // Add or remove the empty UI message based on the presence of tasks
+        addOrRemoveEmptyUI();
+    }
+
+
+    /**
+     * Format the given ISO string into a localized date string.
+     *
+     * @param {string} isoString - The ISO string to format.
+     * @returns {string} The formatted date string.
+     */
+    function formatDate(isoString) {
+        const options = { year: 'numeric', month: 'short', day: 'numeric' };
+        const date = new Date(isoString); // Create a new Date object from the ISO string
+        return date.toLocaleDateString('en-AU', options); // Format the date using the specified options and locale
+    }
+
+
+    /**
+    * Update the UI for a given task.
+    * Updates both the list view and card view for the task.
+    *
+    * @param {Object} task - The updated task data.
+    */
+    function updateTaskInUI(task) {
+        let tagsHtml = '';
+        // Iterate over each tag in the task and construct HTML for tags
+        task.tags.forEach(tag => {
+            tagsHtml += `<span class="badge badge-info m-1">${tag}</span>`;
+        });
+
+        // Create HTML for the updated task in list view
+        const listViewHtml = `
+            <td><a href="#" data-toggle="modal" data-target="#editTaskModal" data-task-id="${task.id}">${task.name}</a></td>
+            <td>${task.story_point}</td>
+            <td>${task.priority}</td>
+            <td>${tagsHtml}</td>
+            <td>${formatDate(task.created_date)}</td>
+            <td><a href="/delete_task/${task.id}/" class="btn btn-danger delete-btn">Delete</a></td>
+        `;
+
+        // Update the HTML content of the task row in the backlog table with the updated task HTML
+        $('#task-row-' + task.id).html(listViewHtml);
+
+        // Create HTML for the task in card view
+        const cardViewHtml = `
+            <div class="col-sm-3" id="task-card-${task.id}">
+                <div class="card mb-3" style="height: 14rem;">
+                    <div class="card-body">
+                        <h4 class="card-title"><a href="#" data-toggle="modal" data-target="#editTaskModal" data-task-id="${task.id}">${task.name}</a></h4>
+                        <h6 class="card-subtitle mb-2 text-muted"><strong>Story Point</strong>: ${task.story_point}</h6>
+                        <h6 class="card-subtitle mb-2 text-muted"><strong>Priority</strong>: ${task.priority}</h6>
+                        <div class="d-flex flex-wrap align-items-start">
+                            <h6 class="card-subtitle mb-2 text-muted mr-2 tags-container">
+                                <strong>Tags</strong>: ${tagsHtml}
+                                <span class="more-tags">...</span>
+                            </h6>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <a href="/delete_task/${task.id}/" class="btn btn-danger delete-btn">Delete</a>
+                    </div>
+                </div>
+            </div>`;
+
+        // Update the HTML content of the task card in the card view with the updated task HTML
+        $('#task-card-' + task.id).html(cardViewHtml);
+    }
+
+
+    // On document ready
+    $(document).ready(function () {
+        // Initialize the tag filter
+        initializeTagFilter('#tags_filter', false);
+
+        // Handle the form input change event for the tag filter
+        $('#createNewTaskModal').on('shown.bs.modal', function (event) {
+            event.preventDefault(); // Prevent the default behavior of the event
+            initializeTagFilter('#createNewTaskModal #id_tags', true);
+        });
+
+        // Handle the form submission for creating a new task
+        $('#createNewTaskForm').submit(function (event) {
+            event.preventDefault(); // Prevent the default form submission behavior
+            const formData = $(this).serialize(); // Serialize the form data into a query string format
+            const createTaskUrl = $(this).attr('action'); // Get the URL specified in the 'action' attribute of the form
+
+            // AJAX request to create a new task
+            $.ajax({
+                url: createTaskUrl,
+                type: 'POST',
+                data: formData,
+                dataType: 'json',
+                success: function (response) {
+                    // Display a success message with the response message
+                    displayMessage('success', response.message);
+                    // Hide the create new task modal
+                    $('#createNewTaskModal').modal('hide');
+                    // Reset the form fields
+                    $('#createNewTaskForm').trigger("reset");
+                    // Add the newly created task to the UI
+                    addTaskToUI(response.task);
+                },
+                error: function (response) {
+                    // Display an error message with the response message
+                    displayMessage('danger', response.message);
+                }
+            });
+        });
+
+
+        // Handle the form field population for editing a task
+        $('#editTaskModal').on('shown.bs.modal', function (event) {
+            event.preventDefault(); // Prevent the default behavior of the event
+            const taskId = $(event.relatedTarget).data('task-id'); // Get the task ID from the data attribute of the related target element
+            const taskUrl = editTaskBaseUrl + taskId + '/'; // Construct the task URL using the base URL and the task ID
+            $('#updateChanges').data('href', taskUrl); // Store the task URL in the data attribute of the element with the ID 'updateChanges'
+            $('#updateChanges').data('task-id', taskId); // Store the task ID in the data attribute of the element with the ID 'updateChanges'
+
+            // Initialize the tag filter for the specified element
+            initializeTagFilter('#editTaskModal #id_tags', true);
+
+            // AJAX request to fetch task details
+            $.ajax({
+                url: taskUrl,
+                type: 'GET',
+                dataType: 'json',
+                success: function (response) {
+                    // Retrieve the task data from the response and populate the edit task form
+                    const edit_task = response.task_data;
+                    populateEditTaskForm(edit_task);
+                },
+                error: function () {
+                    displayMessage('danger', 'Failed to fetch task details.');
+                }
+            });
+        });
+
+        // Handle the form submission for editing a task
+        $('#editTaskForm').submit(function (event) {
+            event.preventDefault();
+            const formData = $(this).serialize();
+            const editUrl = $('#updateChanges').data('href');
+
+            // AJAX request to edit the task
+            $.ajax({
+                url: editUrl,
+                type: 'POST',
+                data: formData,
+                dataType: 'json',
+                success: function (response) {
+                    // Display a success message with the response message
+                    displayMessage('success', response.message);
+                    // Hide the edit task modal
+                    $('#editTaskModal').modal('hide');
+                    // Update the task in the UI with the updated task data
+                    updateTaskInUI(response.task_data[2]);
+                },
+                error: function (response) {
+                    // Display an error message with the response message
+                    displayMessage('danger', response.message);
+                }
+            });
+        });
+
+        // Handle delete button clicks
+        $(document).on('click', '.delete-btn', function (e) {
+            e.preventDefault();
+            const taskId = $(this).data('task-id');
+            const deleteUrl = deleteTaskBaseUrl + taskId + '/';
+            $('#confirmDelete').data('href', deleteUrl);
+            $('#confirmDelete').data('task-id', taskId);
+            $('#deleteModal').modal('show');
+        });
+
+        // Confirm deletion of a task
+        $('#confirmDelete').on('click', function (e) {
+            e.preventDefault();
+            const deleteUrl = $(this).data('href');
+            const csrfToken = $('[name=csrfmiddlewaretoken]').val();
+
+            // AJAX request to delete the task
+            $.ajax({
+                url: deleteUrl,
+                type: 'POST',
+                dataType: 'json',
+                headers: {
+                    'X-CSRFToken': csrfToken
+                },
+                success: function (response) {
+                    // Hide the delete modal
+                    $('#deleteModal').modal('hide');
+                    const taskId = $('#confirmDelete').data('task-id');
+                    // Remove the task row from the list view
+                    $('#task-row-' + taskId).remove();
+                    // Remove the task card from the card view
+                    $('#task-card-' + taskId).remove();
+                    // Add or remove the empty UI message based on the presence of tasks
+                    addOrRemoveEmptyUI();
+                    // Display a message with the response status and message
+                    displayMessage(response.status, response.message);
+                },
+                error: function (response) {
+                    // Display an error message with the response message
+                    displayMessage('danger', response.message);
+                }
+            });
+        });
+
+
+        /**
+         * Populate the edit task modal form with the provided task data.
+         * Assumes the modal fields have IDs corresponding to the task attributes.
+         *
+         * @param {Object} edit_task - The task data to populate the form with.
+         */
+        function populateEditTaskForm(edit_task) {
+            const tags = edit_task.tags;
+
+            // Select the tags in the select2 field
+            $('#editTaskModal #id_tags option').each(function () {
+                // Check if the tag is included in the task's tags
+                if (tags.includes($(this).text())) {
+                    $(this).prop('selected', true);
+                }
+            });
+
+            // Update the select2 field
+            $('#editTaskModal #id_tags').trigger('change');
+
+            // Set the values of other form fields based on the task data
+            $('#editTaskModal #id_name').val(edit_task.name);
+            $('#editTaskModal #id_type').val(edit_task.type);
+            $('#editTaskModal #id_priority').val(edit_task.priority);
+            $('#editTaskModal #id_description').val(edit_task.description);
+            $('#editTaskModal #id_story_point').val(edit_task.story_point);
+            $('#editTaskModal #id_status').val(edit_task.status);
+            $('#editTaskModal #id_stage').val(edit_task.stage);
+            $('#editTaskModal #id_assignee').val(edit_task.assignee);
+            $('#editTaskModal #id_created_date').val(edit_task.created_date);
+
+        }
+    });
+
+</script>
+
 {% endblock %}
+
