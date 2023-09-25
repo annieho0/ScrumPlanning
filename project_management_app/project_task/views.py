@@ -485,9 +485,26 @@ class HomeListView(View):
 
 class SprintBoardView(View):
     """
-    Temporary view for sprint board
+        Temporary view for sprint board
     """
     template_name = 'sprint_board.html'
 
-    def get(self,request):
+    def get(self, request):
         return render(request, 'project_task/sprint_board.html')
+
+
+class CreateGraphView(View):
+    """
+       View class for creating graphs
+    """
+    template_name = 'create_graph.html'
+
+    def get(self,request):
+        # Hard coded data to test chartjs graphs
+        days = ["Day 1", "Day 2", "Day 3", "Day 4 ", "Day 5"]
+        remaining_effort = [100, 85, 70, 45, 25, 10]
+        context = {
+            "days": days,
+            "remaining_effort": remaining_effort
+        }
+        return render(request,'project_task/create_graph.html',context)

@@ -1,0 +1,63 @@
+{% extends "project_task/base.html" %}
+{% load crispy_forms_tags %}
+{% load crispy_forms_filters %}
+
+{% block title %}
+    <title>Create Graphs</title>
+{% endblock %}
+
+{% block extra_styles %}
+{% endblock %}
+
+{% block content %}
+    <h1>Create Graph</h1>
+    <h2>Burndown Chart</h2>
+    <canvas id="burndownChart" width="400" height="200"></canvas>
+{% endblock %}
+
+
+{% block js %}
+    <!-- Chart.js Library-->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        var ctx = document.getElementById('burndownChart').getContext('2d')
+        var myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: {{ days|safe }},
+                datasets:[{
+                    label: 'Remaining Effort',
+                    data: {{ remaining_effort|safe }},
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192,1)',
+                    borderWidth: 1
+                }]
+
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Remaining Effort (Hours)',
+                            font: {
+                                size: 18
+                            }
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Sprint Timeline',
+                            font: {
+                                size: 18
+                            }
+
+                        }
+                    }
+                }
+            }
+        })
+    </script>
+{% endblock %}
