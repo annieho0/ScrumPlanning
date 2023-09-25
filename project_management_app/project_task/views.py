@@ -27,11 +27,17 @@ class TaskManager:
                 - dict or None: Cleaned data from the form if the task was successfully created, None otherwise.
         """
 
-        # Check and add tags to DB before creating the forms
-        TaskManager._create_tags(response_data.getlist('tags'))
+        # Create tags and get their IDs
+        tag_ids = TaskManager._create_tags(response_data.getlist('tags'))
 
-        # Initialize the form with the provided data
-        task_form = CreateNewTaskForm(response_data)
+        # Create a mutable copy of response_data since Django QueryDict is immutable
+        mutable_data = response_data.copy()
+
+        # Update the tags in mutable_data with their corresponding IDs
+        mutable_data.setlist('tags', tag_ids)
+
+        # Initialize the form with the modified data
+        task_form = CreateNewTaskForm(mutable_data)
 
         # Validate the form
         if task_form.is_valid():
@@ -230,10 +236,15 @@ class TaskManager:
             tags (list of str): A list of tag names to either create or retrieve.
 
         Returns:
-            None: This method doesn't return any value but may make changes to the database.
+            tag_ids (list of str): A list of processed tag IDs.
         """
-        for tag in tags:
-            Tag.objects.get_or_create(name=tag)
+        tag_ids = []
+        for tag_name in tags:
+            # Check if the tag exists in the database, if not, create it
+            tag, created = Tag.objects.get_or_create(name=tag_name)
+            tag_ids.append(tag.id)  # Append the tag ID to the list
+        return tag_ids
+
 
     @staticmethod
     def _read_task(task_id):
@@ -366,7 +377,7 @@ class TaskEditView(View):
         Returns:
             JsonResponse: A JSON response containing the task details or an error message.
         """
-        print(task_id)
+
         # Fetch the task details using the TaskManager utility
         status, message, task_data = TaskManager.get_task_details(task_id)
 
