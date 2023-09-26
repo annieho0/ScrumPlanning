@@ -1,6 +1,7 @@
 from django import forms
 from .models import Task, Tag
 from django.utils import timezone
+from register.models import CustomizedUser
 
 
 class CreateNewTaskForm(forms.ModelForm):

@@ -219,7 +219,7 @@ class TaskManager:
             'stage': task.stage,
             'tags': [tag.name for tag in task.tags.all()],
             'story_point': task.story_point,
-            'assignee': task.assignee,
+            'assignee': {'id': task.assignee.id, 'email': task.assignee.email} if task.assignee else None,
             'status': task.status,
             'sprint': task.sprint,
             'created_date': task.created_date,
