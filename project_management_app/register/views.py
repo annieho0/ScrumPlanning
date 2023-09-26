@@ -1,7 +1,8 @@
 from django.shortcuts import render, redirect
 from .forms import RegisterFrom
 from django.db import IntegrityError
-from django.contrib.auth import login, authenticate
+from django.contrib.auth import login
+from .authentication import UserAuthentication
 
 def admin_required(func):
     def _wrapped_view(request, *args, **kwargs):
@@ -29,16 +30,3 @@ def register(response):
         form = RegisterFrom()
     print("Hello")
     return render(response, "register/register.html", {"form": form})
-
-def login_view(request):
-    if request.method == "POST":
-        username = request.POST["username"]
-        password = request.POST["password"]
-        print(username, password)
-
-        user = authenticate(request, username=username, password=password)
-        print(user)
-        if user is not None:
-            login(request, user)
-        else:
-            return redirect("/login")

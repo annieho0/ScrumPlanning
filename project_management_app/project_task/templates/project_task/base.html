@@ -73,11 +73,11 @@
 
 <!-- Content -->
 <div id="content" , name="content" class="main">
-    {% if user.is_authenticate %}
+    {% if user.is_authenticated %}
         {% block content %}
         {% endblock %}
     {% else %}
-        <p>Login <a href="/login">Here</a></p>
+    <p>Login <a href="/login">Here</a></p>
     {% endif %}
     
 </div>

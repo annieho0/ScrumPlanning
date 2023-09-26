@@ -139,7 +139,8 @@ SELECT2_CSS = 'django_select2/css/select2.min.css'
 AUTH_USER_MODEL = 'register.CustomizedUser'
 
 LOGIN_REDIRECT_URL = "/"
-
+LOGOUT_REDIRECT_URL = "/"
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',  # Default backend
+    'register.authentication.UserAuthentication',
 ]
