@@ -26,7 +26,7 @@ class TaskManager:
                 - str: Success or error message.
                 - dict or None: Cleaned data from the form if the task was successfully created, None otherwise.
         """
-
+        print(f'Tags: {response_data.getlist("tags")}')
         # Create tags and get their IDs
         tag_ids = TaskManager._create_tags(response_data.getlist('tags'))
 
@@ -244,10 +244,16 @@ class TaskManager:
             tag_ids (list of str): A list of processed tag IDs.
         """
         tag_ids = []
-        for tag_name in tags:
-            # Check if the tag exists in the database, if not, create it
-            tag, created = Tag.objects.get_or_create(name=tag_name)
-            tag_ids.append(tag.id)  # Append the tag ID to the list
+        for item in tags:
+            try:
+                # Try to interpret the item as an ID
+                tag_id = int(item)
+                tag = Tag.objects.get(id=tag_id)
+                tag_ids.append(tag.id)
+            except (ValueError, Tag.DoesNotExist):
+                # If it's not a valid ID or the tag doesn't exist, treat it as a name
+                tag, created = Tag.objects.get_or_create(name=item)
+                tag_ids.append(tag.id)
         return tag_ids
 
 
