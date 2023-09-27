@@ -1,5 +1,5 @@
 from django.http import JsonResponse
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.views.generic.edit import View
 from .models import Tag, Task
 from .forms import CreateNewTaskForm, EditTaskForm
@@ -479,8 +479,12 @@ class HomeListView(View):
             HttpResponse: Rendered home page with any relevant context.
         """
 
-        # Render and return the home page template
-        return render(request, self.template_name)
+        if request.user.is_authenticated:
+            # Render and return the home page template with the prepared context
+            return render(request, self.template_name)
+        else:
+            # Render and return the home page template
+            return redirect('/login')
 
 
 

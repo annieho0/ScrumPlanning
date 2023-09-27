@@ -1,12 +1,116 @@
 {% extends "project_task/base.html" %}
-
-{% block title %}Create an Account{% endblock %}
 {% load crispy_forms_tags %}
+{% load crispy_forms_filters %}
 
-{% block content %}
-    <form method = "POST" class="form-group">
-        {% csrf_token %}
-        {{form|crispy}}
-        <button type="submit" class="btn btn-success">Register</button>
-    </form>
+
+{% block title %}
+<title>Register</title>
 {% endblock %}
+
+{% block authentication %}
+<div class="text-center">
+    <!-- New Box Container -->
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card shadow-lg">
+                    <div class="card-body m-3">
+                        <form method="POST" class="form-signin">
+                            {% csrf_token %}
+
+                            <!-- Logo and Registration Title-->
+                            <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" fill="currentColor" class="bi bi-person-circle" viewBox="0 0 16 16"><path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/><path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"/></svg>
+                            <h1 class="h3 mb-3 font-weight-normal">Create an Account</h1>
+
+                            <div class="">
+                                <div class="d-grid gap-3">
+                                    {{ form.first_name | as_crispy_field }}
+                                    <div id="alert-first_name"></div>
+                                    {{ form.last_name | as_crispy_field }}
+                                    <div id="alert-last_name"></div>
+                                    {{ form.email | as_crispy_field }}
+                                    <div id="alert-email"></div>
+                                    {{ form.password1 | as_crispy_field }}
+                                    <div id="alert-password1"></div>
+                                    {{ form.password2 | as_crispy_field }}
+                                    <div id="alert-password2"></div>
+                                    <p id="testing"></p>
+                                </div>
+                                <!-- Register button -->
+                                <button id="submitRegisterUser" class="btn btn-lg btn-primary btn-block" type="submit">Register</button>
+                                <p><br>Already have an account? <a href="/login">Sign in</a>.</p>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function() {
+        // Handle displaying alert messages when the user submits the form
+        $('#submitRegisterUser').on('click', function (e) {
+            e.preventDefault();
+            $.ajax({
+                type: "POST",
+                url: "/register/",  // Change this to the correct endpoint if needed
+                data: $('.form-signin').serialize(),
+                success: function (response) {
+                    window.location.href = "/login";
+                },
+                error: function (response) {
+                    const errors = response.responseJSON.error;
+                    // Clear all alert messages
+                    $('#alert-first_name').empty();
+                    $('#alert-last_name').empty();
+                    $('#alert-email').empty();
+                    $('#alert-password1').empty();
+                    $('#alert-password2').empty();
+
+                    // Display alert messages for each error
+                    if (errors.first_name) {
+                        displayMessage('#alert-first_name', errors.first_name);
+                    }
+                    if (errors.last_name) {
+                        displayMessage('#alert-last_name', errors.last_name);
+                    }
+                    if (errors.email) {
+                        displayMessage('#alert-email', errors.email);
+                    }
+                    if (errors.password1) {
+                        displayMessage('#alert-password1', errors.password1);
+                    }
+                    if (errors.password2) {
+                        displayMessage('#alert-password2', errors.password2);
+                    }
+                }
+            });
+        });
+
+
+        /**
+         * Displays an alert message in the DOM based on the field and message passed in
+         * @param {string} field - The field in the DOM to display the alert message (e.g. '#alert-email')
+         * @param {array} message - The message to display in the alert (e.g. ['This field is required.'])
+         */
+        function displayMessage(field, message) {
+            // Create an HTML string for the alert message
+            const alertMessage = `
+                <div class="alert alert-danger" role="alert">
+                    ${message}
+                </div>`;
+
+            // Prepend the alert message to the 'alert' element in the DOM
+            $(field).empty();
+            $(field).prepend(alertMessage);
+        }
+    });
+</script>
+{% endblock %}
+</body>
+</html>

@@ -138,8 +138,10 @@ SELECT2_CSS = 'django_select2/css/select2.min.css'
 # this is to let customized user model to be able to log in and log out
 AUTH_USER_MODEL = 'register.CustomizedUser'
 
-LOGIN_REDIRECT_URL = "/"
-LOGOUT_REDIRECT_URL = "/"
+LOGIN_URL = "/login/"
+LOGIN_REDIRECT_URL = "/home"
+LOGOUT_REDIRECT_URL = "/login"
+
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',  # Default backend
     'register.authentication.UserAuthentication',
