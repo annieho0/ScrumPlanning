@@ -1,86 +1,127 @@
 from django.utils.translation import gettext as _
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.utils import timezone
 
 
 class CustomUserManager(BaseUserManager):
     """
-    Custom user model manager where email is the unique identifiers for authentication instead of usernames.
+    Custom manager for CustomizedUser.
+
+    This manager customizes the user creation process to use the email as the
+    primary unique identifier instead of the traditional username. It also provides
+    utility functions to create regular users and superusers.
     """
 
-    def create_user(self, email, first_name, last_name, password=None, **other_fields):
+    def create_user(self, username, email, first_name, last_name, password=None, **other_fields):
         """
-        Create and save a User with the given email and password.
+        Create and return a new user with the given email, first name, last name, and password.
+
+        Args:
+            - username (str): The desired username for the user. Must be unique.
+            - email (str): The email address of the user. Must be unique.
+            - first_name (str): The first name of the user.
+            - last_name (str): The last name of the user.
+            - password (str, optional): The password for the user. Defaults to None.
+            - other_fields (dict): Any other fields to be set on the user.
+
+        Returns:
+            CustomizedUser: The created user.
         """
+        # Validate essential fields
+        if not username:
+            raise ValueError(_('Users must have a username'))
+        if not email:
+            raise ValueError(_('Users must provide an email address'))
+        if not first_name:
+            raise ValueError(_('Users must have a first name'))
         if not last_name:
             raise ValueError(_('Users must have a last name'))
-        elif not first_name:
-            raise ValueError(_('Users must have a first name'))
-        elif not email:
-            raise ValueError(_('Users must provide an email address'))
 
+        # Create the user
         user = self.model(
-            email=self.normalize_email(email),
+            username=username,
+            email=self.normalize_email(email),  # normalize email address by lowercasing the domain part of it
             first_name=first_name,
             last_name=last_name,
             **other_fields
         )
-        user.set_password(password)
-        user.save(using=self._db)
+        user.set_password(password)  # set user password
+        user.save(using=self._db)  # save the user to the database
 
         return user
 
-    def create_superuser(self, email, first_name, last_name, password=None, **other_fields):
+    def create_superuser(self, username, email, first_name, last_name, password=None, **other_fields):
         """
-        Create and save a SuperUser with the given email and password.
-        """
+        Create and return a new superuser with the given details.
 
+        Args are similar to create_user with the addition that superusers are
+        always set with `is_staff`, `is_superuser`, and `is_admin` as True.
+        """
         other_fields.setdefault('is_staff', True)
         other_fields.setdefault('is_superuser', True)
         other_fields.setdefault('is_admin', True)
 
-        user = self.create_user(
-            email=self.normalize_email(email),
-            first_name=first_name,
-            last_name=last_name,
-            password=password,
-            **other_fields
-        )
-
+        # Validations for superuser
         if other_fields.get('is_staff') is not True:
             raise ValueError('Superuser must be assigned to is_staff=True.')
         if other_fields.get('is_superuser') is not True:
             raise ValueError('Superuser must be assigned to is_superuser=True.')
 
-        user.save(using=self._db)
-
-        return user
+        return self.create_user(username, email, first_name, last_name, password, **other_fields)
 
 
 class CustomizedUser(AbstractBaseUser, PermissionsMixin):
     """
-    This class is used to create a customized user model.
+    Customized User model.
+
+    This model represents a custom user for the application, using email as the primary
+    unique identifier for authentication instead of the traditional username.
+
+    Fields:
+        - email (EmailField): User's email address.
+        - username (CharField): User's username. Unique across the system.
+        - first_name (CharField): User's first name.
+        - last_name (CharField): User's last name.
+        - is_admin (BooleanField): Designates if the user has admin privileges.
+        - is_superuser (BooleanField): Designates if the user has superuser privileges.
+        - is_staff (BooleanField): Designates if the user can access the admin site.
+        - is_active (BooleanField): Designates if the user account is active.
+        - scrum_role (ForeignKey): Role of the user in Scrum.
+        - date_joined (DateTimeField): Date and time the user joined the system.
     """
     objects = CustomUserManager()
 
-    email = models.EmailField(max_length=200, unique=True)
+    # Login Details
+    username = models.CharField(max_length=30, unique=True, verbose_name=_("Username"))
 
-    is_admin = models.BooleanField(default=True)
-    is_superuser = models.BooleanField(default=False)
-    is_staff = models.BooleanField(default=True)
-    is_active = models.BooleanField(default=True)
-    scrum_role = models.ForeignKey('ScrumRole', on_delete=models.CASCADE, blank=True, null=True)
+    # Personal info
+    email = models.EmailField(max_length=200, unique=True, verbose_name=_("Email Address"))
+    first_name = models.CharField(max_length=200, verbose_name=_("First Name"))
+    last_name = models.CharField(max_length=200, verbose_name=_("Last Name"))
 
-    first_name = models.CharField(max_length=200)
-    last_name = models.CharField(max_length=200)
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['first_name', 'last_name']
+    # Permission
+    is_superuser = models.BooleanField(default=False, verbose_name=_("Superuser"))
+    is_staff = models.BooleanField(default=True, verbose_name=_("Staff"))
+    is_active = models.BooleanField(default=True, verbose_name=_("Active"))
+
+    # Additional info
+    scrum_role = models.ForeignKey('ScrumRole', on_delete=models.CASCADE, blank=True, null=True,
+                                   verbose_name=_("Scrum Role"))
+
+    # default required fields
+    date_joined = models.DateTimeField(default=timezone.now, verbose_name=_("Date Joined"))
+    USERNAME_FIELD = 'username'
+    REQUIRED_FIELDS = ['email', 'first_name', 'last_name']
 
     def get_name(self):
         """
-        This method is used to get the full name of the user.
+        Returns the full name of the user.
+
+        Returns:
+            str: Full name in the format "First Name Last Name".
         """
-        return self.first_name + " " + self.last_name
+        return f"{self.first_name} {self.last_name}"
 
 
 class WorkingHour(models.Model):
