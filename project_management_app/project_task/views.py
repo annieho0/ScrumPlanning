@@ -54,3 +54,29 @@ def delete_task(response, task_id):
     task = get_object_or_404(Task, id=task_id)
     task.delete()
     return redirect(reverse('project_backlog'))
+
+# def sprint_board(response):
+#     """This view renders the project backlog page"""
+#     tasks = Task.objects.all().filter(sprint=None)
+#     tags = Tag.objects.all().filter(task=None)
+#     statuses = [('NOT', 'Incomplete'), ('IN_PROG', 'In Progress'), ('COM', 'Complete')]
+#     return render(response, "project_task/sprint_board.html", {"name": "sprint-board", "tasks": tasks, "statuses": statuses, "tag": tags})
+
+# def filter_tasks(request):
+#     selected_view = request.GET.get('filter', '')
+
+#     if selected_view == "":
+#         tasks = Task.objects.all()
+#     else:
+#         tasks = Task.objects.filter(category=selected_view)
+
+#     return render(request, 'project_task/sprint_board.html', {'tasks': tasks})
+
+def sprint_board(request):
+    """This view renders the project backlog page"""
+    tasks = Task.objects.filter(sprint=None)
+    # Fetch unique tags associated with tasks
+    tags = Tag.objects.filter(task__isnull=False).distinct()
+    statuses = [('NOT', 'Incomplete'), ('IN_PROG', 'In Progress'), ('COM', 'Complete')]
+    return render(request, "project_task/sprint_board.html", {"name": "sprint-board", "tasks": tasks, "statuses": statuses, "tags": tags})
+

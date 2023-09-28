@@ -29,3 +29,4 @@ class CreateNewTaskForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(CreateNewTaskForm, self).__init__(*args, **kwargs)
+        

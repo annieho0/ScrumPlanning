@@ -1,6 +1,14 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 
+class Tag(models.Model):
+    """
+    A model for a tag that can be associated with a task.
+    """
+    name = models.CharField(max_length=100, unique=True)  # Name of the tag (e.g., front-end, back-end, testing).
+
+    def __str__(self):
+        return self.name
 
 class Task(models.Model):
     """
@@ -56,7 +64,7 @@ class Task(models.Model):
     status = models.CharField(max_length=7, choices=STATUS_CHOICES, default=NOT_STARTED)
     priority = models.CharField(max_length=3, choices=PRIORITY_CHOICES)
     stage = models.CharField(max_length=3, choices=STAGE_CHOICES)
-    tags = models.ManyToManyField('Tag', blank=False, null=False)
+    tags = models.ManyToManyField(Tag, blank=True, null=True)
     story_point = models.PositiveIntegerField(validators=[MinValueValidator(0), MaxValueValidator(10)], null=True,
                                               blank=True)
     # TODO: Assignee is a string for now. Need to connect to user model to get the user name in future sprint
@@ -66,13 +74,4 @@ class Task(models.Model):
 
     def __str__(self):
         return self.name
-
-
-class Tag(models.Model):
-    """
-    A model for a tag that can be associated with a task.
-    """
-    name = models.CharField(max_length=100, unique=True)  # Name of the tag (e.g., front-end, back-end, testing).
-
-    def __str__(self):
-        return self.name
+    
