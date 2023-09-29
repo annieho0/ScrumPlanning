@@ -1,7 +1,9 @@
+from datetime import timedelta
+
 from django.http import JsonResponse
 from django.shortcuts import render, reverse, redirect
 from django.views.generic.edit import View
-from .models import Tag, Task, Sprint
+from .models import Tag, Task, Sprint, TimeLog
 from .forms import CreateNewTaskForm, EditTaskForm
 from django.db.models import Case, When, Value, IntegerField
 
@@ -499,7 +501,7 @@ class CreateGraphView(View):
     """
     template_name = 'create_graph.html'
 
-    def get(self,request):
+    def get(self, request):
         # Hard coded data to test chartjs graphs
         days = ["Day 1", "Day 2", "Day 3", "Day 4 ", "Day 5"]
         remaining_effort = [100, 85, 70, 45, 25, 10]
@@ -510,4 +512,50 @@ class CreateGraphView(View):
             "remaining_effort": remaining_effort,
             "accumulated_hours": accumulated_hours,
         }
-        return render(request,'project_task/create_graph.html',context)
+        return render(request, 'project_task/create_graph.html', context)
+
+    def burndown_data(self):
+        """
+        Generates burndown data for a given sprint
+
+        Returns:
+            list: A list containing the remaining effort for each day of the sprint
+        """
+        total_effort = self.total_effort
+        remaining_effort = [total_effort]
+
+        current_date = self.start_date
+        while current_date <= self.end_date:
+            logged_hours_on_date = \
+                TimeLog.objects.filter(task__in=self.tasks, date=current_date).aggregate(models.Sum('hours_logged'))[
+                    'hours_logged__sum'] or 0
+
+            total_effort -= logged_hours_on_date
+            remaining_effort.append(total_effort)
+
+            current_date += timedelta(days=1)
+
+        return remaining_effort
+
+    def accumulation_data(self):
+        """
+        Generates an accumulation of effort data for a given sprint
+
+        Returns:
+           list: A list containing the accumulated hours for each day of the sprint
+        """
+        accumulated_effort = [0]
+        accumulated_hours = 0
+
+        current_date = self.start_date
+        while current_date <= self.end_date:
+            logged_hours_on_date = \
+                TimeLog.objects.filter(task__in=self.tasks, date=current_date).aggregate(models.Sum('hours_logged'))[
+                    'hours_logged__sum'] or 0
+
+            accumulated_hours += logged_hours_on_date
+            accumulated_effort.append(accumulated_hours)
+
+            current_date += timedelta(days=1)
+
+        return accumulated_effort

@@ -89,3 +89,15 @@ class Sprint(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class TimeLog(models.Model):
+    """
+    A model for logging time for a task
+    """
+
+
+task = models.ForeignKey(Task, on_delete=models.CASCADE)
+# user = models.ForeignKey(User,on_delete=models.CASCADE)
+hours_logged = models.PositiveIntegerField()
+date = models.DateField(auto_now_add=True)
