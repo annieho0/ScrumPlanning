@@ -503,8 +503,11 @@ class CreateGraphView(View):
         # Hard coded data to test chartjs graphs
         days = ["Day 1", "Day 2", "Day 3", "Day 4 ", "Day 5"]
         remaining_effort = [100, 85, 70, 45, 25, 10]
+        accumulated_hours = [0, 5, 12, 20, 28, 37]
+
         context = {
             "days": days,
-            "remaining_effort": remaining_effort
+            "remaining_effort": remaining_effort,
+            "accumulated_hours": accumulated_hours,
         }
         return render(request,'project_task/create_graph.html',context)
