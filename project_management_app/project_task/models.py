@@ -10,6 +10,12 @@ class Tag(models.Model):
     def __str__(self):
         return self.name
 
+class Sprint(models.Model):
+    title = models.CharField(max_length=100)
+    start_date = models.DateField()
+    end_date = models.DateField()
+    is_completed = models.BooleanField(default=False)
+
 class Task(models.Model):
     """
     A model for a task that consist of all the required and non required information.

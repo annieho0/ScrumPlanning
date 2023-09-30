@@ -32,32 +32,6 @@
     {% endfor %} -->
 </select>
 
-<!-- <div class="col-sm-8 d-flex">
-    <label for="tags_filter">Tags:</label>
-    <select id="tags_filter" multiple="multiple" style="width: 50%" onchange="filterTasks()">
-        {% for tag in tags %}
-        {% if tag.name in selected_tags %}
-        <option value="{{ tag.name }}" selected>{{ tag.name }}</option>
-        {% else %}
-        <option value="{{ tag.name }}">{{ tag.name }}</option>
-        {% endif %}
-        {% endfor %}
-    </select>
-</div> -->
-
-
-<!-- <label for="filter">Filter Tasks:</label>
-<select id="filter" onchange="filterTasks()">
-    <option value="">All</option>
-    {% for tag in tags %}
-        <option value="{{ tag.name }}">{{ tag.name }}</option>
-    {% endfor %}
-</select> -->
-
-
-
-
-
 
 <!-- List view -->
 <div class="container-fluid" id="listView">
@@ -157,7 +131,7 @@
     function filterTasks() {
         const selectedCategory = document.getElementById("filter").value;
         const rows = document.querySelectorAll("#backlogTable tr");
-        const cards = document.querySelectorAll("#kanbanView .card"); // Select all cards in the kanbanView
+        const cards = document.querySelectorAll("#kanbanView .card.mb-3"); // Select all cards with class "card mb-3" in the kanbanView
 
         rows.forEach(row => {
             const category = row.getAttribute("data-category");
@@ -167,25 +141,24 @@
                 row.style.display = "none";
             }
         });
-        
 
         cards.forEach(card => {
-        const cardTags = card.querySelectorAll(".badge-primary"); // Get tags within the card
-        let cardMatchesCategory = false;
+            const cardTags = card.querySelectorAll(".badge-primary"); // Get tags within the card
+            let cardMatchesCategory = false;
 
-        cardTags.forEach(tag => {
-            const tagCategory = tag.textContent.trim();
-            if (selectedCategory === "" || tagCategory.includes(selectedCategory)) {
-                cardMatchesCategory = true;
+            cardTags.forEach(tag => {
+                const tagCategory = tag.textContent.trim();
+                if (selectedCategory === "" || tagCategory.includes(selectedCategory)) {
+                    cardMatchesCategory = true;
+                }
+            });
+
+            if (cardMatchesCategory) {
+                card.style.display = "block"; // Show the card
+            } else {
+                card.style.display = "none"; // Hide the card
             }
         });
-
-        if (cardMatchesCategory) {
-            card.style.display = "block"; // Show the card
-        } else {
-            card.style.display = "none"; // Hide the card
-        }
-    });
     }
     </script>
 {% endblock %}

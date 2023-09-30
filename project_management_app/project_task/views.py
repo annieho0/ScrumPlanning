@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.shortcuts import get_object_or_404
 from django.urls import reverse
-from .models import Tag, Task
+from .models import Tag, Task, Sprint
 from .forms import CreateNewTaskForm
 
 
@@ -79,4 +79,20 @@ def sprint_board(request):
     tags = Tag.objects.filter(task__isnull=False).distinct()
     statuses = [('NOT', 'Incomplete'), ('IN_PROG', 'In Progress'), ('COM', 'Complete')]
     return render(request, "project_task/sprint_board.html", {"name": "sprint-board", "tasks": tasks, "statuses": statuses, "tags": tags})
+
+def archive_sprint(request, sprint_id):
+    sprint = Sprint.objects.get(pk=sprint_id)
+    sprint.is_completed = True
+    sprint.save()
+    return redirect('sprint_backlog')
+
+def delete_incomplete_tasks(request, sprint_id):
+    sprint = Sprint.objects.get(pk=sprint_id)
+    incomplete_tasks = Task.objects.filter(sprint=sprint, is_completed=False)
+    incomplete_tasks.delete()
+    return redirect('sprint_backlog')
+
+def sprint_backlog(request):
+    active_sprints = Sprint.objects.filter(is_completed=False)
+    return render(request, 'project_task/sprint_backlog.html', {'active_sprints': active_sprints})
 
