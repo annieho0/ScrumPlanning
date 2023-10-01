@@ -138,11 +138,26 @@ SELECT2_CSS = 'django_select2/css/select2.min.css'
 # this is to let customized user model to be able to log in and log out
 AUTH_USER_MODEL = 'register.CustomizedUser'
 
+# Login and Logout redirect
 LOGIN_URL = "/login/"
 LOGIN_REDIRECT_URL = "/home"
 LOGOUT_REDIRECT_URL = "/login"
 
+# Authentication backends
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',  # Default backend
     'register.authentication.UserAuthentication',
 ]
+
+# Email settings
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+
+# Email server configuration
+# Login: Dreamteamsolutiontesting@gmail.com
+# Password: DreamTeam@12345
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'dreamteamsolutiontesting@gmail.com'  # Use your Gmail email here
+EMAIL_HOST_PASSWORD = 'wkkjlmxbfsvnnage'    # Use your Gmail password here
+

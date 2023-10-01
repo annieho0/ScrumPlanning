@@ -24,6 +24,8 @@
 
                             <div class="">
                                 <div class="d-grid gap-3">
+                                    {{ form.username | as_crispy_field}}
+                                    <div id="alert-username"></div>
                                     {{ form.first_name | as_crispy_field }}
                                     <div id="alert-first_name"></div>
                                     {{ form.last_name | as_crispy_field }}
@@ -60,12 +62,13 @@
                 type: "POST",
                 url: "/register/",  // Change this to the correct endpoint if needed
                 data: $('.form-signin').serialize(),
-                success: function (response) {
-                    window.location.href = "/login";
+                success: function () {
+                    window.location.href = "/register/success/";
                 },
                 error: function (response) {
                     const errors = response.responseJSON.error;
                     // Clear all alert messages
+                    $('#alert-username').empty();
                     $('#alert-first_name').empty();
                     $('#alert-last_name').empty();
                     $('#alert-email').empty();
@@ -73,6 +76,9 @@
                     $('#alert-password2').empty();
 
                     // Display alert messages for each error
+                    if (errors.username) {
+                        displayMessage('#alert-username', errors.username);
+                    }
                     if (errors.first_name) {
                         displayMessage('#alert-first_name', errors.first_name);
                     }

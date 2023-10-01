@@ -13,4 +13,4 @@ class RegisterFrom(UserCreationForm):
     class Meta:
         model = CustomizedUser
         constraints = [models.UniqueConstraint(fields='email', name='unique_email')]
-        fields = ["first_name", "last_name", "email", "password1", "password2"]
+        fields = ["username", "first_name", "last_name", "email", "password1", "password2"]

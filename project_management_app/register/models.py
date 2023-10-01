@@ -2,6 +2,7 @@ from django.utils.translation import gettext as _
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.utils import timezone
+from django.utils.crypto import get_random_string
 
 
 class CustomUserManager(BaseUserManager):
@@ -40,8 +41,8 @@ class CustomUserManager(BaseUserManager):
 
         # Create the user
         user = self.model(
-            username=username,
-            email=self.normalize_email(email),  # normalize email address by lowercasing the domain part of it
+            username=self.normalize_username(username),
+            email=self.normalize_email(email),
             first_name=first_name,
             last_name=last_name,
             **other_fields
@@ -56,11 +57,10 @@ class CustomUserManager(BaseUserManager):
         Create and return a new superuser with the given details.
 
         Args are similar to create_user with the addition that superusers are
-        always set with `is_staff`, `is_superuser`, and `is_admin` as True.
+        always set with `is_staff` and `is_superuser` as True.
         """
         other_fields.setdefault('is_staff', True)
         other_fields.setdefault('is_superuser', True)
-        other_fields.setdefault('is_admin', True)
 
         # Validations for superuser
         if other_fields.get('is_staff') is not True:
@@ -108,6 +108,10 @@ class CustomizedUser(AbstractBaseUser, PermissionsMixin):
     # Additional info
     scrum_role = models.ForeignKey('ScrumRole', on_delete=models.CASCADE, blank=True, null=True,
                                    verbose_name=_("Scrum Role"))
+
+    # Registration info
+    is_email_confirmed = models.BooleanField(default=False)  # True after email verification
+    activation_token = models.CharField(max_length=255, default=get_random_string(20), unique=True)
 
     # default required fields
     date_joined = models.DateTimeField(default=timezone.now, verbose_name=_("Date Joined"))
