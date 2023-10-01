@@ -1,8 +1,8 @@
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.generic.edit import View
-from .models import Tag, Task
-from .forms import CreateNewTaskForm, EditTaskForm
+from .models import Tag, Task, Sprint 
+from .forms import CreateNewTaskForm, EditTaskForm, CreateNewSprintForm 
 from django.db.models import Case, When, Value, IntegerField
 
 
@@ -480,9 +480,11 @@ class HomeListView(View):
         Returns:
             HttpResponse: Rendered home page with any relevant context.
         """
+        sprint_form = CreateNewSprintForm()
 
         # Render and return the home page template
-        return render(request, self.template_name)
+        return render(request, self.template_name, {"name": "home", "sprint_form": sprint_form})
+
 
 
 
