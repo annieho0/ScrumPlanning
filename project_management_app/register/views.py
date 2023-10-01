@@ -28,5 +28,5 @@ def register(response):
 
     else:
         form = RegisterFrom()
-    print("Hello")
+    
     return render(response, "register/register.html", {"form": form})
