@@ -1,6 +1,9 @@
 {% extends "project_task/base.html" %}
+<<<<<<< HEAD
 {% load crispy_forms_tags %}
 {% load crispy_forms_filters %}
+=======
+>>>>>>> origin/sprint_backlog_categories
 
 {% block title %}
 <title>Sprint Board</title>
@@ -10,7 +13,7 @@
 <style>
     .create-graph-btn {
         position: fixed;
-        bottom: 20px;
+        top: 54px;
         right:20px;
         z-index: 1000;
     }
@@ -18,7 +21,139 @@
 {% endblock %}
 {% block content %}
 <h1>Sprint Board</h1>
+<!-- View options -->
+<label for="view">View:</label>
+<select id="view" onchange="changeView()">
+    <option value="listView">List View</option>
+    <option value="kanbanView">Kanban View</option>
+</select>
 
+<!-- View options -->
+<label for="filter">Filter Tag(s):</label>
+<select id="filter" onchange="filterTasks()">
+    <option value="">All</option>
+    {% for tag in tags %}
+    {% if tag.name in selected_tags %}
+    <option value="{{ tag.name }}" selected>{{ tag.name }}</option>
+    {% else %}
+    <option value="{{ tag.name }}">{{ tag.name }}</option>
+    {% endif %}
+    {% endfor %}
+    <!-- {% for task in tasks%}
+    {% for tag in task.tags.all %}
+        <option value="{{ tag.name }}">{{ tag.name }}</option>
+    {% endfor %}
+    {% endfor %} -->
+</select>
+
+
+<!-- List view -->
+<div class="container-fluid" id="listView">
+    <table class="table table-striped table-bordered">
+        <thead class="thead-light">
+            <tr>
+                <th>Task Name</th>
+                <th>Tag</th>
+                <th>Assignee</th>
+                <th>Story Points</th>
+            </tr>
+
+        </thead>
+        {% for status_title in statuses %}
+        <thead class="thead-dark">
+            <tr>
+                <th colspan="4">{{status_title.1}}</th>
+
+            </tr>
+        </thead>
+
+        <tbody id="backlogTable">
+
+            <!-- Rows will be dynamically added here -->
+            {% for task in tasks%}
+            {% if task.status == status_title.0 %}
+            <tr data-category="{% for tag in task.tags.all %}{{ tag.name }} {% endfor %}">
+                <!-- <td>{{task.name}}</td> -->
+                <td><a href="#" data-toggle="modal" data-target="#editTaskModal" data-task-id="{{ task.id }}">{{task.name}}</a></td>
+                <td>{% for tag in task.tags.all %}
+                    <span class="badge badge-primary">{{ tag.name }}</span>
+                {% endfor %}
+                </td>
+                <td>{{task.assignee}}</td>
+                <td>{{task.story_point}}</td>
+
+            </tr>
+            {% endif %}
+            {% endfor %}
+            <div class="modal fade" id="editTaskModal" tabindex="-1" role="dialog" aria-labelledby="editTaskModalLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="editTaskModalLabel">Edit Task</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <!-- Here, you can display the task details for editing -->
+                            <form>
+
+                                <div class="form-group">
+                                    <label for="editTaskAssignee">Assignee</label>
+                                    <input type="text" class="form-control" id="editTaskAssignee">
+                                </div>
+
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary" id="saveChangesButton">Save Changes</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+
+<!-- Card View Section -->
+<div class="container-fluid" id="kanbanView" style="display: none;">
+    <div class="row">
+        {% for status_title in statuses %}
+            <!-- {{ status_title.1 }} Column -->
+            <div class="col-sm-4">
+                <div class="card">
+                    <div class="card-header"><h2>{{ status_title.1 }}</h2></div>
+                    <div class="card-body">
+                        {% for task in tasks %}
+                        {% if task.status == status_title.0 %}
+                        {% for tag in task.tags.all %}
+                            <div class="card mb-3" style="width: 10rem;" id="{{ tag.name}}">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{task.name}}</h5>
+                                    <h6 class="card-subtitle mb-2 text-muted">{{task.story_point}}</h6>
+                                    <p class="card-text">{{task.assignee}}
+                                        {% for tag in task.tags.all %}
+                                            <span class="badge badge-primary">{{ tag.name }}</span>
+                                        {% endfor %}
+                                    </p>
+
+
+                                </div>
+                            </div>
+                        {% endfor %}
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+
+                </div>
+            </div>
+        {% endfor %}
+
+    </div> <!-- End of row -->
+</div> <!-- End of container -->
 <!-- Log Hours Button -->
 <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#logTimeModal">Log Time</button>
 
@@ -55,6 +190,50 @@
 
 {% block js %}
 <script>
-    // JavaScript for the Sprint Board will be added here
+
+        function changeView() {
+            const selectedView = document.getElementById("view").value;
+            if (selectedView === "listView") {
+                document.getElementById("listView").style.display = "block";
+                document.getElementById("kanbanView").style.display = "none";
+            } else if (selectedView === "kanbanView") {
+                document.getElementById("listView").style.display = "none";
+                document.getElementById("kanbanView").style.display = "block";
+            }
+        }
+
+
+    function filterTasks() {
+        const selectedCategory = document.getElementById("filter").value;
+        const rows = document.querySelectorAll("#backlogTable tr");
+        const cards = document.querySelectorAll("#kanbanView .card.mb-3"); // Select all cards with class "card mb-3" in the kanbanView
+
+        rows.forEach(row => {
+            const category = row.getAttribute("data-category");
+            if (selectedCategory === "" || category.includes(selectedCategory)) {
+                row.style.display = "table-row";
+            } else {
+                row.style.display = "none";
+            }
+        });
+
+        cards.forEach(card => {
+            const cardTags = card.querySelectorAll(".badge-primary"); // Get tags within the card
+            let cardMatchesCategory = false;
+
+            cardTags.forEach(tag => {
+                const tagCategory = tag.textContent.trim();
+                if (selectedCategory === "" || tagCategory.includes(selectedCategory)) {
+                    cardMatchesCategory = true;
+                }
+            });
+
+            if (cardMatchesCategory) {
+                card.style.display = "block"; // Show the card
+            } else {
+                card.style.display = "none"; // Hide the card
+            }
+        });
+    }
 </script>
 {% endblock %}

@@ -54,6 +54,7 @@ class Task(models.Model):
     name = models.CharField(max_length=200)
     description = models.CharField(max_length=500)
     type = models.CharField(max_length=5, choices=TYPE_CHOICES, default=STORY)
+    status = models.CharField(max_length=7, choices=STATUS_CHOICES, default=NOT_STARTED)
     priority = models.CharField(max_length=3, choices=PRIORITY_CHOICES)
     stage = models.CharField(max_length=3, choices=STAGE_CHOICES)
     tags = models.ManyToManyField('Tag', blank=False)
@@ -62,14 +63,13 @@ class Task(models.Model):
     total_hours = models.PositiveIntegerField(default=0)
     # TODO: Assignee is a string for now. Need to connect to user model to get the user name in future sprint
     assignee = models.CharField(max_length=200, null=True, blank=True)
-    created_date = models.DateField(default=timezone.now)
+    created_date = models.DateField(default=timezone.now().date())
     status = models.CharField(max_length=7, choices=STATUS_CHOICES, default=NOT_STARTED)
     # TODO: Sprint is a string for now. Need to connect to sprint model to get the sprint name in future sprint
     sprint = models.CharField(max_length=200, null=True, blank=True)
 
     def __str__(self):
         return self.name
-
 
 class Tag(models.Model):
     """
@@ -83,9 +83,9 @@ class Tag(models.Model):
 
 class Sprint(models.Model):
     """
-     A temporary model for a sprint
+     A model for a Sprint
     """
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=200, unique=True)
     start_date = models.DateField(default=timezone.now())
     end_date = models.DateField(null=True)
     is_active = models.BooleanField(default=True)

@@ -1,0 +1,34 @@
+{% extends "project_task/base.html" %}
+
+{% block title %}
+    <title>Sprint Backlog</title>
+{% endblock %}
+
+{% block content %}
+    <h1>Sprint Backlog</h1>
+
+    <div class="container-fluid">
+        <table class="table table-striped table-bordered">
+            <thead class="thead-light">
+                <tr>
+                    <th>Sprint</th>
+                    <th>Sprint Start</th>
+                    <th>Sprint End</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+
+            <tbody id="backlogTable">
+                <!-- Rows will be dynamically added here -->
+                {% for sprint in sprints %}
+                    <tr>
+                        <td>{{sprint.name}}</td>
+                        <td>{{sprint.start_date}}</td>
+                        <td>{{sprint.end_date}}</td>
+                        <td><!-- Action buttons here (maybe delete sprints if needed)... --></td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

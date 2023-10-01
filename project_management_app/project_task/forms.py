@@ -1,4 +1,6 @@
+from datetime import timezone
 from django import forms
+from .models import Sprint
 from .models import Task, Tag, TimeLog
 from django.utils import timezone
 
@@ -28,8 +30,11 @@ class CreateNewTaskForm(forms.ModelForm):
             "description",
             "story_point",
             "tags",
+            "status",
             "stage",
             "created_date",
+            "assignee",
+            "sprint",
         ]
 
     def __init__(self, *args, **kwargs):
@@ -75,6 +80,25 @@ class EditTaskForm(forms.ModelForm):
 
 class TimeLogForm(forms.ModelForm):
     hours_logged = forms.IntegerField(label="Hours", min_value=0)
+
     class Meta:
         model = TimeLog
         fields = ['hours_logged']
+
+
+class CreateNewSprintForm(forms.ModelForm):
+    class Meta:
+        model = Sprint
+        fields = [
+            "name",
+            "start_date",
+            "end_date",
+        ]
+
+    widgets = {
+        'start_date': forms.DateInput(),
+        'end_date': forms.DateInput()
+    }
+
+    def __init__(self, *args, **kwargs):
+        super(CreateNewSprintForm, self).__init__(*args, **kwargs)
