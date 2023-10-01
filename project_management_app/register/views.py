@@ -1,7 +1,11 @@
+from django.core.mail import send_mail
 from django.http import JsonResponse
-from django.views.generic import FormView
+from django.shortcuts import redirect, render
+from django.views.generic import FormView, View
 from .forms import RegisterFrom
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
+
+from .models import CustomizedUser
 
 
 class RegisterView(FormView):
@@ -13,14 +17,14 @@ class RegisterView(FormView):
     If the form submission is invalid, it returns a JSON response with errors.
 
     Attributes:
-    - template_name (str): Specifies the path to the template for rendering the registration form.
-    - form_class (Form): The form class used for user registration.
-    - success_url (str): URL to redirect to upon successful form submission.
+        template_name (str): Specifies the path to the template for rendering the registration form.
+        form_class (Form): The form class used for user registration.
+        success_url (str): URL to redirect to upon successful form submission.
     """
 
     template_name = 'register/register.html'  # Path to the registration form template
     form_class = RegisterFrom  # Custom registration form class
-    success_url = reverse_lazy('login')  # URL to redirect to after successful registration
+    success_url = reverse_lazy('register_success')  # URL to redirect to after successful registration
 
     def form_valid(self, form):
         """
@@ -30,13 +34,27 @@ class RegisterView(FormView):
         and then redirects the user to the success URL (in this case, the login page).
 
         Args:
-        - form (Form): The submitted form.
+            form (Form): The submitted form.
 
         Returns:
-        - HttpResponse: A redirection to the success URL.
+            HttpResponse: A redirection to the success URL.
         """
-        form.save()  # Save the user data to the database
-        return super().form_valid(form)
+        user = form.save(commit=False)  # Don't save to the database yet
+        user.is_active = False  # Deactivate account until email confirmation
+        user.save()  # Now save user to the database
+
+        # Send confirmation email
+        mail_subject = 'Activate your account'
+        activation_link = self.request.build_absolute_uri(
+            reverse('activate_account', kwargs={
+                'activation_token': user.activation_token
+            }))
+        message = f'Click the link below to activate your account:\n{activation_link}'
+        from_email = 'your_email@example.com'
+        send_mail(mail_subject, message, from_email, [user.email])
+
+        # Not redirecting as frontend ajax will do the redirecting
+        return JsonResponse({"success": "Registered successfully!"})
 
     def form_invalid(self, form):
         """
@@ -46,11 +64,66 @@ class RegisterView(FormView):
         the form errors and a 400 status code.
 
         Args:
-        - form (Form): The submitted form with errors.
+            form (Form): The submitted form with errors.
 
         Returns:
-        - JsonResponse: A JSON response with form errors and a 400 status code.
+            JsonResponse: A JSON response with form errors and a 400 status code.
         """
         # Return a JSON response with the form errors
         return JsonResponse({"error": form.errors}, status=400)
 
+
+def activate_account(request, activation_token):
+    """
+    Activate the user account based on the activation token.
+
+    This view function is called when the user clicks on the activation link in the email.
+    It activates the user's account and sets the email confirmation flag.
+
+    Args:
+        request (HttpRequest): The HTTP request object.
+        activation_token (str): The activation token extracted from the URL.
+
+    Returns:
+        HttpResponse: A redirection to the login page or another success page.
+    """
+    try:
+        user = CustomizedUser.objects.get(activation_token=activation_token)
+    except CustomizedUser.DoesNotExist:
+        user = None
+
+    if user and not user.is_email_confirmed:
+        user.is_active = True
+        user.is_email_confirmed = True
+        user.save()
+        return render(request, 'register/account_activation_valid.html')
+    else:
+        return render(request, 'register/account_activation_invalid.html')
+
+
+class RegisterSuccessView(View):
+    """
+    Class-based view to handle successful user registration.
+
+    This view handles GET requests for successful user registration.
+    It simply renders the registration success template.
+
+    Attributes:
+        template_name (str): Specifies the path to the template for rendering the registration success page.
+    """
+
+    template_name = 'register/register_success.html'  # Path to the registration success template
+
+    def get(self, request):
+        """
+        Handle GET request.
+
+        Renders the registration success template.
+
+        Args:
+            request (HttpRequest): The GET request.
+
+        Returns:
+            HttpResponse: A response containing the rendered registration success template.
+        """
+        return render(request, self.template_name)
