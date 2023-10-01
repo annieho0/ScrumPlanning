@@ -1,5 +1,5 @@
 from django.http import JsonResponse
-from django.shortcuts import render
+from django.shortcuts import render, redirect 
 from django.views.generic.edit import View
 from .models import Tag, Task, Sprint
 from .forms import CreateNewTaskForm, EditTaskForm, CreateNewSprintForm 
@@ -481,13 +481,29 @@ class HomeListView(View):
             HttpResponse: Rendered home page with any relevant context.
         """
         sprint_form = CreateNewSprintForm()
+    
+        return render(request, self.template_name, {"sprint_form": sprint_form})
 
-        # Render and return the home page template
-        return render(request, self.template_name, {"name": "home", "sprint_form": sprint_form})
+    def post(self,request):
+        """
+        Handles POST requests to create a new sprint.
 
+        This method validates the form data, creates the sprint, and redirects to the Sprint Backlog page upon success.
 
+        Parameters:
+            request (HttpRequest): The HTTP request object containing sprint data.
 
+        Returns:
+            HttpResponse: Redirects to the Sprint Backlog page upon success or renders the home page with errors.
+        """
+        sprint_form = CreateNewSprintForm(request.POST)
 
+        if sprint_form.is_valid():
+            sprint = sprint_form.save()
+            return redirect('sprint_backlog')
+        else:
+            print("Form is not valid:", sprint_form.errors)
+            return render(request, "project_task/sprint_backlog.html", {"sprint_form": sprint_form})
 
 
 class SprintBoard():
@@ -515,7 +531,8 @@ class SprintBoard():
 
     def sprint_backlog(request):
         tasks = Task.objects.filter(sprint=None)
+        sprints = Sprint.objects.all()
         # Fetch unique tags associated with tasks
         statuses = [('NOT', 'Incomplete'), ('IN_PROG', 'In Progress'), ('COM', 'Complete')]
-        return render(request, "project_task/sprint_backlog.html", {"name": "sprint-board", "tasks": tasks, "statuses": statuses})
+        return render(request, "project_task/sprint_backlog.html", {"name": "sprint-board", "tasks": tasks, "statuses": statuses,"sprints": sprints})
 
