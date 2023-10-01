@@ -31,6 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'register.apps.RegisterConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -38,11 +39,12 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'project_task.apps.ProjectTaskConfig',
-    'register.apps.RegisterConfig',
+
     # form bootstrap
     'crispy_forms',
     'crispy_bootstrap4',
     'django_select2',
+
 
 ]
 
