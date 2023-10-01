@@ -1,9 +1,10 @@
 from django.http import JsonResponse
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.views.generic.edit import View
 from .models import Tag, Task, Sprint 
 from .forms import CreateNewTaskForm, EditTaskForm, CreateNewSprintForm 
 from django.db.models import Case, When, Value, IntegerField
+from django.utils import timezone
 
 
 class TaskManager:
@@ -501,21 +502,17 @@ class SprintBoard():
         statuses = [('NOT', 'Incomplete'), ('IN_PROG', 'In Progress'), ('COM', 'Complete')]
         return render(request, "project_task/sprint_board.html", {"name": "sprint-board", "tasks": tasks, "statuses": statuses, "tags": tags})
 
-# def archive_sprint(request, sprint_id):
-#     sprint = Sprint.objects.get(pk=sprint_id)
-#     sprint.is_completed = True
-#     sprint.save()
-#     return redirect('sprint_backlog')
+    def active_sprints(request):
+        active_sprints = Sprint.objects.filter(is_completed=False)
+        return render(request, 'project_task/sprint_backlog.html', {'active_sprints': active_sprints})
 
-# def delete_incomplete_tasks(request, sprint_id):
-#     sprint = Sprint.objects.get(pk=sprint_id)
-#     incomplete_tasks = Task.objects.filter(sprint=sprint, is_completed=False)
-#     incomplete_tasks.delete()
-#     return redirect('sprint_backlog')
-
-    def sprint_backlog(request):
-        tasks = Task.objects.filter(sprint=None)
-        # Fetch unique tags associated with tasks
-        statuses = [('NOT', 'Incomplete'), ('IN_PROG', 'In Progress'), ('COM', 'Complete')]
-        return render(request, "project_task/sprint_backlog.html", {"name": "sprint-board", "tasks": tasks, "statuses": statuses})
+    def archived_sprints(request):
+        archived_sprints = Sprint.objects.filter(is_completed=True)
+        return render(request, 'project_task/sprint_backlog_archeived.html', {'archived_sprints': archived_sprints})
+    def complete_sprint(request, sprint_id):
+        sprint = get_object_or_404(Sprint, pk=sprint_id)
+        sprint.is_completed = True
+        sprint.completed_date = timezone.now()
+        sprint.save()
+        return redirect('active_sprints')
 
