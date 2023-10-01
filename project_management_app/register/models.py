@@ -41,7 +41,7 @@ class CustomUserManager(BaseUserManager):
 
         # Create the user
         user = self.model(
-            username=self.normalize_username(username),
+            username= username,
             email=self.normalize_email(email),
             first_name=first_name,
             last_name=last_name,
