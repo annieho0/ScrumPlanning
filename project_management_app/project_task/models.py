@@ -68,5 +68,15 @@ class Task(models.Model):
 
     def __str__(self):
         return self.name
+    
+class Tag(models.Model):
+    """
+    A model for a tag that can be associated with a task.
+    """
+    name = models.CharField(max_length=100, unique=True)  # Name of the tag (e.g., front-end, back-end, testing).
+
+    def __str__(self):
+        return self.name
+
 
     
