@@ -66,7 +66,6 @@ class EditTaskForm(forms.ModelForm):
             "status",
             "stage",
             "assignee",
-            "sprint",
             "created_date",
         ]
 

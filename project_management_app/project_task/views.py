@@ -511,7 +511,7 @@ class SprintBoard():
 
     def sprint_board(request):
         """This view renders the project backlog page"""
-        tasks = Task.objects.filter(sprint=None)
+        tasks = Task.objects.filter()
         # Fetch unique tags associated with tasks
         tags = Tag.objects.filter(task__isnull=False).distinct()
         statuses = [('NOT', 'Incomplete'), ('IN_PROG', 'In Progress'), ('COM', 'Complete')]
@@ -530,7 +530,7 @@ class SprintBoard():
 #     return redirect('sprint_backlog')
 
     def sprint_backlog(request):
-        tasks = Task.objects.filter(sprint=None)
+        tasks = Task.objects.filter()
         sprints = Sprint.objects.all()
         # Fetch unique tags associated with tasks
         statuses = [('NOT', 'Incomplete'), ('IN_PROG', 'In Progress'), ('COM', 'Complete')]
