@@ -7,6 +7,8 @@ from django.db.models import Case, When, Value, IntegerField
 from django.contrib import messages
 from datetime import timedelta, date, datetime
 from django.db import models
+from django.utils import timezone
+from django.shortcuts import get_object_or_404
 
 
 class TaskManager:
@@ -501,7 +503,14 @@ class HomeListView(View):
         sprint_form = CreateNewSprintForm(request.POST)
 
         if sprint_form.is_valid():
-            sprint = sprint_form.save()
+            sprint = sprint_form.save(commit=False)
+            if sprint.start_date == timezone.now().date():
+                try:
+                    sprint_board = Sprint.objects.get(name="sprint_board") 
+                except Sprint.DoesNotExist:
+                    sprint_board = Sprint.objects.create(name="sprint_board")
+            
+            sprint.save()
             return redirect('sprint_backlog')
         else:
             print("Form is not valid:", sprint_form.errors)
@@ -512,12 +521,13 @@ class SprintBoard():
 
     def sprint_board(request):
         """This view renders the project backlog page"""
-        tasks = Task.objects.filter(sprint=None)
+        tasks = Task.objects.filter()
+        sprints = Sprint.objects.all()
         # Fetch unique tags associated with tasks
         tags = Tag.objects.filter(task__isnull=False).distinct()
         statuses = [('NOT', 'Incomplete'), ('IN_PROG', 'In Progress'), ('COM', 'Complete')]
         return render(request, "project_task/sprint_board.html",
-                      {"name": "sprint-board", "tasks": tasks, "statuses": statuses, "tags": tags})
+                      {"name": "sprint-board", "tasks": tasks, "statuses": statuses, "tags": tags, "sprints":sprints})
 
     # def archive_sprint(request, sprint_id):
     #     sprint = Sprint.objects.get(pk=sprint_id)
@@ -532,12 +542,13 @@ class SprintBoard():
     #     return redirect('sprint_backlog')
 
     def sprint_backlog(request):
-        tasks = Task.objects.filter(sprint=None)
+        tasks = Task.objects.filter()
         sprints = Sprint.objects.all()
         # Fetch unique tags associated with tasks
         statuses = [('NOT', 'Incomplete'), ('IN_PROG', 'In Progress'), ('COM', 'Complete')]
         return render(request, "project_task/sprint_backlog.html",
                       {"name": "sprint-board", "tasks": tasks, "statuses": statuses, "sprints": sprints})
+
 
 
 class SprintBoardView(View):
@@ -666,10 +677,16 @@ def log_time(request, task_id):
         # Get the task
         task = get_object_or_404(Task, id=task_id)
         hours = int(request.POST.get('hours'))
-        user = request.user  # might not be necessary
+
+
+        try:
+            hours = float(hours)
+        except ValueError:
+            # Handle invalid input for hours
+            pass
 
         # Create a new time log
-        TimeLog.objects.create(task=task, user=user, hours_logged=hours)
+        TimeLog.objects.create(task=task, hours_logged=hours)
 
         # Update total hours on the task
         task.total_hours += hours

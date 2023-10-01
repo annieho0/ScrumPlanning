@@ -3,6 +3,9 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
 
 
+
+
+
 class Task(models.Model):
     """
     A model for a task that consist of all the required and non required information.
@@ -60,7 +63,7 @@ class Task(models.Model):
     tags = models.ManyToManyField('Tag', blank=False)
     story_point = models.PositiveIntegerField(validators=[MinValueValidator(0), MaxValueValidator(10)], null=True,
                                               blank=True)
-    total_hours = models.PositiveIntegerField(default=0)
+    total_hours = models.DecimalField(max_digits=5, decimal_places=2, default=0)
     # TODO: Assignee is a string for now. Need to connect to user model to get the user name in future sprint
     assignee = models.CharField(max_length=200, null=True, blank=True)
     created_date = models.DateField(default=timezone.now().date())
@@ -93,12 +96,21 @@ class Sprint(models.Model):
     def __str__(self):
         return self.name
 
+#class SprintBoard(models.Model):
+    #name = models.CharField(max_length=200, unique=True)
+    #tags = models.ManyToManyField('Tag', blank=False)
+    #assignee = models.CharField(max_length=255, blank=True, null=True)
+    #story_point = models.PositiveIntegerField(validators=[MinValueValidator(0), MaxValueValidator(10)], null=True,
+                                              #blank=True)
+
 
 class TimeLog(models.Model):
     """
     A model for logging time for a task
     """
+
     task = models.ForeignKey(Task, on_delete=models.CASCADE)
-    # user = models.ForeignKey(User,on_delete=models.CASCADE)
-    hours_logged = models.PositiveIntegerField(default=0)
-    date = models.DateField(auto_now_add=True,null=True)
+    hours_logged = models.DecimalField(max_digits=5, decimal_places=2)
+    log_date = models.DateTimeField(auto_now_add=True)
+
+

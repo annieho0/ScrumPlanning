@@ -1,7 +1,7 @@
 from datetime import timezone
 from django import forms
 from .models import Sprint
-from .models import Task, Tag, TimeLog
+from .models import Task, Tag, TimeLog, Sprint
 from django.utils import timezone
 
 
@@ -102,3 +102,23 @@ class CreateNewSprintForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(CreateNewSprintForm, self).__init__(*args, **kwargs)
+
+#class SprintBoard (forms.ModelForm):
+   #tags = forms.ModelMultipleChoiceField(
+        #queryset=Tag.objects.all(),
+        #widget=forms.SelectMultiple(attrs={'class': 'form-control'}),
+        #required=True
+    #)
+    #class Meta: 
+        #model = SprintBoard
+        #fields = [
+           # "name"
+           # "tags"
+            #"assignee"
+            #"story_point"
+      #  ]
+
+#class EditSprintBoard (forms.ModelForm):
+     #class Meta:
+        #model = SprintBoard
+        #fields = ['assignee'] 
