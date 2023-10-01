@@ -93,7 +93,15 @@ class TaskManager:
             updated_task = update_form.save(commit=False)
 
             # Save the task and return feedback
+            # Save the task and return feedback
             # Now save the task to DB
+            updated_task.save()
+            update_form.save_m2m()
+
+            # Get the task details as dictionary
+            task_details = TaskManager.get_task_details(task_id)
+
+            return True, f"Task '{str(updated_task)}' successfully updated!", task_details
             updated_task.save()
             update_form.save_m2m()
 

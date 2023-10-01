@@ -63,6 +63,8 @@ class Task(models.Model):
     assignee = models.CharField(max_length=200, null=True, blank=True)
     created_date = models.DateField(default=timezone.now)
     status = models.CharField(max_length=7, choices=STATUS_CHOICES, default=NOT_STARTED)
+    created_date = models.DateField(default=timezone.now().date())
+    status = models.CharField(max_length=7, choices=STATUS_CHOICES, default=NOT_STARTED)
     # TODO: Sprint is a string for now. Need to connect to sprint model to get the sprint name in future sprint
     sprint = models.CharField(max_length=200, null=True, blank=True)
 
@@ -78,5 +80,13 @@ class Tag(models.Model):
     def __str__(self):
         return self.name
 
+class Sprint(models.Model):
+    """
+    A model for a Sprint.
+    """
+    name = models.CharField(max_length=200, unique=True)
+    start_date = models.DateField()
+    end_date = models.DateField()
 
-    
+    def __str__(self):
+        return self.name

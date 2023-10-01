@@ -8,4 +8,51 @@
 
 {% block content %}
 <h1>Home</h1>
+<!-- Button to trigger the "Create New Sprint" modal -->
+<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#createNewSprint">
+    Create Sprint
+</button>
+
+<!-- Modal for creating a new sprint -->
+<div class="modal fade" id="createNewSprint" tabindex="-1" role="dialog" aria-labelledby="sprintModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <form id="sprintForm" method="POST">
+                {% csrf_token %}
+                <!-- Modal Header -->
+                <div class="modal-header">
+                    <h5 class="modal-title" id="sprintModalLabel">Create New Sprint</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <!-- Modal Body -->
+                <div class="modal-body">
+                    <div class="d-grid gap-3 text-start">
+                        {{ sprint_form.name| as_crispy_field}}
+                        {{ sprint_form.start_date| as_crispy_field}}
+                        {{ sprint_form.end_date| as_crispy_field}}
+                    </div>
+                </div>
+                <!-- Modal Footer -->
+                <div class="modal-footer">
+                    <!-- Action buttons -->
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Sprint</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 {% endblock %}
+
+{% block sprint_js %}
+<script>
+    $('#createNewSprint').on('shown.bs.modal', function () {
+        $('#sprintForm input:first').trigger('focus');
+    });
+</script>
+
+{% endblock %}
+
+

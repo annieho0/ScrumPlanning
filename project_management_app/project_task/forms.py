@@ -1,5 +1,6 @@
 from django import forms
-from .models import Task, Tag
+from .models import Task, Tag, Sprint 
+from .models import Sprint
 from django.utils import timezone
 
 
@@ -71,3 +72,41 @@ class EditTaskForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(EditTaskForm, self).__init__(*args, **kwargs)
+
+class CreateNewSprintForm(forms.ModelForm):
+    class Meta:
+        model = Sprint
+        fields = [
+            "name",
+            "start_date",
+            "end_date",
+        ]
+
+    widgets = {
+    'start_date': forms.DateInput(),
+    'end_date': forms.DateInput()
+    }
+
+    def __init__(self, *args, **kwargs):
+        super(CreateNewSprintForm, self).__init__(*args, **kwargs)
+
+
+class CreateNewSprintForm(forms.ModelForm):
+    class Meta:
+        model = Sprint
+        fields = [
+            "name",
+            "start_date",
+            "end_date",
+        ]
+
+    widgets = {
+    'start_date': forms.DateInput(),
+    'end_date': forms.DateInput()
+    }
+
+    def __init__(self, *args, **kwargs):
+        super(CreateNewSprintForm, self).__init__(*args, **kwargs)
+
+
+
