@@ -19,8 +19,38 @@
 {% block content %}
 <h1>Sprint Board</h1>
 
+<!-- Log Hours Button -->
+<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#logTimeModal">Log Time</button>
+
+
 <!-- Create Graph Button -->
 <button onclick="window.location='{% url 'create_graph' %}'" class="btn btn-primary create-graph-btn" id="createGraphButton">Create Graph</button>
+
+<!-- Log Hours Modal -->
+<div class="modal fade" id="logTimeModal" tabindex="-1" role="dialog" aria-labelledby="logTimeModalLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="logTimeModalLabel">Log Hours</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form method="post" action="{% url 'sprint_board' %}">
+        {% csrf_token %}
+        <div class="modal-body">
+            <label for="{{ form.hours_logged.id_for_label }}">Hours Logged:</label>
+            <input type="number" name="{{ form.hours_logged.name }}" min="0" class="form-control" id="{{ form.hours_logged.id_for_label }}" value="{{ form.hours_logged.value }}" required>
+            {{ form.non_field_errors }}
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <button type="submit" class="btn btn-primary">Log Time</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
 {% endblock %}
 
 {% block js %}

@@ -1,11 +1,13 @@
-from datetime import timedelta
 
 from django.http import JsonResponse
-from django.shortcuts import render, reverse, redirect
+from django.shortcuts import render, reverse, redirect, get_object_or_404
 from django.views.generic.edit import View
 from .models import Tag, Task, Sprint, TimeLog
-from .forms import CreateNewTaskForm, EditTaskForm
+from .forms import CreateNewTaskForm, EditTaskForm, TimeLogForm
 from django.db.models import Case, When, Value, IntegerField
+from django.contrib import messages
+from datetime import timedelta, date, datetime
+from django.db import models
 
 
 class TaskManager:
@@ -492,6 +494,27 @@ class SprintBoardView(View):
     template_name = 'sprint_board.html'
 
     def get(self, request):
+        form = TimeLogForm()
+        context = {
+            'form': form,
+        }
+
+        return render(request, 'project_task/sprint_board.html')
+    def post(self, request):
+        form = TimeLogForm(request.POST)
+        if form.is_valid():
+            time_log = form.save(commit=False)
+
+            time_log.save()
+            # Return to the sprint board with a success message
+            messages.success(request, 'Time logged successfully!')
+            return redirect('sprint_board.html')
+
+            # If form isn't valid, render the sprint board with the form to show errors
+        context = {
+            'form': form,
+            }
+
         return render(request, 'project_task/sprint_board.html')
 
 
@@ -501,18 +524,44 @@ class CreateGraphView(View):
     """
     template_name = 'create_graph.html'
 
+    def dispatch(self, *args, **kwargs):
+        self.total_effort = None
+        self.tasks = None
+        self.end_date = None
+        self.start_date = None
+        return super().dispatch(*args, **kwargs)
+
     def get(self, request):
-        # Hard coded data to test chartjs graphs
-        days = ["Day 1", "Day 2", "Day 3", "Day 4 ", "Day 5"]
-        remaining_effort = [100, 85, 70, 45, 25, 10]
-        accumulated_hours = [0, 5, 12, 20, 28, 37]
+        # Fetch the currently active sprint
+        current_sprint = Sprint.objects.get(is_active=True)  # Will cause error if there are multiple sprints
+        # Set the start and end dates from the fetched sprint
+        self.start_date = current_sprint.start_date
+        self.end_date = current_sprint.end_date
+
+        self.tasks = Task.objects.filter(sprint=current_sprint)
+
+        # Calculate the total effort (in story points) for the sprint
+        self.total_effort = sum(task.story_point or 0 for task in self.tasks)
 
         context = {
-            "days": days,
-            "remaining_effort": remaining_effort,
-            "accumulated_hours": accumulated_hours,
+            "days": [self.start_date + timedelta(days=i) for i in
+                     range((self.end_date - self.start_date).days + 1)],
+            "remaining_effort": self.burndown_data(),
+            "accumulated_hours": self.accumulation_data(),
         }
         return render(request, 'project_task/create_graph.html', context)
+    # def get(self, request):
+    #     # Hard coded data to test chartjs graphs
+    #     days = ["Day 1", "Day 2", "Day 3", "Day 4 ", "Day 5"]
+    #     remaining_effort = [100, 85, 70, 45, 25, 10]
+    #     accumulated_hours = [0, 5, 12, 20, 28, 37]
+    #
+    #     context = {
+    #         "days": days,
+    #         "remaining_effort": remaining_effort,
+    #         "accumulated_hours": accumulated_hours,
+    #     }
+    #     return render(request, 'project_task/create_graph.html', context)
 
     def burndown_data(self):
         """
@@ -523,18 +572,13 @@ class CreateGraphView(View):
         """
         total_effort = self.total_effort
         remaining_effort = [total_effort]
-
         current_date = self.start_date
         while current_date <= self.end_date:
-            logged_hours_on_date = \
-                TimeLog.objects.filter(task__in=self.tasks, date=current_date).aggregate(models.Sum('hours_logged'))[
+            logged_hours_on_date = TimeLog.objects.filter(task__in=self.tasks, date=current_date).aggregate(models.Sum('hours_logged'))[
                     'hours_logged__sum'] or 0
-
             total_effort -= logged_hours_on_date
             remaining_effort.append(total_effort)
-
             current_date += timedelta(days=1)
-
         return remaining_effort
 
     def accumulation_data(self):
@@ -549,8 +593,7 @@ class CreateGraphView(View):
 
         current_date = self.start_date
         while current_date <= self.end_date:
-            logged_hours_on_date = \
-                TimeLog.objects.filter(task__in=self.tasks, date=current_date).aggregate(models.Sum('hours_logged'))[
+            logged_hours_on_date =  TimeLog.objects.filter(task__in=self.tasks, date=current_date).aggregate(models.Sum('hours_logged'))[
                     'hours_logged__sum'] or 0
 
             accumulated_hours += logged_hours_on_date
@@ -559,3 +602,23 @@ class CreateGraphView(View):
             current_date += timedelta(days=1)
 
         return accumulated_effort
+
+
+def log_time(request, task_id):
+    if request.method == "POST":
+        # Get the task
+        task = get_object_or_404(Task, id=task_id)
+        hours = int(request.POST.get('hours'))
+        user = request.user  # might not be necessary
+
+        # Create a new time log
+        TimeLog.objects.create(task=task, user=user, hours_logged=hours)
+
+        # Update total hours on the task
+        task.total_hours += hours
+        task.save()
+
+        return redirect(reverse('sprint_board'))
+
+
+

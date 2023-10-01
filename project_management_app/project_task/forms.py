@@ -1,5 +1,5 @@
 from django import forms
-from .models import Task, Tag
+from .models import Task, Tag, TimeLog
 from django.utils import timezone
 
 
@@ -71,3 +71,10 @@ class EditTaskForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(EditTaskForm, self).__init__(*args, **kwargs)
+
+
+class TimeLogForm(forms.ModelForm):
+    hours_logged = forms.IntegerField(label="Hours", min_value=0)
+    class Meta:
+        model = TimeLog
+        fields = ['hours_logged']

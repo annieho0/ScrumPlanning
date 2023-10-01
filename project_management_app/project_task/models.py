@@ -59,9 +59,10 @@ class Task(models.Model):
     tags = models.ManyToManyField('Tag', blank=False)
     story_point = models.PositiveIntegerField(validators=[MinValueValidator(0), MaxValueValidator(10)], null=True,
                                               blank=True)
+    total_hours = models.PositiveIntegerField(default=0)
     # TODO: Assignee is a string for now. Need to connect to user model to get the user name in future sprint
     assignee = models.CharField(max_length=200, null=True, blank=True)
-    created_date = models.DateField(default=timezone.now().date())
+    created_date = models.DateField(default=timezone.now)
     status = models.CharField(max_length=7, choices=STATUS_CHOICES, default=NOT_STARTED)
     # TODO: Sprint is a string for now. Need to connect to sprint model to get the sprint name in future sprint
     sprint = models.CharField(max_length=200, null=True, blank=True)
@@ -85,6 +86,8 @@ class Sprint(models.Model):
      A temporary model for a sprint
     """
     name = models.CharField(max_length=100)
+    start_date = models.DateField(default=timezone.now())
+    end_date = models.DateField(null=True)
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
@@ -95,9 +98,7 @@ class TimeLog(models.Model):
     """
     A model for logging time for a task
     """
-
-
-task = models.ForeignKey(Task, on_delete=models.CASCADE)
-# user = models.ForeignKey(User,on_delete=models.CASCADE)
-hours_logged = models.PositiveIntegerField()
-date = models.DateField(auto_now_add=True)
+    task = models.ForeignKey(Task, on_delete=models.CASCADE)
+    # user = models.ForeignKey(User,on_delete=models.CASCADE)
+    hours_logged = models.PositiveIntegerField(default=0)
+    date = models.DateField(auto_now_add=True,null=True)
