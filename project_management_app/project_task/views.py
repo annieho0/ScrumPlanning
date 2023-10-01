@@ -1,7 +1,7 @@
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.generic.edit import View
-from .models import Tag, Task, Sprint 
+from .models import Tag, Task, Sprint
 from .forms import CreateNewTaskForm, EditTaskForm, CreateNewSprintForm 
 from django.db.models import Case, When, Value, IntegerField
 
