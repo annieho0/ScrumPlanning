@@ -3,9 +3,6 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
 
 
-
-
-
 class Task(models.Model):
     """
     A model for a task that consist of all the required and non required information.
@@ -74,6 +71,7 @@ class Task(models.Model):
     def __str__(self):
         return self.name
 
+
 class Tag(models.Model):
     """
     A model for a tag that can be associated with a task.
@@ -89,28 +87,20 @@ class Sprint(models.Model):
      A model for a Sprint
     """
     name = models.CharField(max_length=200, unique=True)
-    start_date = models.DateField(default=timezone.now())
+    start_date = models.DateField(default=timezone.now)
     end_date = models.DateField(null=True)
     is_active = models.BooleanField(default=True)
 
     def __str__(self):
         return self.name
 
-#class SprintBoard(models.Model):
-    #name = models.CharField(max_length=200, unique=True)
-    #tags = models.ManyToManyField('Tag', blank=False)
-    #assignee = models.CharField(max_length=255, blank=True, null=True)
-    #story_point = models.PositiveIntegerField(validators=[MinValueValidator(0), MaxValueValidator(10)], null=True,
-                                              #blank=True)
 
-
+# TimeLog Model Delete if not needed
 class TimeLog(models.Model):
     """
     A model for logging time for a task
     """
 
     task = models.ForeignKey(Task, on_delete=models.CASCADE)
-    hours_logged = models.DecimalField(max_digits=5, decimal_places=2)
-    log_date = models.DateTimeField(auto_now_add=True)
-
-
+    hours_logged = models.DecimalField(max_digits=5, decimal_places=2, null=True)
+    log_date = models.DateTimeField(auto_now_add=True, null=True)

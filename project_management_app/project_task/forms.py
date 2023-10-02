@@ -9,6 +9,9 @@ class CreateNewTaskForm(forms.ModelForm):
     """
     A form for creating a new task.
     """
+    # Hidden field to determine form type
+    form_type = forms.CharField(initial='task', widget=forms.HiddenInput(), required=False)
+
     # For the tags, use Django's built-in SelectMultiple widget
     tags = forms.ModelMultipleChoiceField(
         queryset=Tag.objects.all(),
@@ -35,6 +38,7 @@ class CreateNewTaskForm(forms.ModelForm):
             "created_date",
             "assignee",
             "sprint",
+            "form_type", #hidden field
         ]
 
     def __init__(self, *args, **kwargs):
@@ -87,12 +91,19 @@ class TimeLogForm(forms.ModelForm):
 
 
 class CreateNewSprintForm(forms.ModelForm):
+    """
+    A form for creating a sprint
+    """
+    # Hidden field to determine form type
+    form_type = forms.CharField(initial='sprint', widget=forms.HiddenInput(), required=False)
+
     class Meta:
         model = Sprint
         fields = [
             "name",
             "start_date",
             "end_date",
+            "form_type",
         ]
 
     widgets = {
@@ -103,22 +114,22 @@ class CreateNewSprintForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(CreateNewSprintForm, self).__init__(*args, **kwargs)
 
-#class SprintBoard (forms.ModelForm):
-   #tags = forms.ModelMultipleChoiceField(
-        #queryset=Tag.objects.all(),
-        #widget=forms.SelectMultiple(attrs={'class': 'form-control'}),
-        #required=True
-    #)
-    #class Meta: 
-        #model = SprintBoard
-        #fields = [
-           # "name"
-           # "tags"
-            #"assignee"
-            #"story_point"
-      #  ]
+# class SprintBoard (forms.ModelForm):
+# tags = forms.ModelMultipleChoiceField(
+# queryset=Tag.objects.all(),
+# widget=forms.SelectMultiple(attrs={'class': 'form-control'}),
+# required=True
+# )
+# class Meta:
+# model = SprintBoard
+# fields = [
+# "name"
+# "tags"
+# "assignee"
+# "story_point"
+#  ]
 
-#class EditSprintBoard (forms.ModelForm):
-     #class Meta:
-        #model = SprintBoard
-        #fields = ['assignee'] 
+# class EditSprintBoard (forms.ModelForm):
+# class Meta:
+# model = SprintBoard
+# fields = ['assignee']

@@ -1,4 +1,4 @@
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseBadRequest
 from django.shortcuts import render, redirect, get_object_or_404, reverse
 from django.views.generic.edit import View
 from .models import Tag, Task, Sprint, TimeLog
@@ -307,6 +307,7 @@ class TaskListView(View):
         # Generate an empty CreateNewTask form and EditTask form
         create_new_task_form = CreateNewTaskForm()
         edit_task_form = EditTaskForm()
+        sprint_form = CreateNewSprintForm()
 
         # Extract sorting, view, and date created sort parameters from the URL or use default values
         priority_sort = request.GET.get('priority_sort', 'priority_ascending')
@@ -330,6 +331,7 @@ class TaskListView(View):
             "name": "project-backlog",
             "create_new_task_form": create_new_task_form,
             "edit_task_form": edit_task_form,
+            "sprint_form": sprint_form, #fix
             "tasks": tasks,
             "tags": tags,
             "current_view": current_view,
@@ -338,23 +340,56 @@ class TaskListView(View):
             "date_sort": date_sort,
         }
 
+
+
         # Render and return the template with the prepared context
         return render(request, self.template_name, context)
 
-    def post(self, request):
-        """
-        Handles POST requests for creating a new task.
+    # def post(self, request):
+    #     """
+    #     Handles POST requests for creating a new task.
+    #
+    #     Validates the form data, creates the task using TaskManager utility, and responds with a JSON containing the
+    #     task details or error message.
+    #
+    #     Parameters:
+    #         request (HttpRequest): The HTTP request object containing form data.
+    #
+    #     Returns:
+    #         JsonResponse: A JSON response indicating the success or failure of task creation.
+    #     """
+    #
+    #     # Attempt to create a new task using the TaskManager utility
+    #     success, message, task_details = TaskManager.create_task(request.POST)
+    #
+    #     # Handle unsuccessful task creation (e.g., form validation errors)
+    #     if not success:
+    #         return JsonResponse({'status': 'error', 'message': message})
+    #
+    #     # Convert task tags into a list of strings
+    #     tags_list = [str(tag) for tag in task_details['tags']]
+    #
+    #     # Respond with a JSON indicating successful task creation and task details
+    #     return JsonResponse({'status': 'success', 'message': message, 'task': {**task_details, 'tags': tags_list}})
 
-        Validates the form data, creates the task using TaskManager utility, and responds with a JSON containing the
-        task details or error message.
 
-        Parameters:
-            request (HttpRequest): The HTTP request object containing form data.
+def post(self, request):
+    """
+    Handles POST requests for creating a new task.
 
-        Returns:
-            JsonResponse: A JSON response indicating the success or failure of task creation.
-        """
+    Validates the form data, creates the task using TaskManager utility, and responds with a JSON containing the
+    task details or error message.
 
+    Parameters:
+        request (HttpRequest): The HTTP request object containing form data.
+
+    Returns:
+        JsonResponse: A JSON response indicating the success or failure of task creation.
+    """
+    # Check which form has been submitted
+    form_type = request.POST.get('form_type')
+    # Task form has been submitted
+    if form_type == 'task':
         # Attempt to create a new task using the TaskManager utility
         success, message, task_details = TaskManager.create_task(request.POST)
 
@@ -367,7 +402,28 @@ class TaskListView(View):
 
         # Respond with a JSON indicating successful task creation and task details
         return JsonResponse({'status': 'success', 'message': message, 'task': {**task_details, 'tags': tags_list}})
+        # Sprint form has been submitted
+    elif form_type == 'sprint':
+        sprint_form = CreateNewSprintForm(request.POST)
 
+        if sprint_form.is_valid():
+            sprint = sprint_form.save(commit=False)
+            if sprint.start_date == timezone.now().date():
+                try:
+                    sprint_board = Sprint.objects.get(name="sprint_board")
+                except Sprint.DoesNotExist:
+                    sprint_board = Sprint.objects.create(name="sprint_board")
+
+            sprint.save()
+            return redirect('sprint_backlog')
+        else:
+            # Handle invalid sprint form if needed (e.g., show errors)
+            print("Form is not valid:", sprint_form.errors)
+            return render(request, "project_task/sprint_backlog.html", {"sprint_form": sprint_form})
+
+    # Unknown form has been submitted, handle as needed
+    else:
+        return HttpResponseBadRequest('Invalid form submission.')
 
 class TaskEditView(View):
     """
@@ -473,48 +529,59 @@ class HomeListView(View):
     template_name = 'project_task/home.html'
 
     def get(self, request):
-        """
-        Handles GET requests to render the home page.
+        # Check if there's an active sprint
+        active_sprints = Sprint.objects.filter(is_active=True)
 
-        This method prepares the context (if necessary) and renders the home page template.
-
-        Parameters:
-            request (HttpRequest): The HTTP request object.
-
-        Returns:
-            HttpResponse: Rendered home page with any relevant context.
-        """
-        sprint_form = CreateNewSprintForm()
-
-        return render(request, self.template_name, {"sprint_form": sprint_form})
-
-    def post(self, request):
-        """
-        Handles POST requests to create a new sprint.
-
-        This method validates the form data, creates the sprint, and redirects to the Sprint Backlog page upon success.
-
-        Parameters:
-            request (HttpRequest): The HTTP request object containing sprint data.
-
-        Returns:
-            HttpResponse: Redirects to the Sprint Backlog page upon success or renders the home page with errors.
-        """
-        sprint_form = CreateNewSprintForm(request.POST)
-
-        if sprint_form.is_valid():
-            sprint = sprint_form.save(commit=False)
-            if sprint.start_date == timezone.now().date():
-                try:
-                    sprint_board = Sprint.objects.get(name="sprint_board") 
-                except Sprint.DoesNotExist:
-                    sprint_board = Sprint.objects.create(name="sprint_board")
-            
-            sprint.save()
-            return redirect('sprint_backlog')
+        if active_sprints.exists():
+            # If an active sprint exists, redirect to the sprint board (you'll need to implement this view)
+            return redirect(reverse('sprint_board'))
         else:
-            print("Form is not valid:", sprint_form.errors)
-            return render(request, "project_task/sprint_backlog.html", {"sprint_form": sprint_form})
+            # If no active sprint, redirect to the project backlog
+            return redirect(reverse('project_backlog'))
+
+    # def get(self, request):
+    #     """
+    #     Handles GET requests to render the home page.
+    #
+    #     This method prepares the context (if necessary) and renders the home page template.
+    #
+    #     Parameters:
+    #         request (HttpRequest): The HTTP request object.
+    #
+    #     Returns:
+    #         HttpResponse: Rendered home page with any relevant context.
+    #     """
+    #     sprint_form = CreateNewSprintForm()
+    #
+    #     return render(request, self.template_name, {"sprint_form": sprint_form})
+
+    # def post(self, request):
+    #     """
+    #     Handles POST requests to create a new sprint.
+    #
+    #     This method validates the form data, creates the sprint, and redirects to the Sprint Backlog page upon success.
+    #
+    #     Parameters:
+    #         request (HttpRequest): The HTTP request object containing sprint data.
+    #
+    #     Returns:
+    #         HttpResponse: Redirects to the Sprint Backlog page upon success or renders the home page with errors.
+    #     """
+    #     sprint_form = CreateNewSprintForm(request.POST)
+    #
+    #     if sprint_form.is_valid():
+    #         sprint = sprint_form.save(commit=False)
+    #         if sprint.start_date == timezone.now().date():
+    #             try:
+    #                 sprint_board = Sprint.objects.get(name="sprint_board")
+    #             except Sprint.DoesNotExist:
+    #                 sprint_board = Sprint.objects.create(name="sprint_board")
+    #
+    #         sprint.save()
+    #         return redirect('sprint_backlog')
+    #     else:
+    #         print("Form is not valid:", sprint_form.errors)
+    #         return render(request, "project_task/sprint_backlog.html", {"sprint_form": sprint_form})
 
 
 class SprintBoard():
@@ -671,7 +738,7 @@ class CreateGraphView(View):
 
         return accumulated_effort
 
-
+# Delete if not needed
 def log_time(request, task_id):
     if request.method == "POST":
         # Get the task
