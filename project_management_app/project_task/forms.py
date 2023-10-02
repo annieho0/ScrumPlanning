@@ -67,6 +67,7 @@ class EditTaskForm(forms.ModelForm):
             "stage",
             "assignee",
             "created_date",
+            "sprints",
         ]
 
     def __init__(self, *args, **kwargs):

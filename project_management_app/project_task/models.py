@@ -13,8 +13,8 @@ class Tag(models.Model):
 
 class Sprint(models.Model):
     name = models.CharField(max_length=255)
-    start_date = models.DateField()
-    end_date = models.DateField()
+    start_date = models.DateField(default=timezone.now)
+    end_date = models.DateField(default=timezone.now)
     is_completed = models.BooleanField(default=False)
 
     def __str__(self):
@@ -74,16 +74,16 @@ class Task(models.Model):
     priority = models.CharField(max_length=3, choices=PRIORITY_CHOICES)
     stage = models.CharField(max_length=3, choices=STAGE_CHOICES)
     tags = models.ManyToManyField('Tag', blank=False)
-    story_point = models.PositiveIntegerField(validators=[MinValueValidator(0), MaxValueValidator(10)], null=True,
-                                              blank=True)
+    story_point = models.PositiveIntegerField(validators=[MinValueValidator(0), MaxValueValidator(10)], null=True, blank=True)
     # TODO: Assignee is a string for now. Need to connect to user model to get the user name in future sprint
     assignee = models.CharField(max_length=200, null=True, blank=True)
     created_date = models.DateField(default=timezone.now)
     status = models.CharField(max_length=7, choices=STATUS_CHOICES, default=NOT_STARTED)
-    created_date = models.DateField(default=timezone.now().date())
-    status = models.CharField(max_length=7, choices=STATUS_CHOICES, default=NOT_STARTED)
+    # created_date = models.DateField(default=timezone.now().date())
+    # status = models.CharField(max_length=7, choices=STATUS_CHOICES, default=NOT_STARTED)
     # TODO: Sprint is a string for now. Need to connect to sprint model to get the sprint name in future sprint
-    # sprint = models.ForeignKey(Sprint, on_delete=models.CASCADE)
+    sprints = models.ManyToManyField(Sprint)
+    # sprint = models.CharField(max_length=200)
 
 
     def __str__(self):

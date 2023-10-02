@@ -17,7 +17,7 @@
             <!-- Rows will be dynamically added here -->
             {% for sprint in sprint_backlog_archived %}
             <tr>
-                <td><a href="{% url 'redirect_to_sprint_board' sprint.id %}">{{ sprint.name }}</a></td>
+                <td><a href="{% url 'sprint_boards' sprint.id %}">{{ sprint.name }}</a></td>
                 <td>{{sprint.start_date}}</td>  
                 <td>{{sprint.end_date}}</td> 
 

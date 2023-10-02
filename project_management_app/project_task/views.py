@@ -505,21 +505,29 @@ class HomeListView(View):
 class SprintBoard():
 
 
-    def sprint_board(request):
-        """This view renders the project backlog page"""
-        tasks = Task.objects.filter()
+    # def sprint_board(request):
+    #     """This view renders the project backlog page"""
+    #     tasks = Task.objects.filter()
+    #     # Fetch unique tags associated with tasks
+    #     tags = Tag.objects.filter(task__isnull=False).distinct()
+    #     statuses = [('NOT', 'Incomplete'), ('IN_PROG', 'In Progress'), ('COM', 'Complete')]
+    #     return render(request, "project_task/sprint_board.html", {"name": "sprint-board", "tasks": tasks, "statuses": statuses, "tags": tags})
+    
+    def sprint_boards(request, sprint_id):
+        sprints = Sprint.objects.get(pk=sprint_id)
+        sprint = get_object_or_404(Sprint, pk=sprint_id)
+        tasks = Task.objects.filter(sprints=sprints)
         # Fetch unique tags associated with tasks
         tags = Tag.objects.filter(task__isnull=False).distinct()
         statuses = [('NOT', 'Incomplete'), ('IN_PROG', 'In Progress'), ('COM', 'Complete')]
-        return render(request, "project_task/sprint_board.html", {"name": "sprint-board", "tasks": tasks, "statuses": statuses, "tags": tags})
+        if sprint.is_completed:
+        # Delete tasks that are not completed and associated with the archived sprint
+            task = tasks.filter(status='COM')
+        return render(request, "project_task/sprint_board.html", {"name": "sprint-board", "tasks": task, "statuses": statuses, "tags": tags})
     
-    def sprint_boards(request, sprint_id):
-        sprint = Sprint.objects.get(pk=sprint_id)
-        tasks = Task.objects.filter(sprint=sprint)
-        return render(request, 'project_task/sprint_board.html', {'sprint': sprint, 'tasks': tasks})
 
-    def redirect_to_sprint_board(request, sprint_id):
-        return redirect('sprint_board', sprint_id=sprint_id)
+    # def redirect_to_sprint_board(request, sprint_id):
+    #     return redirect('sprint_boards', sprint_id=sprint_id)
 
     def active_sprints(request):
         # Get all active sprints
@@ -580,12 +588,5 @@ class SprintBoard():
             success = False
 
         return JsonResponse({'success': success})
-        
-
-
     
-
-
-    
-
  
