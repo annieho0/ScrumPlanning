@@ -597,8 +597,8 @@ class CreateGraphView(View):
 
     def get(self, request):
         # Hard coded data to test chartjs graphs
-        days = ["Day 1", "Day 2", "Day 3", "Day 4 ", "Day 5"]
-        remaining_effort = [100, 85, 70, 45, 25, 10]
+        days = ["Day 1", "Day 2", "Day 3", "Day 4 ", "Day 5","Day 6"]
+        remaining_effort = [100, 85, 70, 45, 15, 10]
         accumulated_hours = [0, 5, 12, 20, 28, 37]
 
         context = {
