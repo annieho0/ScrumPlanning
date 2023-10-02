@@ -2,6 +2,23 @@ from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
 
+class Tag(models.Model):
+    """
+    A model for a tag that can be associated with a task.
+    """
+    name = models.CharField(max_length=100, unique=True)  # Name of the tag (e.g., front-end, back-end, testing).
+
+    def __str__(self):
+        return self.name
+
+class Sprint(models.Model):
+    name = models.CharField(max_length=255)
+    start_date = models.DateField()
+    end_date = models.DateField()
+    is_completed = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.name
 
 class Task(models.Model):
     """
@@ -66,26 +83,10 @@ class Task(models.Model):
     created_date = models.DateField(default=timezone.now().date())
     status = models.CharField(max_length=7, choices=STATUS_CHOICES, default=NOT_STARTED)
     # TODO: Sprint is a string for now. Need to connect to sprint model to get the sprint name in future sprint
+    # sprint = models.ForeignKey(Sprint, on_delete=models.CASCADE)
 
 
     def __str__(self):
         return self.name
     
-class Tag(models.Model):
-    """
-    A model for a tag that can be associated with a task.
-    """
-    name = models.CharField(max_length=100, unique=True)  # Name of the tag (e.g., front-end, back-end, testing).
 
-    def __str__(self):
-        return self.name
-
-class Sprint(models.Model):
-    name = models.CharField(max_length=255)
-    start_date = models.DateField()
-    end_date = models.DateField()
-    is_completed = models.BooleanField(default=False)
-
-
-    def __str__(self):
-        return self.title

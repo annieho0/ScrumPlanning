@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import HomeListView, TaskListView, TaskEditView, TaskDeleteView, SprintBoard
+from .views import  HomeListView, TaskListView, TaskEditView, TaskDeleteView, SprintBoard
 
 urlpatterns = [
     path("", HomeListView.as_view(), name="home_redirect"),
@@ -8,8 +8,11 @@ urlpatterns = [
     path("project-backlog/edit_task/<int:task_id>/", TaskEditView.as_view(), name="edit_task"),
     path("project-backlog/delete_task/<int:task_id>/", TaskDeleteView.as_view(), name="delete_task"),
     path("sprint-board/", SprintBoard.sprint_board, name="sprint_board"),
-    path('active_sprints/', SprintBoard.active_sprints, name='sprint_backlog'),
-    path('archived_sprints/', SprintBoard.archived_sprints, name='archived_sprints'),
-    path('complete_sprint/<int:sprint_id>/', SprintBoard.complete_sprint, name='complete_sprint'),
+    path("sprint-board/update_task/<int:task_id>/", SprintBoard.update_task, name="update_task"),
+    path('sprint_boards/<int:sprint_id>/', SprintBoard.sprint_boards, name='sprint_board'),
+    path('redirect_to_sprint_board/<int:sprint_id>/', SprintBoard.redirect_to_sprint_board, name='redirect_to_sprint_board'),
+    path('sprint_backlog/', SprintBoard.active_sprints, name='sprint_backlog'),
+    path('sprint_backlog_archived', SprintBoard.archived_sprints, name='sprint_backlog_archived'),
+    path('sprint_backlog/archive_sprint_backlog/<int:sprint_id>/', SprintBoard.archive_sprint_backlog, name='archive_sprint_backlog'),
 ]
 

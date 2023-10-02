@@ -26,11 +26,7 @@
     <option value="{{ tag.name }}">{{ tag.name }}</option>
     {% endif %}
     {% endfor %}
-    <!-- {% for task in tasks%}  
-    {% for tag in task.tags.all %} 
-        <option value="{{ tag.name }}">{{ tag.name }}</option>
-    {% endfor %}
-    {% endfor %} -->
+
 </select>
 
 
@@ -59,9 +55,11 @@
             <!-- Rows will be dynamically added here -->
             {% for task in tasks%}  
             {% if task.status == status_title.0 %}
-            <tr data-category="{% for tag in task.tags.all %}{{ tag.name }} {% endfor %}">
-                <!-- <td>{{task.name}}</td> -->
-                <td><a href="#" data-toggle="modal" data-target="#editTaskModal" data-task-id="{{ task.id }}">{{task.name}}</a></td>
+            <tr data-category="{% for tag in task.tags.all %}{{ tag.name }} {% endfor %}" data-task-id="{{ task.id }}">
+                
+                <td>
+                    <a href="#" data-toggle="modal" data-target="#editTaskModal" data-task-id="{{ task.id }}">{{ task.name }}</a>
+                </td>
                 <td>{% for tag in task.tags.all %}
                     <span class="badge badge-primary">{{ tag.name }}</span>
                 {% endfor %}
@@ -72,35 +70,9 @@
             </tr>
             {% endif %}
             {% endfor %}
-            <div class="modal fade" id="editTaskModal" tabindex="-1" role="dialog" aria-labelledby="editTaskModalLabel" aria-hidden="true">
-                <div class="modal-dialog" role="document">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="editTaskModalLabel">Edit Task</h5>
-                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
-                        <div class="modal-body">
-                            <!-- Here, you can display the task details for editing -->
-                            <form>
-                                
-                                <div class="form-group">
-                                    <label for="editTaskAssignee">Assignee</label>
-                                    <input type="text" class="form-control" id="editTaskAssignee">
-                                </div>
-                                
-                            </form>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                            <button type="button" class="btn btn-primary" id="saveChangesButton">Save Changes</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        {% endfor %}
         </tbody>
+        {% endfor %}
+        
     </table>
 </div>
 
@@ -117,9 +89,10 @@
                         {% for task in tasks %}
                         {% if task.status == status_title.0 %}
                         {% for tag in task.tags.all %}                                        
-                            <div class="card mb-3" style="width: 10rem;" id="{{ tag.name}}">
+                            <div class="card mb-3" style="width: 10rem;" id="{{ tag.name}}" >
                                 <div class="card-body">
-                                    <h5 class="card-title">{{task.name}}</h5>
+                                    <h5 class="card-title">
+                                        <a href="#" data-toggle="modal" data-target="#editTaskModal" data-task-id="{{ task.id }}">{{ task.name }}</a></h5>
                                     <h6 class="card-subtitle mb-2 text-muted">{{task.story_point}}</h6>
                                     <p class="card-text">{{task.assignee}}
                                         {% for tag in task.tags.all %}
@@ -141,23 +114,67 @@
 
     </div> <!-- End of row -->
 </div> <!-- End of container -->
+{% for task in tasks %}
+<div class="modal fade" id="editTaskModal" tabindex="-1" role="dialog" aria-labelledby="editTaskModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <h4 class="modal-title">Edit Task</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+
+            <!-- Modal body -->
+            <form id="editTaskForm" method="post" action="{% url 'update_task' task.id %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="name">Name:</label>
+                        <input type="text" class="form-control" id="name" name="name" value="">
+                    </div>
+                    <div class="form-group">
+                        <label for="assignee">Assignee:</label>
+                        <input type="text" class="form-control" id="assignee" name="assignee" value="">
+                    </div>
+                    <div class="form-group">
+                        <label for="status">Status:</label>
+                        <select class="form-control" id="status" name="status">
+                            <option value='NOT'>Incomplete</option>
+                            <option value='IN_PROG'>In Progress</option>
+                            <option value='COM'>Complete</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="updateChanges">Update changes</button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+{% endfor %}
+
 {% endblock %}
 
 {% block js %}
-    <script>
-        
-        function changeView() {
-            const selectedView = document.getElementById("view").value;
-            if (selectedView === "listView") {
-                document.getElementById("listView").style.display = "block";
-                document.getElementById("kanbanView").style.display = "none";
-            } else if (selectedView === "kanbanView") {
-                document.getElementById("listView").style.display = "none";
-                document.getElementById("kanbanView").style.display = "block";
-            }
-        }
 
-   
+<script>
+    
+    function changeView() {
+        const selectedView = document.getElementById("view").value;
+        if (selectedView === "listView") {
+            document.getElementById("listView").style.display = "block";
+            document.getElementById("kanbanView").style.display = "none";
+        } else if (selectedView === "kanbanView") {
+            document.getElementById("listView").style.display = "none";
+            document.getElementById("kanbanView").style.display = "block";
+        }
+    }
+
+
     function filterTasks() {
         const selectedCategory = document.getElementById("filter").value;
         const rows = document.querySelectorAll("#backlogTable tr");
@@ -190,5 +207,42 @@
             }
         });
     }
-    </script>
+    $(document).on('click', 'a[data-toggle="modal"][data-target="#editTaskModal"]', function () {
+        var taskId = $(this).data('task-id');
+        var taskName = $(this).text();
+        var taskAssignee = $(this).closest('tr').find('td:eq(2)').text();
+
+        $('#editTaskModal').find('form').attr('action', `/sprint-board/update_task/${taskId}/`);
+        // Update the URL here
+
+        // Update the modal form fields
+        $('#editTaskModal #name').val(taskName);
+        $('#editTaskModal #assignee').val(taskAssignee);
+    });
+
+    // Event listener for submitting the edit task form
+    $('#editTaskForm').on('submit', function (e) {
+        e.preventDefault();
+
+        var taskId = $(this).attr('action').split('=')[1]; // Extract the taskId from the action URL
+        var formData = $(this).serialize();
+
+        $.ajax({
+            type: 'POST',
+            url: $(this).attr('action'),
+            data: formData,
+            success: function (data) {
+                if (data.success) {
+                    $('#editTaskModal').modal('hide');
+                    // You can optionally update the task details displayed on the page here
+                }
+            },
+            error: function (error) {
+                console.error("Error:", error);
+            }
+        });
+    });
+
+
+</script>
 {% endblock %}

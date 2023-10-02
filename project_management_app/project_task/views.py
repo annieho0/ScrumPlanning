@@ -1,5 +1,6 @@
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse_lazy
 from django.views.generic.edit import View
 from .models import Tag, Task, Sprint
 from .forms import CreateNewTaskForm, EditTaskForm, CreateNewSprintForm 
@@ -103,13 +104,7 @@ class TaskManager:
             task_details = TaskManager.get_task_details(task_id)
 
             return True, f"Task '{str(updated_task)}' successfully updated!", task_details
-            updated_task.save()
-            update_form.save_m2m()
-
-            # Get the task details as dictionary
-            task_details = TaskManager.get_task_details(task_id)
-
-            return True, f"Task '{str(updated_task)}' successfully updated!", task_details
+            
         else:
             return False, update_form.errors, None
 
@@ -230,7 +225,7 @@ class TaskManager:
             'story_point': task.story_point,
             'assignee': task.assignee,
             'status': task.status,
-            'sprint': task.sprint,
+            # 'sprint': task.sprint,
             'created_date': task.created_date,
             # ... add any other necessary fields here ...
         }
@@ -517,18 +512,80 @@ class SprintBoard():
         tags = Tag.objects.filter(task__isnull=False).distinct()
         statuses = [('NOT', 'Incomplete'), ('IN_PROG', 'In Progress'), ('COM', 'Complete')]
         return render(request, "project_task/sprint_board.html", {"name": "sprint-board", "tasks": tasks, "statuses": statuses, "tags": tags})
+    
+    def sprint_boards(request, sprint_id):
+        sprint = Sprint.objects.get(pk=sprint_id)
+        tasks = Task.objects.filter(sprint=sprint)
+        return render(request, 'project_task/sprint_board.html', {'sprint': sprint, 'tasks': tasks})
+
+    def redirect_to_sprint_board(request, sprint_id):
+        return redirect('sprint_board', sprint_id=sprint_id)
 
     def active_sprints(request):
-        active_sprints = Sprint.objects.filter(is_completed=False)
-        return render(request, 'project_task/sprint_backlog.html', {'active_sprints': active_sprints})
+        # Get all active sprints
+        active_sprints = Sprint.objects.filter(end_date__gt=timezone.now(), is_completed=False)
+
+        # Get all completed sprints
+        completed_sprints = Sprint.objects.filter(end_date__lte=timezone.now(), is_completed=False)
+
+        # Update completed sprints and move them to the archived sprints
+        for sprint in completed_sprints:
+            sprint.is_completed = True
+            sprint.save()
+
+        # Get the sprint backlog (only active sprints)
+        sprint_backlog = active_sprints
+
+        return render(request, 'project_task/sprint_backlog.html', {'sprint_backlog': sprint_backlog})
 
     def archived_sprints(request):
-        archived_sprints = Sprint.objects.filter(is_completed=True)
-        return render(request, 'project_task/sprint_backlog_archeived.html', {'archived_sprints': archived_sprints})
-    def complete_sprint(request, sprint_id):
-        sprint = get_object_or_404(Sprint, pk=sprint_id)
-        sprint.is_completed = True
-        sprint.completed_date = timezone.now()
-        sprint.save()
-        return redirect('active_sprints')
+        sprint_backlog_archived = Sprint.objects.filter(is_completed=True)
+        return render(request, 'project_task/sprint_backlog_archived.html', {'sprint_backlog_archived': sprint_backlog_archived})
 
+    def archive_sprint_backlog(request, sprint_id):
+        try:
+            sprint = get_object_or_404(Sprint, id=sprint_id)
+            
+            if not sprint.is_completed:
+                # If the sprint is not completed, set the end_date to today
+                sprint.end_date = timezone.now()
+            
+            sprint.is_completed = True  # Mark the sprint as completed
+            
+            sprint.save()
+            
+        except Sprint.DoesNotExist:
+            # Handle the case where the sprint does not exist
+            pass
+
+        # Redirect back to the Sprint Backlog page after archiving
+        return redirect('sprint_backlog')
+    
+
+    def update_task(request, task_id):
+
+        if request.method == 'POST':
+            task_name = request.POST.get('name')
+            task_assignee = request.POST.get('assignee')
+            task_status = request.POST.get('status')
+
+        try:
+            task = get_object_or_404(Task, pk=task_id)
+            task.name = task_name
+            task.assignee = task_assignee
+            task.status = task_status
+            task.save()
+            success = True
+        except Task.DoesNotExist:
+            success = False
+
+        return JsonResponse({'success': success})
+        
+
+
+    
+
+
+    
+
+ 
