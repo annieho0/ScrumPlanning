@@ -331,7 +331,7 @@ class TaskListView(View):
             "name": "project-backlog",
             "create_new_task_form": create_new_task_form,
             "edit_task_form": edit_task_form,
-            "sprint_form": sprint_form, #fix
+            "sprint_form": sprint_form,  # fix
             "tasks": tasks,
             "tags": tags,
             "current_view": current_view,
@@ -340,56 +340,23 @@ class TaskListView(View):
             "date_sort": date_sort,
         }
 
-
-
         # Render and return the template with the prepared context
         return render(request, self.template_name, context)
 
-    # def post(self, request):
-    #     """
-    #     Handles POST requests for creating a new task.
-    #
-    #     Validates the form data, creates the task using TaskManager utility, and responds with a JSON containing the
-    #     task details or error message.
-    #
-    #     Parameters:
-    #         request (HttpRequest): The HTTP request object containing form data.
-    #
-    #     Returns:
-    #         JsonResponse: A JSON response indicating the success or failure of task creation.
-    #     """
-    #
-    #     # Attempt to create a new task using the TaskManager utility
-    #     success, message, task_details = TaskManager.create_task(request.POST)
-    #
-    #     # Handle unsuccessful task creation (e.g., form validation errors)
-    #     if not success:
-    #         return JsonResponse({'status': 'error', 'message': message})
-    #
-    #     # Convert task tags into a list of strings
-    #     tags_list = [str(tag) for tag in task_details['tags']]
-    #
-    #     # Respond with a JSON indicating successful task creation and task details
-    #     return JsonResponse({'status': 'success', 'message': message, 'task': {**task_details, 'tags': tags_list}})
+    def post(self, request):
+        """
+        Handles POST requests for creating a new task.
 
+        Validates the form data, creates the task using TaskManager utility, and responds with a JSON containing the
+        task details or error message.
 
-def post(self, request):
-    """
-    Handles POST requests for creating a new task.
+        Parameters:
+            request (HttpRequest): The HTTP request object containing form data.
 
-    Validates the form data, creates the task using TaskManager utility, and responds with a JSON containing the
-    task details or error message.
+        Returns:
+            JsonResponse: A JSON response indicating the success or failure of task creation.
+        """
 
-    Parameters:
-        request (HttpRequest): The HTTP request object containing form data.
-
-    Returns:
-        JsonResponse: A JSON response indicating the success or failure of task creation.
-    """
-    # Check which form has been submitted
-    form_type = request.POST.get('form_type')
-    # Task form has been submitted
-    if form_type == 'task':
         # Attempt to create a new task using the TaskManager utility
         success, message, task_details = TaskManager.create_task(request.POST)
 
@@ -402,28 +369,7 @@ def post(self, request):
 
         # Respond with a JSON indicating successful task creation and task details
         return JsonResponse({'status': 'success', 'message': message, 'task': {**task_details, 'tags': tags_list}})
-        # Sprint form has been submitted
-    elif form_type == 'sprint':
-        sprint_form = CreateNewSprintForm(request.POST)
 
-        if sprint_form.is_valid():
-            sprint = sprint_form.save(commit=False)
-            if sprint.start_date == timezone.now().date():
-                try:
-                    sprint_board = Sprint.objects.get(name="sprint_board")
-                except Sprint.DoesNotExist:
-                    sprint_board = Sprint.objects.create(name="sprint_board")
-
-            sprint.save()
-            return redirect('sprint_backlog')
-        else:
-            # Handle invalid sprint form if needed (e.g., show errors)
-            print("Form is not valid:", sprint_form.errors)
-            return render(request, "project_task/sprint_backlog.html", {"sprint_form": sprint_form})
-
-    # Unknown form has been submitted, handle as needed
-    else:
-        return HttpResponseBadRequest('Invalid form submission.')
 
 class TaskEditView(View):
     """
@@ -528,60 +474,61 @@ class HomeListView(View):
 
     template_name = 'project_task/home.html'
 
-    def get(self, request):
-        # Check if there's an active sprint
-        active_sprints = Sprint.objects.filter(is_active=True)
-
-        if active_sprints.exists():
-            # If an active sprint exists, redirect to the sprint board (you'll need to implement this view)
-            return redirect(reverse('sprint_board'))
-        else:
-            # If no active sprint, redirect to the project backlog
-            return redirect(reverse('project_backlog'))
-
+    # Logic for choosing the default page will need to integrate once we move create sprint button
     # def get(self, request):
-    #     """
-    #     Handles GET requests to render the home page.
+    #     # Check if there's an active sprint
+    #     active_sprints = Sprint.objects.filter(is_active=True)
     #
-    #     This method prepares the context (if necessary) and renders the home page template.
-    #
-    #     Parameters:
-    #         request (HttpRequest): The HTTP request object.
-    #
-    #     Returns:
-    #         HttpResponse: Rendered home page with any relevant context.
-    #     """
-    #     sprint_form = CreateNewSprintForm()
-    #
-    #     return render(request, self.template_name, {"sprint_form": sprint_form})
-
-    # def post(self, request):
-    #     """
-    #     Handles POST requests to create a new sprint.
-    #
-    #     This method validates the form data, creates the sprint, and redirects to the Sprint Backlog page upon success.
-    #
-    #     Parameters:
-    #         request (HttpRequest): The HTTP request object containing sprint data.
-    #
-    #     Returns:
-    #         HttpResponse: Redirects to the Sprint Backlog page upon success or renders the home page with errors.
-    #     """
-    #     sprint_form = CreateNewSprintForm(request.POST)
-    #
-    #     if sprint_form.is_valid():
-    #         sprint = sprint_form.save(commit=False)
-    #         if sprint.start_date == timezone.now().date():
-    #             try:
-    #                 sprint_board = Sprint.objects.get(name="sprint_board")
-    #             except Sprint.DoesNotExist:
-    #                 sprint_board = Sprint.objects.create(name="sprint_board")
-    #
-    #         sprint.save()
-    #         return redirect('sprint_backlog')
+    #     if active_sprints.exists():
+    #         # If an active sprint exists, redirect to the sprint board
+    #         return redirect(reverse('sprint_board'))
     #     else:
-    #         print("Form is not valid:", sprint_form.errors)
-    #         return render(request, "project_task/sprint_backlog.html", {"sprint_form": sprint_form})
+    #         # If no active sprint, redirect to the project backlog
+    #         return redirect(reverse('project_backlog'))
+
+    def get(self, request):
+        """
+        Handles GET requests to render the home page.
+
+        This method prepares the context (if necessary) and renders the home page template.
+
+        Parameters:
+            request (HttpRequest): The HTTP request object.
+
+        Returns:
+            HttpResponse: Rendered home page with any relevant context.
+        """
+        sprint_form = CreateNewSprintForm()
+
+        return render(request, self.template_name, {"sprint_form": sprint_form})
+
+    def post(self, request):
+        """
+        Handles POST requests to create a new sprint.
+
+        This method validates the form data, creates the sprint, and redirects to the Sprint Backlog page upon success.
+
+        Parameters:
+            request (HttpRequest): The HTTP request object containing sprint data.
+
+        Returns:
+            HttpResponse: Redirects to the Sprint Backlog page upon success or renders the home page with errors.
+        """
+        sprint_form = CreateNewSprintForm(request.POST)
+
+        if sprint_form.is_valid():
+            sprint = sprint_form.save(commit=False)
+            if sprint.start_date == timezone.now().date():
+                try:
+                    sprint_board = Sprint.objects.get(name="sprint_board")
+                except Sprint.DoesNotExist:
+                    sprint_board = Sprint.objects.create(name="sprint_board")
+
+            sprint.save()
+            return redirect('sprint_backlog')
+        else:
+            print("Form is not valid:", sprint_form.errors)
+            return render(request, "project_task/sprint_backlog.html", {"sprint_form": sprint_form})
 
 
 class SprintBoard():
@@ -594,7 +541,7 @@ class SprintBoard():
         tags = Tag.objects.filter(task__isnull=False).distinct()
         statuses = [('NOT', 'Incomplete'), ('IN_PROG', 'In Progress'), ('COM', 'Complete')]
         return render(request, "project_task/sprint_board.html",
-                      {"name": "sprint-board", "tasks": tasks, "statuses": statuses, "tags": tags, "sprints":sprints})
+                      {"name": "sprint-board", "tasks": tasks, "statuses": statuses, "tags": tags, "sprints": sprints})
 
     # def archive_sprint(request, sprint_id):
     #     sprint = Sprint.objects.get(pk=sprint_id)
@@ -617,37 +564,29 @@ class SprintBoard():
                       {"name": "sprint-board", "tasks": tasks, "statuses": statuses, "sprints": sprints})
 
 
-
-class SprintBoardView(View):
-    """
-        Temporary view for sprint board
-    """
-    template_name = 'sprint_board.html'
-
-    def get(self, request):
-        form = TimeLogForm()
-        context = {
-            'form': form,
-        }
-
-        return render(request, 'project_task/sprint_board.html')
-
-    def post(self, request):
-        form = TimeLogForm(request.POST)
-        if form.is_valid():
-            time_log = form.save(commit=False)
-
-            time_log.save()
-            # Return to the sprint board with a success message
-            messages.success(request, 'Time logged successfully!')
-            return redirect('sprint_board.html')
-
-            # If form isn't valid, render the sprint board with the form to show errors
-        context = {
-            'form': form,
-        }
-
-        return render(request, 'project_task/sprint_board.html')
+# Time Log Method
+# def get(self, request):
+#     form = TimeLogForm()
+#     context = {
+#         'form': form,
+#     }
+#
+#     return render(request, 'project_task/sprint_board.html')
+#
+# def post(self, request):
+#     form = TimeLogForm(request.POST)
+#     if form.is_valid():
+#         time_log = form.save(commit=False)
+#
+#         time_log.save()
+#         # Return to the sprint board with a success message
+#         messages.success(request, 'Time logged successfully!')
+#         return redirect('sprint_board.html')
+#
+#         # If form isn't valid, render the sprint board with the form to show errors
+#     context = {
+#         'form': form,
+#     }
 
 
 class CreateGraphView(View):
@@ -655,33 +594,6 @@ class CreateGraphView(View):
        View class for creating graphs
     """
     template_name = 'create_graph.html'
-
-    def dispatch(self, *args, **kwargs):
-        self.total_effort = None
-        self.tasks = None
-        self.end_date = None
-        self.start_date = None
-        return super().dispatch(*args, **kwargs)
-
-    def get(self, request):
-        # Fetch the currently active sprint
-        current_sprint = Sprint.objects.get(is_active=True)  # Will cause error if there are multiple sprints
-        # Set the start and end dates from the fetched sprint
-        self.start_date = current_sprint.start_date
-        self.end_date = current_sprint.end_date
-
-        self.tasks = Task.objects.filter(sprint=current_sprint)
-
-        # Calculate the total effort (in story points) for the sprint
-        self.total_effort = sum(task.story_point or 0 for task in self.tasks)
-
-        context = {
-            "days": [self.start_date + timedelta(days=i) for i in
-                     range((self.end_date - self.start_date).days + 1)],
-            "remaining_effort": self.burndown_data(),
-            "accumulated_hours": self.accumulation_data(),
-        }
-        return render(request, 'project_task/create_graph.html', context)
 
     def get(self, request):
         # Hard coded data to test chartjs graphs
@@ -696,67 +608,71 @@ class CreateGraphView(View):
         }
         return render(request, 'project_task/create_graph.html', context)
 
-    def burndown_data(self):
-        """
-        Generates burndown data for a given sprint
+    # def dispatch(self, *args, **kwargs):
+    #     self.total_effort = None
+    #     self.tasks = None
+    #     self.end_date = None
+    #     self.start_date = None
+    #     return super().dispatch(*args, **kwargs)
 
-        Returns:
-            list: A list containing the remaining effort for each day of the sprint
-        """
-        total_effort = self.total_effort
-        remaining_effort = [total_effort]
-        current_date = self.start_date
-        while current_date <= self.end_date:
-            logged_hours_on_date = \
-            TimeLog.objects.filter(task__in=self.tasks, date=current_date).aggregate(models.Sum('hours_logged'))[
-                'hours_logged__sum'] or 0
-            total_effort -= logged_hours_on_date
-            remaining_effort.append(total_effort)
-            current_date += timedelta(days=1)
-        return remaining_effort
+    # def get(self, request):
+    #     # Fetch the currently active sprint
+    #     current_sprint = Sprint.objects.get(is_active=True)  # Will cause error if there are multiple sprints
+    #     # Set the start and end dates from the fetched sprint
+    #     self.start_date = current_sprint.start_date
+    #     self.end_date = current_sprint.end_date
+    #
+    #     self.tasks = Task.objects.filter(sprint=current_sprint)
+    #
+    #     # Calculate the total effort (in story points) for the sprint
+    #     self.total_effort = sum(task.story_point or 0 for task in self.tasks)
+    #
+    #     context = {
+    #         "days": [self.start_date + timedelta(days=i) for i in
+    #                  range((self.end_date - self.start_date).days + 1)],
+    #         "remaining_effort": self.burndown_data(),
+    #         "accumulated_hours": self.accumulation_data(),
+    #     }
+    #     return render(request, 'project_task/create_graph.html', context)
 
-    def accumulation_data(self):
-        """
-        Generates an accumulation of effort data for a given sprint
+    # def burndown_data(self):
+    #     """
+    #     Generates burndown data for a given sprint
+    #
+    #     Returns:
+    #         list: A list containing the remaining effort for each day of the sprint
+    #     """
+    #     total_effort = self.total_effort
+    #     remaining_effort = [total_effort]
+    #     current_date = self.start_date
+    #     while current_date <= self.end_date:
+    #         logged_hours_on_date = \
+    #             TimeLog.objects.filter(task__in=self.tasks, date=current_date).aggregate(models.Sum('hours_logged'))[
+    #                 'hours_logged__sum'] or 0
+    #         total_effort -= logged_hours_on_date
+    #         remaining_effort.append(total_effort)
+    #         current_date += timedelta(days=1)
+    #     return remaining_effort
 
-        Returns:
-           list: A list containing the accumulated hours for each day of the sprint
-        """
-        accumulated_effort = [0]
-        accumulated_hours = 0
-
-        current_date = self.start_date
-        while current_date <= self.end_date:
-            logged_hours_on_date = \
-            TimeLog.objects.filter(task__in=self.tasks, date=current_date).aggregate(models.Sum('hours_logged'))[
-                'hours_logged__sum'] or 0
-
-            accumulated_hours += logged_hours_on_date
-            accumulated_effort.append(accumulated_hours)
-
-            current_date += timedelta(days=1)
-
-        return accumulated_effort
-
-# Delete if not needed
-def log_time(request, task_id):
-    if request.method == "POST":
-        # Get the task
-        task = get_object_or_404(Task, id=task_id)
-        hours = int(request.POST.get('hours'))
-
-
-        try:
-            hours = float(hours)
-        except ValueError:
-            # Handle invalid input for hours
-            pass
-
-        # Create a new time log
-        TimeLog.objects.create(task=task, hours_logged=hours)
-
-        # Update total hours on the task
-        task.total_hours += hours
-        task.save()
-
-        return redirect(reverse('sprint_board'))
+    # def accumulation_data(self):
+    #     """
+    #     Generates an accumulation of effort data for a given sprint
+    #
+    #     Returns:
+    #        list: A list containing the accumulated hours for each day of the sprint
+    #     """
+    #     accumulated_effort = [0]
+    #     accumulated_hours = 0
+    #
+    #     current_date = self.start_date
+    #     while current_date <= self.end_date:
+    #         logged_hours_on_date = \
+    #             TimeLog.objects.filter(task__in=self.tasks, date=current_date).aggregate(models.Sum('hours_logged'))[
+    #                 'hours_logged__sum'] or 0
+    #
+    #         accumulated_hours += logged_hours_on_date
+    #         accumulated_effort.append(accumulated_hours)
+    #
+    #         current_date += timedelta(days=1)
+    #
+    #     return accumulated_effort

@@ -9,8 +9,6 @@ class CreateNewTaskForm(forms.ModelForm):
     """
     A form for creating a new task.
     """
-    # Hidden field to determine form type
-    form_type = forms.CharField(initial='task', widget=forms.HiddenInput(), required=False)
 
     # For the tags, use Django's built-in SelectMultiple widget
     tags = forms.ModelMultipleChoiceField(
@@ -38,7 +36,6 @@ class CreateNewTaskForm(forms.ModelForm):
             "created_date",
             "assignee",
             "sprint",
-            "form_type", #hidden field
         ]
 
     def __init__(self, *args, **kwargs):
@@ -94,16 +91,12 @@ class CreateNewSprintForm(forms.ModelForm):
     """
     A form for creating a sprint
     """
-    # Hidden field to determine form type
-    form_type = forms.CharField(initial='sprint', widget=forms.HiddenInput(), required=False)
-
     class Meta:
         model = Sprint
         fields = [
             "name",
             "start_date",
             "end_date",
-            "form_type",
         ]
 
     widgets = {
