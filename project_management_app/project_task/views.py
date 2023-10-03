@@ -576,12 +576,14 @@ class SprintBoard():
             task_name = request.POST.get('name')
             task_assignee = request.POST.get('assignee')
             task_status = request.POST.get('status')
+            task_type = request.POST.get('type')
 
         try:
             task = get_object_or_404(Task, pk=task_id)
             task.name = task_name
             task.assignee = task_assignee
             task.status = task_status
+            task.type = task_type
             task.save()
             success = True
         except Task.DoesNotExist:

@@ -58,7 +58,7 @@
             <tr data-category="{% for tag in task.tags.all %}{{ tag.name }} {% endfor %}" data-task-id="{{ task.id }}">
                 
                 <td>
-                    <a href="#" data-toggle="modal" data-target="#editTaskModal" data-task-id="{{ task.id }}">{{ task.name }}</a>
+                    <a href="#" data-toggle="modal" data-target="#editTaskModal" data-task-id="{{ task.id }}" data-task-type ="{{ task.type }}">{{ task.name }}</a>
                 </td>
                 <td>{{task.story_point}}</td>       
                 <td>{% for tag in task.tags.all %}
@@ -153,6 +153,30 @@
                             <option value='COM'>Complete</option>
                         </select>
                     </div>
+                    <div class="form-group">
+                        <label for="type">Type:</label>
+                        <input type="text" class="form-control" id="type" name="type" value="" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="priority">Priority:</label>
+                        <input type="text" class="form-control" id="priority" name="priority" value="" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="story_point">Story Point:</label>
+                        <input type="text" class="form-control" id="story_point" name="story_point" value="" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="tags">Tags:</label>
+                        <input type="text" class="form-control" id="tags" name="tags" value="" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="stage">Stage:</label>
+                        <input type="text" class="form-control" id="stage" name="stage" value="" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label for="created_date">Created Date:</label>
+                        <input type="text" class="form-control" id="created_date" name="created_date" value="" readonly>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
@@ -219,6 +243,7 @@
         var taskId = $(this).data('task-id');
         var taskName = $(this).text();
         var taskAssignee = $(this).closest('tr').find('td:eq(2)').text();
+        var tasktype = $(this).data('task-type');
         var logHoursInput = $("#editTaskHours");
         var totalHoursInput = $("#editTaskTotalHours");
         logHoursInput.on("input", function () {
@@ -233,6 +258,7 @@
         $('#editTaskModal #name').val(taskName);
         $('#editTaskModal #assignee').val(taskAssignee);
         $('#editTaskModal #status').val(taskStatus); 
+        $('#edittaskmodal #type').val(tasktype); 
     });
 
     // Event listener for submitting the edit task form
