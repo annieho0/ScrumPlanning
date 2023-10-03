@@ -83,7 +83,6 @@ class CustomizedUser(AbstractBaseUser, PermissionsMixin):
         - username (CharField): User's username. Unique across the system.
         - first_name (CharField): User's first name.
         - last_name (CharField): User's last name.
-        - is_admin (BooleanField): Designates if the user has admin privileges.
         - is_superuser (BooleanField): Designates if the user has superuser privileges.
         - is_staff (BooleanField): Designates if the user can access the admin site.
         - is_active (BooleanField): Designates if the user account is active.
