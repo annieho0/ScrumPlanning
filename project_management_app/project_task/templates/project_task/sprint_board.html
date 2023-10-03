@@ -219,6 +219,12 @@
         var taskId = $(this).data('task-id');
         var taskName = $(this).text();
         var taskAssignee = $(this).closest('tr').find('td:eq(2)').text();
+        var logHoursInput = $("#editTaskHours");
+        var totalHoursInput = $("#editTaskTotalHours");
+        logHoursInput.on("input", function () {
+            var loggedHours = parseFloat(logHoursInput.val()) || 0;
+            totalHoursInput.val(loggedHours);
+        });
 
         $('#editTaskModal').find('form').attr('action', `/sprint-board/update_task/${taskId}/`);
         // Update the URL here
