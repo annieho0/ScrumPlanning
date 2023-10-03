@@ -31,14 +31,14 @@
 
 
 <!-- List view -->
-<div class="container-fluid" id="listView">
+<div class="container-fluid" id="listView" style="margin-top: 20px;">
     <table class="table table-striped table-bordered">
         <thead class="thead-light">
             <tr>
                 <th>Task Name</th>
+                <th>Story Points</th>
                 <th>Tag</th>
                 <th>Assignee</th>
-                <th>Story Points</th>
             </tr>
 
         </thead>
@@ -60,12 +60,12 @@
                 <td>
                     <a href="#" data-toggle="modal" data-target="#editTaskModal" data-task-id="{{ task.id }}">{{ task.name }}</a>
                 </td>
+                <td>{{task.story_point}}</td>       
                 <td>{% for tag in task.tags.all %}
-                    <span class="badge badge-primary">{{ tag.name }}</span>
+                    <span class="badge badge-info">{{ tag.name }}</span>
                 {% endfor %}
                 </td>
-                <td>{{task.assignee}}</td>
-                <td>{{task.story_point}}</td>              
+                <td>{{task.assignee}}</td>       
                 
             </tr>
             {% endif %}
@@ -93,12 +93,12 @@
                                 <div class="card-body">
                                     <h5 class="card-title">
                                         <a href="#" data-toggle="modal" data-target="#editTaskModal" data-task-id="{{ task.id }}">{{ task.name }}</a></h5>
-                                    <h6 class="card-subtitle mb-2 text-muted">{{task.story_point}}</h6>
-                                    <p class="card-text">{{task.assignee}}
-                                        {% for tag in task.tags.all %}
-                                            <span class="badge badge-primary">{{ tag.name }}</span>
+                                    <h6 class="card-subtitle mb-2 text-muted"><strong>Story Point:</strong> {{task.story_point}}</h6>
+                                    <h6 class="card-text mb-2 text-muted"><strong>Assignee:</strong> {{task.assignee}}</h6>
+                                    <h6 class="card-text mb-2 text-muted"><strong>Tags:</strong>{% for tag in task.tags.all %}
+                                            <span class="badge badge-info"> {{ tag.name }}</span>
                                         {% endfor %}
-                                    </p>
+                                    </h6>
                                                                       
                                     
                                 </div>
