@@ -16,5 +16,6 @@ urlpatterns = [
     path('sprint_backlog/', SprintBoard.active_sprints, name='sprint_backlog'),
     path('sprint_backlog_archived', SprintBoard.archived_sprints, name='sprint_backlog_archived'),
     path('sprint_backlog/archive_sprint_backlog/<int:sprint_id>/', SprintBoard.archive_sprint_backlog, name='archive_sprint_backlog'),
+
 ]
 

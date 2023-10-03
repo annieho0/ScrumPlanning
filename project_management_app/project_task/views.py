@@ -522,8 +522,8 @@ class SprintBoard():
         statuses = [('NOT', 'Incomplete'), ('IN_PROG', 'In Progress'), ('COM', 'Complete')]
         if sprint.is_completed:
         # Delete tasks that are not completed and associated with the archived sprint
-            task = tasks.filter(status='COM')
-        return render(request, "project_task/sprint_board.html", {"name": "sprint-board", "tasks": task, "statuses": statuses, "tags": tags})
+            tasks = tasks.filter(status='COM')
+        return render(request, "project_task/sprint_board.html", {"name": "sprint-board", "tasks": tasks, "statuses": statuses, "tags": tags})
     
 
     # def redirect_to_sprint_board(request, sprint_id):
@@ -588,5 +588,4 @@ class SprintBoard():
             success = False
 
         return JsonResponse({'success': success})
-    
- 
+
