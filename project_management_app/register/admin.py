@@ -44,7 +44,7 @@ class CustomizedUserAdmin(UserAdmin):
             'fields': ('is_active', 'scrum_role')
         }),
         ('Permissions', {
-            'fields': ('is_admin', 'is_superuser', 'is_staff')
+            'fields': ('is_superuser', 'is_staff')
         }),
         ('History', {
             'fields': ('date_joined', 'last_login')
