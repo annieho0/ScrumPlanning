@@ -326,21 +326,21 @@
     }
     // Toggle between light and dark themes
         document.getElementById('theme-toggle').addEventListener('click', function() {
-                let body = document.body;
-                let themeButton = document.getElementById('theme-toggle');
+            let body = document.body;
+            let themeButton = document.getElementById('theme-toggle');
 
-                if (body.classList.contains('light-theme')) {
-                    body.classList.remove('light-theme');
-                    body.classList.add('dark-theme');
-                    themeButton.textContent = 'Light Theme';
-                    localStorage.setItem('theme', 'dark-theme');
-                } else {
-                    body.classList.remove('dark-theme');
-                    body.classList.add('light-theme');
-                    themeButton.textContent = 'Dark Theme';
-                    localStorage.setItem('theme', 'light-theme');
-                }
-            });
+            if (body.classList.contains('light-theme')) {
+                body.classList.remove('light-theme');
+                body.classList.add('dark-theme');
+                themeButton.textContent = 'Light Theme';
+                localStorage.setItem('theme', 'dark-theme');
+            } else {
+                body.classList.remove('dark-theme');
+                body.classList.add('light-theme');
+                themeButton.textContent = 'Dark Theme';
+                localStorage.setItem('theme', 'light-theme');
+            }
+        });
 
             // Set the default theme of page to the 'light theme'
             let storedTheme = localStorage.getItem('theme') || 'light-theme';
