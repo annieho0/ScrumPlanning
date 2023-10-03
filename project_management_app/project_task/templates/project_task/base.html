@@ -48,60 +48,10 @@
             padding-top: 0;
         }
 
-        /* h1 border for light theme */
+        /* h1 border for light theme (default) */
         h1 {
             border-bottom: 2px solid #333;
             padding-bottom: 2px;
-        }
-
-        /* h1 border for dark theme */
-        body.dark-theme h1 {
-        border-bottom: 2px solid #fff;
-        }
-
-        /* Light theme */
-        body.light-theme {
-            background-color: #ffffff;
-            color: #333333;
-        }
-
-        .sidenav.light-theme {
-            background-color: #e6e6e6;
-        }
-
-        .sidenav a.light-theme {
-            color: #333333;
-        }
-
-        /* Dark theme */
-        body.dark-theme {
-            background-color: #333333;
-            color: #ffffff;
-        }
-
-        .sidenav.dark-theme {
-            background-color: #111;
-        }
-
-        .sidenav a.dark-theme {
-            color: #818181;
-        }
-
-        #theme-toggle {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index:1000;
-            padding: 10px 20px;
-            cursor:pointer;
-            background-color: #444;
-            color: #fff;
-            border: none;
-            border-radius: 5px;
-            transition: background-color 0.3s;
-        }
-        #theme-toggle:hover {
-            background-color: #555;
         }
 
     </style>
@@ -116,8 +66,7 @@
     <a href="{% url 'sprint_board' %}">Sprint Board</a>
     <a href="{% url 'sprint_backlog' %}">Sprint Backlog</a>
 </div>
-<!-- Toggling Light/Dark Themes -->
-<button id="theme-toggle">Light/Dark Theme</button>
+
 <!-- jQuery Library -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <!-- Popper.js -->
@@ -139,24 +88,6 @@
 
 {% block js %}
     <script>
-        // Toggling between light and dark themes
-        document.getElementById('theme-toggle').addEventListener('click', function() {
-                let body = document.body;
-
-                if (body.classList.contains('light-theme')) {
-                    body.classList.remove('light-theme');
-                    body.classList.add('dark-theme');
-                    localStorage.setItem('theme', 'dark-theme');
-                } else {
-                    body.classList.remove('dark-theme');
-                    body.classList.add('light-theme');
-                    localStorage.setItem('theme', 'light-theme');
-                }
-            });
-
-            // Set the default theme of page to the 'light theme'
-            let storedTheme = localStorage.getItem('theme') || 'light-theme';
-            document.body.classList.add(storedTheme);
     </script>
 {% endblock %}
 </body>
