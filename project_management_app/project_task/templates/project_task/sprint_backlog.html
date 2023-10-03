@@ -6,6 +6,7 @@
 
 {% block content %}
     <h1>Sprint Backlog</h1>
+    <button class="btn btn-info" onclick="showHelp()">Help</button>
 
 <div class="container-fluid" style="margin-top: 20px;">
     <table class="table table-striped table-bordered">
@@ -33,6 +34,11 @@
         </tbody>
     </table>
 </div>
-
+<script>
+    function showHelp() {
+        alert("Sprint Backlog displays all sprints that have been created, including their start and end dates. When a sprint is clicked on, the website will redirect to it's corresponding Sprint Board. The 'Archive Sprint' button will allow the sprint to be archived and moved to the 'Archived Sprints' tab, which can be accessed in the side bar.");
+    }
+</script>
 {% endblock %}
+
 

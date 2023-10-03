@@ -6,6 +6,7 @@
 
 {% block content %}
 <h1>Sprint Board</h1>
+<button class="btn btn-info" onclick="showHelp()">Help</button>
 
 
 <!-- View options -->
@@ -205,6 +206,9 @@
             document.getElementById("kanbanView").style.display = "block";
         }
     }
+    function showHelp() {
+            alert("This page displays the Sprint Board for a sprint that is currently running. List View and Kanban Views can be used to view the Sprint Board. Tasks on the Sprint Board can be filtered by the tags assigned to them. The tasks on the Sprint Board can be clicked to view additional fields and log hours for each task. ");
+        }
 
 
     function filterTasks() {

@@ -28,6 +28,7 @@
 
 {% block content %}
 <h1>Project Backlog</h1>
+<button class="btn btn-info" onclick="showHelp()">Help</button>
 
 <!-- Alert Message container -->
 <div id="messages-container"></div>
@@ -82,6 +83,10 @@
 
 <!-- Custom JavaScript -->
 <script>
+    function showHelp() {
+            alert("This page allows new tasks to be created by generating a modal to fill in fields such as name, type etc. When the task is made, it will be added to the Project Backlog table, but can be clicked on to edit task details and saved. The task can also be deleted by clicking on the delete button in the Action column. The page can be viewed in either List or Kanban and the tasks can be sorted based on priority, tags and date.");
+        }
+
     // This is the base URL for the edit and delete task views
     const editTaskBaseUrl = "{% url 'edit_task' task_id=0 %}".replace("0/", "");
     const deleteTaskBaseUrl = "{% url 'delete_task' task_id=0 %}".replace("0/", "");
@@ -537,6 +542,7 @@
             $('#editTaskModal #id_created_date').val(edit_task.created_date);
 
         }
+        
     });
 
     
