@@ -132,7 +132,7 @@
                 <div class="modal-body">
                     <div class="form-group">
                         <label for="name">Name:</label>
-                        <input type="text" class="form-control" id="name" name="name" value="">
+                        <input type="text" class="form-control" id="name" name="name" value="" readonly>
                     </div>
                     <div class="form-group">
                         <label for="assignee">Assignee:</label>
@@ -246,30 +246,42 @@
     $(document).on('click', 'a[data-toggle="modal"][data-target="#editTaskModal"]', function () {
         var taskId = $(this).data('task-id');
         var taskName = $(this).text();
-        var taskAssignee = $(this).closest('tr').find('td:eq(2)').text();
-        var tasktype = $(this).data('task-type');
+        
         var logHoursInput = $("#editTaskHours");
         var totalHoursInput = $("#editTaskTotalHours");
         logHoursInput.on("input", function () {
             var loggedHours = parseFloat(logHoursInput.val()) || 0;
             totalHoursInput.val(loggedHours);
         });
+        $.ajax({
+            url: `/sprint-boards/get_task/${taskId}/`, 
+            method: 'GET',
+            dataType: 'json',
+            success: function (data) {
+                
+                var taskAssignee = data.assignee; 
+                var taskStatus = data.status;
+                var tasktype = data.type;
+                
+                // Update the modal form fields for name, status, and type
+                $('#editTaskModal #name').val(taskName);
+                $('#editTaskModal #assignee').val(taskAssignee);
+                $('#editTaskModal #status').val(taskStatus);
+                $('#editTaskModal #type').val(tasktype);
+            },
+            error: function () {
+                // Handle error if the AJAX request fails
+                console.error('Failed to fetch assignee data');
+            }
+        });
 
-        $('#editTaskModal').find('form').attr('action', `/sprint-board/update_task/${taskId}/`);
-        // Update the URL here
-
-        // Update the modal form fields
-        $('#editTaskModal #name').val(taskName);
-        $('#editTaskModal #assignee').val(taskAssignee);
-        $('#editTaskModal #status').val(taskStatus); 
-        $('#edittaskmodal #type').val(tasktype); 
     });
 
     // Event listener for submitting the edit task form
     $('#editTaskForm').on('submit', function (e) {
         e.preventDefault();
 
-        var taskId = $(this).attr('action').split('=')[1]; // Extract the taskId from the action URL
+        var taskId = $(this).attr('action').split('=')[1]; 
         var formData = $(this).serialize();
 
         $.ajax({
@@ -279,7 +291,7 @@
             success: function (data) {
                 if (data.success) {
                     $('#editTaskModal').modal('hide');
-                    // You can optionally update the task details displayed on the page here
+                    
                 }
             },
             error: function (error) {

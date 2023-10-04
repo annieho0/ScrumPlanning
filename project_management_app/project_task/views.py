@@ -569,6 +569,15 @@ class SprintBoard():
         # Redirect back to the Sprint Backlog page after archiving
         return redirect('sprint_backlog')
     
+    def get_task(request, task_id):
+        try:
+            task = Task.objects.get(pk=task_id)
+            assignee = task.assignee
+            status = task.status  # Assuming 'assignee' is the name of the field
+            return JsonResponse({'assignee': assignee, 'status': status})
+        except Task.DoesNotExist:
+            return JsonResponse({'error': 'Task not found'}, status=404)
+    
 
     def update_task(request, task_id):
 
