@@ -123,13 +123,6 @@
 </head>
 
 <body>
-<!-- Sidenav -->
-<div class="sidenav">
-    <a href="{% url 'home' %}">Home</a>
-    <a href="{% url 'project_backlog' %}">Project Backlog</a>
-    <a href="{% url 'sprint_backlog' %}">Sprint Backlog</a>
-    <a href="{% url 'sprint_backlog_archived' %}"> Archived Sprints</a>
-</div>
 
 <!-- jQuery Library -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -155,7 +148,13 @@
             <button id="large-font" onclick="changeFontSize('large')">Large</button>
         </div>
     </div>
-
+    <!-- Sidenav -->
+    <div class="sidenav">
+        <a href="{% url 'home' %}">Home</a>
+        <a href="{% url 'project_backlog' %}">Project Backlog</a>
+        <a href="{% url 'sprint_backlog' %}">Sprint Backlog</a>
+        <a href="{% url 'sprint_backlog_archived' %}"> Archived Sprints</a>
+    </div>
     {% block content %}
     {% endblock %}
 </div>
@@ -165,8 +164,6 @@
 {% block authentication %}
 {% endblock %}
 
-   
-</div>
 <script>
     function changeFontSize(fontSize) {
         document.body.style.fontSize = fontSize;
