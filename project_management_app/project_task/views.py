@@ -502,17 +502,7 @@ class HomeListView(View):
             return render(request, "project_task/sprint_backlog.html", {"sprint_form": sprint_form})
 
 
-class SprintBoard():
-
-
-    # def sprint_board(request):
-    #     """This view renders the project backlog page"""
-    #     tasks = Task.objects.filter()
-    #     # Fetch unique tags associated with tasks
-    #     tags = Tag.objects.filter(task__isnull=False).distinct()
-    #     statuses = [('NOT', 'Incomplete'), ('IN_PROG', 'In Progress'), ('COM', 'Complete')]
-    #     return render(request, "project_task/sprint_board.html", {"name": "sprint-board", "tasks": tasks, "statuses": statuses, "tags": tags})
-    
+class SprintBoard():    
     def sprint_boards(request, sprint_id):
         sprints = Sprint.objects.get(pk=sprint_id)
         sprint = get_object_or_404(Sprint, pk=sprint_id)
@@ -526,8 +516,6 @@ class SprintBoard():
         return render(request, "project_task/sprint_board.html", {"name": "sprint-board", "tasks": tasks, "statuses": statuses, "tags": tags})
     
 
-    # def redirect_to_sprint_board(request, sprint_id):
-    #     return redirect('sprint_boards', sprint_id=sprint_id)
 
     def active_sprints(request):
         # Get all active sprints
