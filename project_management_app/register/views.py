@@ -212,4 +212,4 @@ class LoginView(LoginView):
             return redirect(reverse_lazy('admin:index'))
         # Otherwise, redirect to your desired page
         else:
-            return redirect('/')
+            return redirect(reverse_lazy('/'))
