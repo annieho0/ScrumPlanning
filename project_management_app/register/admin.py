@@ -1,7 +1,7 @@
 from django.contrib import admin
 from .models import CustomizedUser, WorkingHour, ScrumRole
 from django.contrib.auth.admin import UserAdmin
-
+from django.utils.translation import gettext_lazy as _
 
 @admin.register(CustomizedUser)
 class CustomizedUserAdmin(UserAdmin):
@@ -61,3 +61,9 @@ class WorkingHoursAdmin(admin.ModelAdmin):
 @admin.register(ScrumRole)
 class ScrumRoleAdmin(admin.ModelAdmin):
     pass
+
+
+admin.site.site_header = _('Site Administration Portal')
+admin.site.site_title = _('Admin Portal')
+admin.site.index_title = _('Admin Dashboard')
+

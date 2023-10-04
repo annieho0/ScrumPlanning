@@ -117,6 +117,10 @@ class CustomizedUser(AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['email', 'first_name', 'last_name']
 
+    class Meta:
+        verbose_name = _("User")
+        verbose_name_plural = _("Users")
+
     def get_name(self):
         """
         Returns the full name of the user.
