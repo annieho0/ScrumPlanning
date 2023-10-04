@@ -561,9 +561,15 @@ class SprintBoard():
             task = Task.objects.get(pk=task_id)
             assignee = task.assignee
             status = task.status  # Assuming 'assignee' is the name of the field
-            return JsonResponse({'assignee': assignee, 'status': status})
+            type = task.type
+            description = task.description
+            priority = task.priority 
+            stage = task.stage 
+            created_date = task.created_date
+            return JsonResponse({'assignee': assignee, 'status': status, 'type': type, 'description': description, 'priority': priority, 'stage':stage, 'created_date': created_date})
         except Task.DoesNotExist:
             return JsonResponse({'error': 'Task not found'}, status=404)
+
     
 
     def update_task(request, task_id):
@@ -573,6 +579,10 @@ class SprintBoard():
             task_assignee = request.POST.get('assignee')
             task_status = request.POST.get('status')
             task_type = request.POST.get('type')
+            task_description = request.POST.get('description')
+            task_priority = request.POST.get('priority')
+            task_stage = request.POST.get('stage')
+            task_created_date = request.POST.get('created_date')
 
         try:
             task = get_object_or_404(Task, pk=task_id)
@@ -580,12 +590,17 @@ class SprintBoard():
             task.assignee = task_assignee
             task.status = task_status
             task.type = task_type
+            task.description = task_description
+            task.priority = task_priority
+            task.stage = task_stage
+            task.created_date = task_created_date
             task.save()
             success = True
         except Task.DoesNotExist:
             success = False
 
         return JsonResponse({'success': success})
+
 
 
 

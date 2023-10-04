@@ -110,7 +110,6 @@
     <option value="{{ tag.name }}">{{ tag.name }}</option>
     {% endif %}
     {% endfor %}
-
 </select>
 
 
@@ -149,7 +148,8 @@
             <tr data-category="{% for tag in task.tags.all %}{{ tag }} {% endfor %}" data-task-id="{{ task.id }}">
                 
                 <td>
-                    <a href="#" data-toggle="modal" data-target="#editTaskModal" data-task-id="{{ task.id }}" data-task-type ="{{ task.type }}">{{ task.name }}</a>
+                    <a href="#" data-toggle="modal" data-target="#editTaskModal" data-task-id="{{ task.id }}" data-task-type ="{{ task.type}}" data-task-description ="{{ task.description }}" data-task-priority = "{{ task.priority }}" data-task-stage = "{{ task.stage }}" data-task-created_date = "{{ task.created_date}}">{{ task.name }}</a>
+
                 </td>
                 <td>{{task.story_point}}</td>       
                 <td>{% for tag in task.tags.all %}
@@ -296,12 +296,8 @@
             alert("This page displays the Sprint Board for a sprint that is currently running. List View and Kanban Views can be used to view the Sprint Board. Tasks on the Sprint Board can be filtered by the tags assigned to them. The tasks on the Sprint Board can be clicked to view additional fields and log hours for each task. ");
     }
 
-<!-- Create Graph Button -->
-<button onclick="window.location='{% url 'create_graph' %}'" class="btn btn-primary create-graph-btn" id="createGraphButton">Create Graph</button>
-
-
-
-
+    <!-- Create Graph Button -->
+    <button onclick="window.location='{% url 'create_graph' %}'" class="btn btn-primary create-graph-btn" id="createGraphButton">Create Graph</button>
 
     function filterTasks() {
         const selectedCategory = document.getElementById("filter").value;
@@ -340,6 +336,11 @@
     $(document).on('click', 'a[data-toggle="modal"][data-target="#editTaskModal"]', function () {
         var taskId = $(this).data('task-id');
         var taskName = $(this).text();
+        var taskType = $(this).data('task-type');
+        var taskDescription = $(this).data('task-description');
+        var taskPriority = $(this).data('task-priority');
+        var taskStage = $(this).data('task-stage');
+        var taskCreatedDate =  $(this).data('task-created_date');
         
         var logHoursInput = $("#editTaskHours");
         var totalHoursInput = $("#editTaskTotalHours");
@@ -352,10 +353,14 @@
             method: 'GET',
             dataType: 'json',
             success: function (data) {
-                
                 var taskAssignee = data.assignee; 
                 var taskStatus = data.status;
-                var tasktype = data.type;
+                var taskType = data.type;
+                var taskDescription = data.description; 
+                var taskPriority = data.priority;
+                var taskStage = data.stage; 
+                var taskCreatedDate = data.created_date;
+
                 
                 // Update the modal form fields for name, status, and type
                 $('#editTaskModal #name').val(taskName);
