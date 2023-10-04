@@ -143,7 +143,8 @@
         crossorigin="anonymous"></script>
         <!-- Select2 JS and initialization -->
         <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
-        
+
+{% if user.is_authenticated %}
 <!-- Content -->
 <div id="content" , name="content" class="main">
     <div class="dropdown">
@@ -154,19 +155,16 @@
             <button id="large-font" onclick="changeFontSize('large')">Large</button>
         </div>
     </div>
-    {% if user.is_authenticated %}
-        {% block content %}
-        {% endblock %}
 
-    {% else %}
-    <p>Login <a href="/login">Here</a></p>
-    {% endif %}
-    
-    <!-- <div class="font-size-controls">
-        <button id="small-font" onclick="changeFontSize('small')">Small</button>
-        <button id="medium-font" onclick="changeFontSize('medium')">Medium</button>
-        <button id="large-font" onclick="changeFontSize('large')">Large</button>
-    </div> -->
+    {% block content %}
+    {% endblock %}
+</div>
+ {% endif %}
+
+<!-- Authentication -->
+{% block authentication %}
+{% endblock %}
+
    
 </div>
 <script>
