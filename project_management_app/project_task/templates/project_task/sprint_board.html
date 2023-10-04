@@ -16,7 +16,7 @@
     <option value="kanbanView">Kanban View</option>
 </select>
 
-<!-- View options -->
+<!-- Filter options -->
 <label for="filter">Filter Tag(s):</label>
 <select id="filter" onchange="filterTasks()">
     <option value="">All</option>
@@ -56,14 +56,14 @@
             <!-- Rows will be dynamically added here -->
             {% for task in tasks%}  
             {% if task.status == status_title.0 %}
-            <tr data-category="{% for tag in task.tags.all %}{{ tag.name }} {% endfor %}" data-task-id="{{ task.id }}">
+            <tr data-category="{% for tag in task.tags.all %}{{ tag }} {% endfor %}" data-task-id="{{ task.id }}">
                 
                 <td>
                     <a href="#" data-toggle="modal" data-target="#editTaskModal" data-task-id="{{ task.id }}" data-task-type ="{{ task.type }}">{{ task.name }}</a>
                 </td>
                 <td>{{task.story_point}}</td>       
                 <td>{% for tag in task.tags.all %}
-                    <span class="badge badge-info">{{ tag.name }}</span>
+                    <span class="badge badge-info">{{ tag }}</span>
                 {% endfor %}
                 </td>
                 <td>{{task.assignee}}</td>       
@@ -88,33 +88,29 @@
                     <div class="card-header"><h2>{{ status_title.1 }}</h2></div>
                     <div class="card-body">
                         {% for task in tasks %}
-                        {% if task.status == status_title.0 %}
-                        {% for tag in task.tags.all %}                                        
-                            <div class="card mb-3" style="width: 10rem;" id="{{ tag.name}}" >
-                                <div class="card-body">
-                                    <h5 class="card-title">
-                                        <a href="#" data-toggle="modal" data-target="#editTaskModal" data-task-id="{{ task.id }}">{{ task.name }}</a></h5>
-                                    <h6 class="card-subtitle mb-2 text-muted"><strong>Story Point:</strong> {{task.story_point}}</h6>
-                                    <h6 class="card-text mb-2 text-muted"><strong>Assignee:</strong> {{task.assignee}}</h6>
-                                    <h6 class="card-text mb-2 text-muted"><strong>Tags:</strong>{% for tag in task.tags.all %}
-                                            <span class="badge badge-info"> {{ tag.name }}</span>
-                                        {% endfor %}
-                                    </h6>
-                                                                      
-                                    
+                            {% if task.status == status_title.0 %}
+                                <div class="card mb-3" style="width: 10rem;" id="{{task.tags.name}}" >
+                                    <div class="card-body">
+                                        <h5 class="card-title">
+                                            <a href="#" data-toggle="modal" data-target="#editTaskModal" data-task-id="{{ task.id }}">{{ task.name }}</a></h5>
+                                        <h6 class="card-subtitle mb-2 text-muted"><strong>Story Point:</strong> {{task.story_point}}</h6>
+                                        <h6 class="card-text mb-2 text-muted"><strong>Assignee:</strong> {{task.assignee}}</h6>
+                                        <h6 class="card-text mb-2 text-muted"><strong>Tags:</strong>{% for tag in task.tags.all %}
+                                                <span class="badge badge-info"> {{ tag }}</span>
+                                            {% endfor %}
+                                        </h6>                                                                      
+                                    </div>
                                 </div>
-                            </div>
-                        {% endfor %}
-                        {% endif %}
+                            {% endif %}
                         {% endfor %}
                     </div>
-                    
                 </div>
             </div>
         {% endfor %}
-
     </div> <!-- End of row -->
 </div> <!-- End of container -->
+
+
 {% for task in tasks %}
 <div class="modal fade" id="editTaskModal" tabindex="-1" role="dialog" aria-labelledby="editTaskModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -226,7 +222,7 @@
         });
 
         cards.forEach(card => {
-            const cardTags = card.querySelectorAll(".badge-primary"); // Get tags within the card
+            const cardTags = card.querySelectorAll(".badge-info"); // Get tags within the card
             let cardMatchesCategory = false;
 
             cardTags.forEach(tag => {
