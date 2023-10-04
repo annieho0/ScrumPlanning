@@ -49,7 +49,7 @@
     {% block header %}
     <div id="header">
         <div id="branding">
-            {% block branding %}csd{% endblock %}
+            {% block branding %}{% endblock %}
         </div>
         {% block usertools %}
         {% if has_permission %}
@@ -99,12 +99,13 @@
     <div class="main" id="main">
         {% if not is_popup and is_nav_sidebar_enabled %}
         {% block nav-sidebar %}
+        <div id="nav-filter" hidden></div>
         <button class="sticky toggle-nav-sidebar" id="toggle-nav-sidebar" aria-label="{% translate 'Toggle navigation' %}"></button>
         <nav class="sticky" id="nav-sidebar" aria-label="{% translate 'Sidebar' %}">
             <div id="side-nav-bar">
-                <a href="/admin">Dashboard</a>
+                <a href="{% url 'admin:index' %}">Dashboard</a>
                 <a href="/admin/register/customizeduser">User</a>
-                <a href="#">Chart</a>
+                <a href="{% url 'hour_graph' %}">Chart</a>
             </div>
         </nav>
         {% endblock %}
