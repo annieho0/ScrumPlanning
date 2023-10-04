@@ -1,0 +1,247 @@
+{% extends "project_task/base.html" %}
+{% load crispy_forms_tags %}
+{% load crispy_forms_filters %}
+
+{% block title %}
+    <title>Create Graphs</title>
+{% endblock %}
+
+{% block extra_styles %}
+    <style>
+        /* h1 border for dark theme */
+        body.dark-theme h1 {
+        border-bottom: 2px solid #fff;
+        }
+        /* Light theme */
+        body.light-theme {
+            background-color: #ffffff;
+            color: #333333;
+        }
+
+        body.light-theme .thead-light {
+            background-color: white;
+            color: black;
+        }
+
+        body.light-theme .thead-dark {
+            background-color: white;
+            color: black;
+        }
+
+        /* Theme toggle button in light theme */
+        body.light-theme #theme-toggle {
+        background-color: #444;
+        color: #fff;
+        }
+
+        body.light-theme #theme-toggle:hover {
+        background-color: #555;
+        }
+
+        /* Dark theme */
+        body.dark-theme {
+            background-color: #333333;
+            color: #ffffff;
+        }
+
+        body.dark-theme .thead-light,
+        body.dark-theme .thead-dark {
+            background-color: #343a40;
+            color: white;
+        }
+        /* Theme toggle button in dark theme */
+        body.dark-theme #theme-toggle {
+            background-color: #ffffff;
+            color: #333333;
+        }
+
+        body.dark-theme #theme-toggle:hover {
+            background-color: #dddddd;
+        }
+        /* Theme toggle button */
+        #theme-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1001;
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #444;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        #theme-toggle:hover {
+            background-color: #555;
+        }
+        </style>
+{% endblock %}
+
+{% block content %}
+    <h1>Create Graph</h1>
+   <!-- Graph View Dropdown -->
+    <label for="graphView"></label>
+    <select id="graphView" onchange="changeGraphView()">
+        <option value="" selected disabled>Select a chart...</option>
+        <option value="burndownChart">Burndown</option>
+        <option value="accumulationChart">Accumulation of Efforts</option>
+    </select>
+
+    <!-- Toggle button for Light/Dark themes -->
+    <button id="theme-toggle">Light/Dark Theme</button>
+
+    <h2 id="burndownTitle" style="display: none;">Burndown Chart</h2>
+    <canvas id="burndownChart" width="400" height="200" {% if not show_burndown %}style="display: none;"{% endif %}></canvas>
+
+
+    <h2 id="accumulationTitle" style="display: none;">Accumulation of Efforts Chart</h2>
+    <canvas id="accumulationChart" width="400" height="200" style="display: none;"></canvas>
+
+{% endblock %}
+
+
+{% block js %}
+    <!-- Chart.js Library-->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        function changeGraphView() {
+            const selectedValue = document.getElementById("graphView").value;
+
+            if (selectedValue === "burndownChart") {
+                document.getElementById("burndownChart").style.display = "block";
+                document.getElementById("burndownTitle").style.display = "block";
+                document.getElementById("accumulationTitle").style.display = "none";
+                document.getElementById("accumulationChart").style.display = "none";
+            } else if (selectedValue === "accumulationChart") {
+                document.getElementById("burndownChart").style.display = "none";
+                document.getElementById("burndownTitle").style.display = "none";
+                document.getElementById("accumulationTitle").style.display = "block";
+                document.getElementById("accumulationChart").style.display = "block";
+            }
+        }
+        document.addEventListener("DOMContentLoaded", function() {
+    // Burndown Chart graph logic
+        var ctx = document.getElementById('burndownChart').getContext('2d')
+        var actualData = {{ remaining_effort|safe }};
+        var idealData = [100, 80, 60, 40, 20, 0];
+        var myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: {{ days|safe }},
+                datasets:[
+                    {
+                        label: 'Actual Remaining Effort',
+                        data: actualData,
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',//   Blue
+                        borderColor: 'rgba(75, 192, 192,1)',
+                        borderWidth: 1,
+                        fill : 1, // Fill the gap between the two graphs
+                    },
+
+                    {
+                        label:'Ideal Remaining Effort',
+                        //Hard coded data for now until we have set up live data
+                        data: idealData,
+                        backgroundColor: 'rgba(255, 0, 0, 0.2)', // Red
+                        borderColor: 'rgba(255, 0, 0, 1)',
+                        borderWidth: 1,
+                        fill : -1,
+                    },
+
+                ]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Remaining Effort (Hours)',
+                            font: {
+                                size: 18
+                            }
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Sprint Timeline',
+                            font: {
+                                size: 18
+                            }
+
+                        }
+                    }
+                }
+            }
+        })
+        // Accumulation of effort graph logic
+        var accCtx = document.getElementById('accumulationChart').getContext('2d');
+        var myAccumulationChart = new Chart(accCtx, {
+            type: 'line',
+            data: {
+                labels: {{ days|safe }},
+                datasets:[{
+                    label: 'Accumulated Hours',
+                    data: {{ accumulated_hours|safe }},
+                    backgroundColor: 'rgba(153, 102, 255, 0.2)',
+                    borderColor: 'rgba(153, 102, 255, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Hours Accumulated',
+                            font: {
+                                size: 18
+                            }
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Sprint Timeline',
+                            font: {
+                                size: 18
+                            }
+                        }
+                    }
+                }
+            }
+        })})
+        // Toggle between light and dark themes
+        document.getElementById('theme-toggle').addEventListener('click', function() {
+                let body = document.body;
+                let themeButton = document.getElementById('theme-toggle');
+
+                if (body.classList.contains('light-theme')) {
+                    body.classList.remove('light-theme');
+                    body.classList.add('dark-theme');
+                    themeButton.textContent = 'Light Theme';
+                    localStorage.setItem('theme', 'dark-theme');
+                } else {
+                    body.classList.remove('dark-theme');
+                    body.classList.add('light-theme');
+                    themeButton.textContent = 'Dark Theme';
+                    localStorage.setItem('theme', 'light-theme');
+                }
+            });
+
+            // Set the default theme of page to the 'light theme'
+            let storedTheme = localStorage.getItem('theme') || 'light-theme';
+            document.body.classList.add(storedTheme);
+
+            // Set the button text based on the current theme
+            if (storedTheme === 'light-theme') {
+                document.getElementById('theme-toggle').textContent = 'Dark Theme';
+            } else {
+                document.getElementById('theme-toggle').textContent = 'Light Theme';
+            }
+
+    </script>
+{% endblock %}
