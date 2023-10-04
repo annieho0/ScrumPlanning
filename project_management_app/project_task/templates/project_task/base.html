@@ -105,8 +105,19 @@
         }
 
         body {
-            padding-top: 0; /* Adjust this value as needed */
+            padding-top: 0;
         }
+
+        /* h1 border for light theme (default) */
+        h1 {
+            border-bottom: 2px solid #333;
+            padding-bottom: 2px;
+        }
+        .page-title {
+            text-align: center;
+            margin-top: 20px; /* Adjust the margin as needed */
+        }
+
     </style>
     {% endblock %}
 </head>
@@ -115,7 +126,9 @@
 <!-- Sidenav -->
 <div class="sidenav">
     <a href="{% url 'home' %}">Home</a>
-    <a href="{% url 'project_backlog' %}">Project Backlog</a>    
+    <a href="{% url 'project_backlog' %}">Project Backlog</a>
+    <a href="{% url 'sprint_backlog' %}">Sprint Backlog</a>
+    <a href="{% url 'sprint_backlog_archived' %}"> Archived Sprints</a>
 </div>
 
 <!-- jQuery Library -->

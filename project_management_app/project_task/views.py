@@ -1,9 +1,17 @@
-from django.http import JsonResponse
-from django.shortcuts import render, redirect
+
+from django.urls import reverse_lazy
+from django.http import JsonResponse, HttpResponseBadRequest
+from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic.edit import View
-from .models import Tag, Task
-from .forms import CreateNewTaskForm, EditTaskForm
+from .models import Tag, Task, Sprint
+from .forms import CreateNewTaskForm, EditTaskForm, CreateNewSprintForm
 from django.db.models import Case, When, Value, IntegerField
+from django.contrib import messages
+from datetime import timedelta, date, datetime
+from django.db import models
+from django.utils import timezone
+from django.shortcuts import get_object_or_404
+
 
 
 class TaskManager:
@@ -93,7 +101,9 @@ class TaskManager:
             updated_task = update_form.save(commit=False)
 
             # Save the task and return feedback
+            # Save the task and return feedback
             # Now save the task to DB
+
             updated_task.save()
             update_form.save_m2m()
 
@@ -101,6 +111,7 @@ class TaskManager:
             task_details = TaskManager.get_task_details(task_id)
 
             return True, f"Task '{str(updated_task)}' successfully updated!", task_details
+
         else:
             return False, update_form.errors, None
 
@@ -194,6 +205,7 @@ class TaskManager:
         If the task exists, it will return its details as a dictionary.
         If the task does not exist, it will return None.
 
+
         Parameters:
             task_id (int): The ID of the task to fetch details for.
 
@@ -221,7 +233,7 @@ class TaskManager:
             'story_point': task.story_point,
             'assignee': {'id': task.assignee.id, 'email': task.assignee.email} if task.assignee else None,
             'status': task.status,
-            'sprint': task.sprint,
+            # 'sprint': task.sprint,
             'created_date': task.created_date,
             # ... add any other necessary fields here ...
         }
@@ -478,6 +490,20 @@ class HomeListView(View):
         Returns:
             HttpResponse: Rendered home page with any relevant context.
         """
+        sprint_form = CreateNewSprintForm()
+
+    
+        return render(request, self.template_name, {"sprint_form": sprint_form})
+
+    def post(self,request):
+        sprint_form = CreateNewSprintForm(request.POST)
+
+        if sprint_form.is_valid():
+            sprint = sprint_form.save()
+            return redirect('sprint_backlog')
+        else:
+            print("Form is not valid:", sprint_form.errors)
+            return render(request, "project_task/sprint_backlog.html", {"sprint_form": sprint_form})
 
         if request.user.is_authenticated:
             # Render and return the home page template with the prepared context
@@ -487,4 +513,179 @@ class HomeListView(View):
             return redirect('/login')
 
 
+class SprintBoard():   
+    def sprint_boards(request, sprint_id):
+        sprints = Sprint.objects.get(pk=sprint_id)
+        sprint = get_object_or_404(Sprint, pk=sprint_id)
+        tasks = Task.objects.filter(sprints=sprints)
+        # Fetch unique tags associated with tasks
+        tags = Tag.objects.filter(task__isnull=False).distinct()
+        statuses = [('NOT', 'Incomplete'), ('IN_PROG', 'In Progress'), ('COM', 'Complete')]
+        if sprint.is_completed:
+        # Delete tasks that are not completed and associated with the archived sprint
+            tasks = tasks.filter(status='COM')
+        return render(request, "project_task/sprint_board.html", {"name": "sprint-board", "tasks": tasks, "statuses": statuses, "tags": tags})
+    
+
+
+    def active_sprints(request):
+        # Get all active sprints
+        active_sprints = Sprint.objects.filter(end_date__gt=timezone.now(), is_completed=False)
+
+        # Get all completed sprints
+        completed_sprints = Sprint.objects.filter(end_date__lte=timezone.now(), is_completed=False)
+
+        # Update completed sprints and move them to the archived sprints
+        for sprint in completed_sprints:
+            sprint.is_completed = True
+            sprint.save()
+
+        # Get the sprint backlog (only active sprints)
+        sprint_backlog = active_sprints
+
+        return render(request, 'project_task/sprint_backlog.html', {'sprint_backlog': sprint_backlog})
+
+    def archived_sprints(request):
+        sprint_backlog_archived = Sprint.objects.filter(is_completed=True)
+        return render(request, 'project_task/sprint_backlog_archived.html', {'sprint_backlog_archived': sprint_backlog_archived})
+
+    def archive_sprint_backlog(request, sprint_id):
+        try:
+            sprint = get_object_or_404(Sprint, id=sprint_id)
+            
+            if not sprint.is_completed:
+                # If the sprint is not completed, set the end_date to today
+                sprint.end_date = timezone.now()
+            
+            sprint.is_completed = True  # Mark the sprint as completed
+            
+            sprint.save()
+            
+        except Sprint.DoesNotExist:
+            # Handle the case where the sprint does not exist
+            pass
+
+        # Redirect back to the Sprint Backlog page after archiving
+        return redirect('sprint_backlog')
+    
+    def get_task(request, task_id):
+        try:
+            task = Task.objects.get(pk=task_id)
+            assignee = task.assignee
+            status = task.status  # Assuming 'assignee' is the name of the field
+            return JsonResponse({'assignee': assignee, 'status': status})
+        except Task.DoesNotExist:
+            return JsonResponse({'error': 'Task not found'}, status=404)
+    
+
+    def update_task(request, task_id):
+
+        if request.method == 'POST':
+            task_name = request.POST.get('name')
+            task_assignee = request.POST.get('assignee')
+            task_status = request.POST.get('status')
+            task_type = request.POST.get('type')
+
+        try:
+            task = get_object_or_404(Task, pk=task_id)
+            task.name = task_name
+            task.assignee = task_assignee
+            task.status = task_status
+            task.type = task_type
+            task.save()
+            success = True
+        except Task.DoesNotExist:
+            success = False
+
+        return JsonResponse({'success': success})
+
+
+
+class CreateGraphView(View):
+    """
+       View class for creating graphs
+    """
+    template_name = 'create_graph.html'
+
+    def get(self, request):
+        # Hard coded data to test chartjs graphs
+        days = ["Day 1", "Day 2", "Day 3", "Day 4 ", "Day 5","Day 6"]
+        remaining_effort = [100, 85, 70, 45, 15, 10]
+        accumulated_hours = [0, 5, 12, 20, 28, 37]
+
+        context = {
+            "days": days,
+            "remaining_effort": remaining_effort,
+            "accumulated_hours": accumulated_hours,
+        }
+        return render(request, 'project_task/create_graph.html', context)
+
+    # def dispatch(self, *args, **kwargs):
+    #     self.total_effort = None
+    #     self.tasks = None
+    #     self.end_date = None
+    #     self.start_date = None
+    #     return super().dispatch(*args, **kwargs)
+
+    # def get(self, request):
+    #     # Fetch the currently active sprint
+    #     current_sprint = Sprint.objects.get(is_active=True)  # Will cause error if there are multiple sprints
+    #     # Set the start and end dates from the fetched sprint
+    #     self.start_date = current_sprint.start_date
+    #     self.end_date = current_sprint.end_date
+    #
+    #     self.tasks = Task.objects.filter(sprint=current_sprint)
+    #
+    #     # Calculate the total effort (in story points) for the sprint
+    #     self.total_effort = sum(task.story_point or 0 for task in self.tasks)
+    #
+    #     context = {
+    #         "days": [self.start_date + timedelta(days=i) for i in
+    #                  range((self.end_date - self.start_date).days + 1)],
+    #         "remaining_effort": self.burndown_data(),
+    #         "accumulated_hours": self.accumulation_data(),
+    #     }
+    #     return render(request, 'project_task/create_graph.html', context)
+
+    # def burndown_data(self):
+    #     """
+    #     Generates burndown data for a given sprint
+    #
+    #     Returns:
+    #         list: A list containing the remaining effort for each day of the sprint
+    #     """
+    #     total_effort = self.total_effort
+    #     remaining_effort = [total_effort]
+    #     current_date = self.start_date
+    #     while current_date <= self.end_date:
+    #         logged_hours_on_date = \
+    #             TimeLog.objects.filter(task__in=self.tasks, date=current_date).aggregate(models.Sum('hours_logged'))[
+    #                 'hours_logged__sum'] or 0
+    #         total_effort -= logged_hours_on_date
+    #         remaining_effort.append(total_effort)
+    #         current_date += timedelta(days=1)
+    #     return remaining_effort
+
+    # def accumulation_data(self):
+    #     """
+    #     Generates an accumulation of effort data for a given sprint
+    #
+    #     Returns:
+    #        list: A list containing the accumulated hours for each day of the sprint
+    #     """
+    #     accumulated_effort = [0]
+    #     accumulated_hours = 0
+    #
+    #     current_date = self.start_date
+    #     while current_date <= self.end_date:
+    #         logged_hours_on_date = \
+    #             TimeLog.objects.filter(task__in=self.tasks, date=current_date).aggregate(models.Sum('hours_logged'))[
+    #                 'hours_logged__sum'] or 0
+    #
+    #         accumulated_hours += logged_hours_on_date
+    #         accumulated_effort.append(accumulated_hours)
+    #
+    #         current_date += timedelta(days=1)
+    #
+    #     return accumulated_effort
 
