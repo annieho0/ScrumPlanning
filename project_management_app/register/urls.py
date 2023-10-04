@@ -3,6 +3,8 @@ from django.contrib.auth import views as auth_views
 from . import views as register_view
 
 urlpatterns = [
+    # Login URLs
+    path('login/', register_view.LoginView.as_view(template_name='registration/login.html'), name='login'),
     # Registration URLs
     path('register/', register_view.RegisterView.as_view(), name='register'),
     path('register/success/', register_view.RegisterSuccessView.as_view(), name='register_success'),

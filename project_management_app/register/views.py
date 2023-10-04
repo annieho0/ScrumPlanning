@@ -1,11 +1,13 @@
+from django.contrib.auth import login
+from django.contrib.auth.views import LoginView
 from django.core.mail import send_mail
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.views.generic import FormView, View
 from .forms import RegisterFrom
 from django.urls import reverse_lazy, reverse
-
 from .models import CustomizedUser
+from django.contrib.auth.mixins import UserPassesTestMixin
 
 
 class RegisterView(FormView):
@@ -127,3 +129,87 @@ class RegisterSuccessView(View):
             HttpResponse: A response containing the rendered registration success template.
         """
         return render(request, self.template_name)
+
+
+class AdminGraphView(UserPassesTestMixin, View):
+    """
+    Class-based view to handle rendering the admin graph page.
+
+    This view handles GET requests for rendering the admin graph page.
+    It simply renders the admin graph template.
+
+    Attributes:
+        template_name (str): Specifies the path to the template for rendering the admin graph page.
+    """
+    template_name = 'admin/hour_graph.html'
+
+    def test_func(self):
+        """
+        Define the test function used by UserPassesTestMixin.
+
+        This method should return True if the user passes the test (i.e., if the user is a superuser)
+        and False otherwise.
+
+        Returns:
+            bool: True if user is a superuser, False otherwise.
+        """
+        return self.request.user.is_superuser
+
+    def get(self, request):
+        """
+        Handle GET request.
+
+        Renders the admin graph template.
+
+        Args:
+            request (HttpRequest): The GET request.
+
+        Returns:
+            HttpResponse: A response containing the rendered admin graph template.
+        """
+        context = {
+            'has_permission': self.request.user.is_superuser,
+            'is_nav_sidebar_enabled': True,
+            'is_popup': False,
+            'title': 'Admin Graph',
+        }
+        return render(request, self.template_name, context)
+
+
+class LoginView(LoginView):
+    """
+    Class-based view to handle user login.
+
+    This view handles both GET and POST requests for user login.
+    Upon a valid POST submission, it logs the user in.
+    If the user is a superuser, it redirects to the admin panel.
+    Otherwise, it redirects to a specified page.
+
+    Attributes:
+        template_name (str): Specifies the path to the template for rendering the login form.
+    """
+
+    template_name = 'registration/login.html'  # Your login template
+
+    def form_valid(self, form):
+        """
+        Handle valid form submission.
+
+        If the form is valid, this method logs the user in.
+        If the user is a superuser, it redirects to the admin panel.
+        Otherwise, it redirects to a specified page.
+
+        Args:
+            form (Form): The submitted form.
+
+        Returns:
+            HttpResponse: A redirection to the admin panel or a specified page.
+        """
+        login(self.request, form.get_user())
+
+        # Check if the user is a superuser. Redirect to the admin panel if they are.
+        if self.request.user.is_superuser:
+            return redirect(reverse_lazy('admin:index'))
+        # Otherwise, redirect to your desired page
+        else:
+            return redirect(reverse_lazy('/'))
