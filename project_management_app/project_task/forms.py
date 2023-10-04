@@ -3,12 +3,17 @@ from django import forms
 from .models import Task, Tag, Sprint 
 from .models import Sprint
 from django.utils import timezone
+from register.models import CustomizedUser
 
 
 class CreateNewTaskForm(forms.ModelForm):
     """
     A form for creating a new task.
     """
+    # users = CustomizedUser.objects.all()
+    # users_choices = []
+    # for user in users:
+    #     users_choices.append((user, user.get_name()))
 
     # For the tags, use Django's built-in SelectMultiple widget
     tags = forms.ModelMultipleChoiceField(

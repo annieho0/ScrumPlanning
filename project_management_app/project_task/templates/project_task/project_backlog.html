@@ -602,6 +602,12 @@
                 }
             });
 
+
+            // Set the assignee field value if selected
+            if (edit_task.assignee) {
+                $('#editTaskModal #id_assignee').val(edit_task.assignee.id);
+            }
+
             // Update the select2 field
             $('#editTaskModal #id_tags').trigger('change');
 
@@ -613,7 +619,6 @@
             $('#editTaskModal #id_story_point').val(edit_task.story_point);
             $('#editTaskModal #id_status').val(edit_task.status);
             $('#editTaskModal #id_stage').val(edit_task.stage);
-            $('#editTaskModal #id_assignee').val(edit_task.assignee);
             $('#editTaskModal #id_created_date').val(edit_task.created_date);
 
         }

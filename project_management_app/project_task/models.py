@@ -76,7 +76,7 @@ class Task(models.Model):
     tags = models.ManyToManyField('Tag', blank=False)
     story_point = models.PositiveIntegerField(validators=[MinValueValidator(0), MaxValueValidator(10)], null=True, blank=True)
     # TODO: Assignee is a string for now. Need to connect to user model to get the user name in future sprint
-    assignee = models.CharField(max_length=200, null=True, blank=True)
+    assignee = models.ForeignKey('register.CustomizedUser', on_delete=models.SET_NULL, null=True, blank=True)
     created_date = models.DateField(default=timezone.now)
     status = models.CharField(max_length=7, choices=STATUS_CHOICES, default=NOT_STARTED)
     # created_date = models.DateField(default=timezone.now().date())
@@ -91,3 +91,12 @@ class Task(models.Model):
     
 
 
+class Tag(models.Model):
+    """
+    A model for a tag that can be associated with a task.
+    """
+    name = models.CharField(max_length=100, unique=True)  # Name of the tag (e.g., front-end, back-end, testing).
+
+    def __str__(self):
+        return self.name
+   

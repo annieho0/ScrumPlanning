@@ -1,0 +1,17 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block coltype %}colMS{% endblock %}
+
+{% block bodyclass %}{{ block.super }} dashboard{% endblock %}
+
+{% block nav-breadcrumbs %}{{ block.super }}{% endblock %}
+
+{% block nav-sidebar %}
+{{ block.super }}
+{% endblock %}
+
+{% block content %}
+    <!-- TODO: Need to Implement Dashboard -->
+    <p>TBC: Need to Implement Dashboard</p>
+{% endblock %}
