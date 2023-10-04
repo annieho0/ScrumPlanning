@@ -1,10 +1,10 @@
 
 from django.urls import reverse_lazy
 from django.http import JsonResponse, HttpResponseBadRequest
-from django.shortcuts import render, redirect, get_object_or_404, reverse
+from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic.edit import View
-from .models import Tag, Task, Sprint, TimeLog
-from .forms import CreateNewTaskForm, EditTaskForm, CreateNewSprintForm, TimeLogForm
+from .models import Tag, Task, Sprint
+from .forms import CreateNewTaskForm, EditTaskForm, CreateNewSprintForm
 from django.db.models import Case, When, Value, IntegerField
 from django.contrib import messages
 from datetime import timedelta, date, datetime
@@ -490,18 +490,15 @@ class HomeListView(View):
         return render(request, self.template_name, {"sprint_form": sprint_form})
 
     def post(self,request):
-            sprint = sprint_form.save(commit=False)
-            if sprint.start_date == timezone.now().date():
-                try:
-                    sprint_board = Sprint.objects.get(name="sprint_board")
-                except Sprint.DoesNotExist:
-                    sprint_board = Sprint.objects.create(name="sprint_board")
+        sprint_form = CreateNewSprintForm(request.POST)
 
-            sprint.save()
+        if sprint_form.is_valid():
+            sprint = sprint_form.save()
             return redirect('sprint_backlog')
         else:
             print("Form is not valid:", sprint_form.errors)
             return render(request, "project_task/sprint_backlog.html", {"sprint_form": sprint_form})
+
 
 
 class SprintBoard():   

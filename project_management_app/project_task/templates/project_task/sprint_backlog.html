@@ -92,20 +92,23 @@
                     <th>Action</th>
                 </tr>
             </thead>
-
+            
             <tbody id="backlogTable">
                 <!-- Rows will be dynamically added here -->
-                {% for sprint in sprints %}
-                    <tr>
-                        <td>{{sprint.name}}</td>
-                        <td>{{sprint.start_date}}</td>
-                        <td>{{sprint.end_date}}</td>
-                        <td><!-- Action buttons here (maybe delete sprints if needed)... --></td>
-                    </tr>
+                {% for sprint in sprint_backlog %}
+                <tr>
+                    <td><a href="{% url 'sprint_boards' sprint.id %}">{{ sprint.name }}</a></td>
+                    <td>{{sprint.start_date}}</td>  
+                    <td>{{sprint.end_date}}</td> 
+                    <td>
+                        <a href="{% url 'archive_sprint_backlog' sprint.id %}" class="btn btn-success">Archive Sprint</a>
+                    </td>
+                </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
+        
 {% endblock %}
 
 {% block js %}

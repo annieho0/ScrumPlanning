@@ -4,10 +4,6 @@
 <title>Sprint Board</title>
 {% endblock %}
 
-{% block content %}
-<h1>Sprint Board</h1>
-<button class="btn btn-info" onclick="showHelp()">Help</button>
-
 {% block extra_styles %}
 <style>
     .create-graph-btn {
@@ -85,8 +81,17 @@
     }
 </style>
 {% endblock %}
+
 {% block content %}
 <h1>Sprint Board</h1>
+
+<button class="btn btn-info" onclick="showHelp()">Help</button>
+
+<!-- Create Graph Button --> 
+<button onclick="window.location='{% url 'create_graph' %}'" class="btn btn-primary create-graph-btn" id="createGraphButton">Create Graph</button>
+
+
+
 <!-- View options -->
 <label for="view">View:</label>
 <select id="view" onchange="changeView()">
@@ -131,8 +136,8 @@
         <thead class="thead-dark">
             <tr>
                 <th colspan="4">{{status_title.1}}</th>
-
                 
+
             </tr>
         </thead>
         
@@ -159,13 +164,13 @@
         </tbody>
         {% endfor %}
         
-
+    </table>
+</div>
 
 
 <!-- Card View Section -->
 <div class="container-fluid" id="kanbanView" style="display: none;">
-    <div class="row">
-
+    <div class="row">        
         {% for status_title in statuses %}
             <!-- {{ status_title.1 }} Column -->
             <div class="col-sm-4">
@@ -289,27 +294,13 @@
     }
     function showHelp() {
             alert("This page displays the Sprint Board for a sprint that is currently running. List View and Kanban Views can be used to view the Sprint Board. Tasks on the Sprint Board can be filtered by the tags assigned to them. The tasks on the Sprint Board can be clicked to view additional fields and log hours for each task. ");
- 
+    }
 
 <!-- Create Graph Button -->
 <button onclick="window.location='{% url 'create_graph' %}'" class="btn btn-primary create-graph-btn" id="createGraphButton">Create Graph</button>
 
 
 
-{% block js %}
-<script>
-
-
-        function changeView() {
-            const selectedView = document.getElementById("view").value;
-            if (selectedView === "listView") {
-                document.getElementById("listView").style.display = "block";
-                document.getElementById("kanbanView").style.display = "none";
-            } else if (selectedView === "kanbanView") {
-                document.getElementById("listView").style.display = "none";
-                document.getElementById("kanbanView").style.display = "block";
-            }
-        }
 
 
     function filterTasks() {
@@ -403,7 +394,7 @@
         });
     });
 
-    // Toggle between light and dark themes
+// Toggle between light and dark themes
         document.getElementById('theme-toggle').addEventListener('click', function() {
             let body = document.body;
             let themeButton = document.getElementById('theme-toggle');
