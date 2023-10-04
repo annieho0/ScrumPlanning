@@ -292,12 +292,10 @@
             document.getElementById("kanbanView").style.display = "block";
         }
     }
+
     function showHelp() {
             alert("This page displays the Sprint Board for a sprint that is currently running. List View and Kanban Views can be used to view the Sprint Board. Tasks on the Sprint Board can be filtered by the tags assigned to them. The tasks on the Sprint Board can be clicked to view additional fields and log hours for each task. ");
     }
-
-    <!-- Create Graph Button -->
-    <button onclick="window.location='{% url 'create_graph' %}'" class="btn btn-primary create-graph-btn" id="createGraphButton">Create Graph</button>
 
     function filterTasks() {
         const selectedCategory = document.getElementById("filter").value;
