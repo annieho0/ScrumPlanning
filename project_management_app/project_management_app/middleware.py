@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.shortcuts import redirect
+from django.urls import resolve, Resolver404
 
 
 class LoginRequiredMiddleware:
@@ -50,10 +51,14 @@ class LoginRequiredMiddleware:
             # ... any other URL names related to authentication
         ]
 
-        # Check if the current request's path is in the list of exempt URLs
-        path_is_exempt = any(url in request.path for url in auth_exempt_urls)
+        try:
+            # Resolve the current path to its corresponding view function and pattern name
+            resolved_path = resolve(request.path_info)
+            path_is_exempt = resolved_path.url_name in auth_exempt_urls
+        except Resolver404:
+            path_is_exempt = False
 
-        # Check if the user is authenticated or if the path is exempt
+            # Check if the user is authenticated or if the path is exempt
         if request.user.is_authenticated or path_is_exempt:
             return self.get_response(request)
         else:
