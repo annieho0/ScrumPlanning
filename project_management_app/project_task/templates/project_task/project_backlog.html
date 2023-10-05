@@ -158,13 +158,27 @@
 
 <!-- Custom JavaScript -->
 <script>
-    function showHelp() {
-            alert("This page allows new tasks to be created by generating a modal to fill in fields such as name, type etc. When the task is made, it will be added to the Project Backlog table, but can be clicked on to edit task details and saved. The task can also be deleted by clicking on the delete button in the Action column. The page can be viewed in either List or Kanban and the tasks can be sorted based on priority, tags and date.");
-        }
-
     // This is the base URL for the edit and delete task views
     const editTaskBaseUrl = "{% url 'edit_task' task_id=0 %}".replace("0/", "");
     const deleteTaskBaseUrl = "{% url 'delete_task' task_id=0 %}".replace("0/", "");
+
+    // Set the default theme of page to the 'light theme'
+    let storedTheme = localStorage.getItem('theme') || 'light-theme';
+    document.body.classList.add(storedTheme);
+
+    // Set the button text based on the current theme
+    if (storedTheme === 'light-theme') {
+        document.getElementById('theme-toggle').textContent = 'Dark Theme';
+    } else {
+        document.getElementById('theme-toggle').textContent = 'Light Theme';
+    }
+
+    /**
+     * Show a help message.
+     */
+    function showHelp() {
+            alert("This page allows new tasks to be created by generating a modal to fill in fields such as name, type etc. When the task is made, it will be added to the Project Backlog table, but can be clicked on to edit task details and saved. The task can also be deleted by clicking on the delete button in the Action column. The page can be viewed in either List or Kanban and the tasks can be sorted based on priority, tags and date.");
+        }
 
 
     /**
@@ -447,13 +461,13 @@
 
     // On document ready
     $(document).ready(function () {
-        // Initialize the tag filter
+        // Initialize the tag filter in the view options
         initializeTagFilter('#tags_filter', false);
 
         // Handle the form input change event for the tag filter
         $('#createNewTaskModal').on('shown.bs.modal', function (event) {
             event.preventDefault(); // Prevent the default behavior of the event
-            initializeTagFilter('#createNewTaskModal #id_tags', true);
+            initializeTagFilter('#id_tags', true);
         });
 
         // Handle the form submission for creating a new task
@@ -584,6 +598,24 @@
             });
         });
 
+        //Toggle between light and dark themes
+        $('#theme-toggle').on('click', function() {
+            let body = document.body;
+            let themeButton = document.getElementById('theme-toggle');
+
+            if (body.classList.contains('light-theme')) {
+                body.classList.remove('light-theme');
+                body.classList.add('dark-theme');
+                themeButton.textContent = 'Light Theme';
+                localStorage.setItem('theme', 'dark-theme');
+            } else {
+                body.classList.remove('dark-theme');
+                body.classList.add('light-theme');
+                themeButton.textContent = 'Dark Theme';
+                localStorage.setItem('theme', 'light-theme');
+            }
+        });
+
 
         /**
          * Populate the edit task modal form with the provided task data.
@@ -601,7 +633,6 @@
                     $(this).prop('selected', true);
                 }
             });
-
 
             // Set the assignee field value if selected
             if (edit_task.assignee) {
@@ -624,38 +655,6 @@
         }
         
     });
-    document.getElementById('theme-toggle').addEventListener('click', function() {
-            let body = document.body;
-            let themeButton = document.getElementById('theme-toggle');
-
-            if (body.classList.contains('light-theme')) {
-                body.classList.remove('light-theme');
-                body.classList.add('dark-theme');
-                themeButton.textContent = 'Light Theme';
-                localStorage.setItem('theme', 'dark-theme');
-            } else {
-                body.classList.remove('dark-theme');
-                body.classList.add('light-theme');
-                themeButton.textContent = 'Dark Theme';
-                localStorage.setItem('theme', 'light-theme');
-            }
-        });
-
-            // Set the default theme of page to the 'light theme'
-            let storedTheme = localStorage.getItem('theme') || 'light-theme';
-            document.body.classList.add(storedTheme);
-
-            // Set the button text based on the current theme
-            if (storedTheme === 'light-theme') {
-                document.getElementById('theme-toggle').textContent = 'Dark Theme';
-            } else {
-                document.getElementById('theme-toggle').textContent = 'Light Theme';
-            }
-
-    
 </script>
-
-
-
 {% endblock %}
 

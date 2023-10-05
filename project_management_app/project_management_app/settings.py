@@ -15,7 +15,6 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
@@ -26,7 +25,6 @@ SECRET_KEY = 'django-insecure-mt&%ng#p%*&dbp1-%l@-pa=_s@jw^wc^dr4mf0ercb-z1i$-s&
 DEBUG = True
 
 ALLOWED_HOSTS = []
-
 
 # Application definition
 
@@ -45,7 +43,6 @@ INSTALLED_APPS = [
     'crispy_bootstrap4',
     'django_select2',
 
-
 ]
 
 MIDDLEWARE = [
@@ -56,6 +53,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'project_management_app.middleware.LoginRequiredMiddleware',
 ]
 
 ROOT_URLCONF = 'project_management_app.urls'
@@ -78,7 +76,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'project_management_app.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
@@ -88,7 +85,6 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
@@ -108,7 +104,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
@@ -119,7 +114,6 @@ TIME_ZONE = 'Australia/Melbourne'
 USE_I18N = True
 
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
@@ -135,7 +129,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CRISPY_TEMPLATE_PACK = "bootstrap4"
 SELECT2_JS = 'django_select2/js/select2.full.min.js'
 SELECT2_CSS = 'django_select2/css/select2.min.css'
-
 
 # this is to let customized user model to be able to log in and log out
 AUTH_USER_MODEL = 'register.CustomizedUser'
@@ -161,5 +154,4 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'dreamteamsolutiontesting@gmail.com'  # Use your Gmail email here
-EMAIL_HOST_PASSWORD = 'wkkjlmxbfsvnnage'    # Use your Gmail password here
-
+EMAIL_HOST_PASSWORD = 'wkkjlmxbfsvnnage'  # Use your Gmail password here
