@@ -123,13 +123,7 @@
 </head>
 
 <body>
-<!-- Sidenav -->
-<div class="sidenav">
-    <a href="{% url 'home' %}">Home</a>
-    <a href="{% url 'project_backlog' %}">Project Backlog</a>
-    <a href="{% url 'sprint_backlog' %}">Sprint Backlog</a>
-    <a href="{% url 'sprint_backlog_archived' %}"> Archived Sprints</a>
-</div>
+
 
 <!-- jQuery Library -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -145,6 +139,15 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 
 {% if user.is_authenticated %}
+<!-- Sidenav -->
+<div class="sidenav">
+    <a href="{% url 'home' %}">Home</a>
+    <a href="{% url 'project_backlog' %}">Project Backlog</a>
+    <a href="{% url 'sprint_backlog' %}">Sprint Backlog</a>
+    <a href="{% url 'sprint_backlog_archived' %}"> Archived Sprints</a>
+    <a href="{% url 'logout' %}">Logout</a>
+
+</div>
 <!-- Content -->
 <div id="content" , name="content" class="main">
     <div class="dropdown">
@@ -158,6 +161,8 @@
 
     {% block content %}
     {% endblock %}
+    <!-- <div class="logout">
+    </div> -->
 </div>
  {% endif %}
 
