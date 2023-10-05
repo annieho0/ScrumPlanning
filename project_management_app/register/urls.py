@@ -16,4 +16,6 @@ urlpatterns = [
     path('reset/done/', auth_views.PasswordResetCompleteView.as_view(template_name='registration/password_reset_complete.html'), name='password_reset_complete'),
     # Admin URLs
     path('admin/hour_graph/', register_view.AdminGraphView.as_view(), name='hour_graph'),
+    # Logout URL
+    path('logout/', auth_views.LogoutView.as_view(), name='logout')
 ]
