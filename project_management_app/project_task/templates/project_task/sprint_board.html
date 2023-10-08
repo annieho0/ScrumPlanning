@@ -4,93 +4,14 @@
 <title>Sprint Board</title>
 {% endblock %}
 
-{% block extra_styles %}
-<style>
-    .create-graph-btn {
-        position: fixed;
-        top: 54px;
-        right:20px;
-        z-index: 1000;
-    }
-    /* h1 border for dark theme */
-    body.dark-theme h1 {
-    border-bottom: 2px solid #fff;
-    }
-    /* Light theme */
-    body.light-theme {
-        background-color: #ffffff;
-        color: #333333;
-    }
-
-    body.light-theme .thead-light {
-        background-color: white;
-        color: black;
-    }
-
-    body.light-theme .thead-dark {
-        background-color: white;
-        color: black;
-    }
-
-    /* Theme toggle button in light theme */
-    body.light-theme #theme-toggle {
-    background-color: #444;
-    color: #fff;
-    }
-
-    body.light-theme #theme-toggle:hover {
-    background-color: #555;
-    }
-
-    /* Dark theme */
-    body.dark-theme {
-        background-color: #333333;
-        color: #ffffff;
-    }
-
-    body.dark-theme .thead-light,
-    body.dark-theme .thead-dark {
-        background-color: #343a40;
-        color: white;
-    }
-    /* Theme toggle button in dark theme */
-    body.dark-theme #theme-toggle {
-        background-color: #ffffff;
-        color: #333333;
-    }
-
-    body.dark-theme #theme-toggle:hover {
-        background-color: #dddddd;
-    }
-    /* Theme toggle button */
-    #theme-toggle {
-        position: fixed;
-        bottom: 20px;
-        right: 20px;
-        z-index: 1001;
-        padding: 10px 20px;
-        cursor: pointer;
-        background-color: #444;
-        color: #fff;
-        border: none;
-        border-radius: 5px;
-        transition: background-color 0.3s;
-    }
-    #theme-toggle:hover {
-        background-color: #555;
-    }
-</style>
+<!-- Header -->
+{% block header %}
+    <h1>Sprint Board</h1>
 {% endblock %}
 
 {% block content %}
-<h1>Sprint Board</h1>
-
-<button class="btn btn-info" onclick="showHelp()">Help</button>
-
-<!-- Create Graph Button --> 
+<!-- Create Graph Button -->
 <button onclick="window.location='{% url 'create_graph' %}'" class="btn btn-primary create-graph-btn" id="createGraphButton">Create Graph</button>
-
-
 
 <!-- View options -->
 <label for="view">View:</label>
@@ -113,11 +34,9 @@
 
 </select>
 
+<!-- Create Graph Button -->
+<button onclick="window.location='{% url 'create_graph' %}'" class="btn btn-primary create-graph-btn" id="createGraphButton">Create Graph</button>
 
-
-
-<!-- Toggle button for Light/Dark themes -->
-<button id="theme-toggle">Light/Dark Theme</button>
 <!-- List view -->
 <div class="container-fluid" id="listView">
     <table class="table table-striped table-bordered">
@@ -281,21 +200,6 @@
 {% block js %}
 
 <script>
-    
-    function changeView() {
-        const selectedView = document.getElementById("view").value;
-        if (selectedView === "listView") {
-            document.getElementById("listView").style.display = "block";
-            document.getElementById("kanbanView").style.display = "none";
-        } else if (selectedView === "kanbanView") {
-            document.getElementById("listView").style.display = "none";
-            document.getElementById("kanbanView").style.display = "block";
-        }
-    }
-    function showHelp() {
-            alert("This page displays the Sprint Board for a sprint that is currently running. List View and Kanban Views can be used to view the Sprint Board. Tasks on the Sprint Board can be filtered by the tags assigned to them. The tasks on the Sprint Board can be clicked to view additional fields and log hours for each task. ");
-    }
-
     function filterTasks() {
         const selectedCategory = document.getElementById("filter").value;
         const rows = document.querySelectorAll("#backlogTable tr");
@@ -401,35 +305,6 @@
             }
         });
     });
-
-// Toggle between light and dark themes
-        document.getElementById('theme-toggle').addEventListener('click', function() {
-            let body = document.body;
-            let themeButton = document.getElementById('theme-toggle');
-
-            if (body.classList.contains('light-theme')) {
-                body.classList.remove('light-theme');
-                body.classList.add('dark-theme');
-                themeButton.textContent = 'Light Theme';
-                localStorage.setItem('theme', 'dark-theme');
-            } else {
-                body.classList.remove('dark-theme');
-                body.classList.add('light-theme');
-                themeButton.textContent = 'Dark Theme';
-                localStorage.setItem('theme', 'light-theme');
-            }
-        });
-
-            // Set the default theme of page to the 'light theme'
-            let storedTheme = localStorage.getItem('theme') || 'light-theme';
-            document.body.classList.add(storedTheme);
-
-            // Set the button text based on the current theme
-            if (storedTheme === 'light-theme') {
-                document.getElementById('theme-toggle').textContent = 'Dark Theme';
-            } else {
-                document.getElementById('theme-toggle').textContent = 'Light Theme';
-            }
 
 </script>
 {% endblock %}
