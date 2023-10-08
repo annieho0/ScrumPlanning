@@ -1,9 +1,16 @@
 {% extends "project_task/base.html" %}
 
-{% block content %}
-<h1>Archived Sprints</h1>
-<button class="btn btn-info" onclick="showHelp()">Help</button>
+{% block title %}
+    <title>Archived Sprints</title>
+{% endblock %}
 
+
+<!-- Header -->
+{% block header %}
+    <h1>Archived Sprints</h1>
+{% endblock %}
+
+{% block content %}
 <div class="container-fluid" style="margin-top: 20px;">
     <table class="table table-striped table-bordered">
         <thead class="thead-light">
@@ -13,14 +20,14 @@
                 <th>Sprint End</th>
             </tr>
         </thead>
-        
+
         <tbody id="backlogTable">
             <!-- Rows will be dynamically added here -->
             {% for sprint in sprint_backlog_archived %}
             <tr>
                 <td><a href="{% url 'sprint_boards' sprint.id %}">{{ sprint.name }}</a></td>
-                <td>{{sprint.start_date}}</td>  
-                <td>{{sprint.end_date}}</td> 
+                <td>{{sprint.start_date}}</td>
+                <td>{{sprint.end_date}}</td>
 
             </tr>
             {% endfor %}

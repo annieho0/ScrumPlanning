@@ -4,15 +4,14 @@
 <title>Sprint Board</title>
 {% endblock %}
 
+<!-- Header -->
+{% block header %}
+    <h1>Sprint Board</h1>
+{% endblock %}
 
 {% block content %}
-<h1>Sprint Board</h1>
-
-
 <!-- Create Graph Button -->
 <button onclick="window.location='{% url 'create_graph' %}'" class="btn btn-primary create-graph-btn" id="createGraphButton">Create Graph</button>
-
-
 
 <!-- View options -->
 <label for="view">View:</label>
@@ -34,7 +33,6 @@
     {% endfor %}
 
 </select>
-
 
 <!-- Create Graph Button -->
 <button onclick="window.location='{% url 'create_graph' %}'" class="btn btn-primary create-graph-btn" id="createGraphButton">Create Graph</button>

@@ -8,6 +8,7 @@
 
 {% block extra_styles %}
 <style>
+
     .tags-container {
 
         max-height: 1.5em; /* This might need adjustment based on your badge height */
@@ -28,8 +29,12 @@
 </style>
 {% endblock %}
 
+<!-- Header -->
+{% block header %}
+    <h1>Project Backlog</h1>
+{% endblock %}
+
 {% block content %}
-<h1>Project Backlog</h1>
 
 <!-- Alert Message container -->
 <div id="messages-container"></div>
@@ -83,7 +88,6 @@
 
 
 {% block js %}
-
 <!-- Custom JavaScript -->
 <script>
     // This is the base URL for the edit and delete task views
@@ -506,6 +510,8 @@
                 }
             });
         });
+
+
 
 
         /**
