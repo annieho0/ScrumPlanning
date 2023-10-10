@@ -4,7 +4,7 @@ from django.core.mail import send_mail
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.views.generic import FormView, View
-from .forms import RegisterFrom
+from .forms import RegisterFrom, CreateHourGraphForm
 from django.urls import reverse_lazy, reverse
 from .models import CustomizedUser
 from django.contrib.auth.mixins import UserPassesTestMixin
@@ -213,3 +213,18 @@ class LoginView(LoginView):
         # Otherwise, redirect to your desired page
         else:
             return redirect(reverse_lazy('home'))
+        
+class CreateHourGraphView(View):
+    template_name = 'admin/hour_graph.html'
+
+    def create_graph(self, request):
+        if request.method == "POST":
+            form = CreateHourGraphForm(request.POST)
+            if form.is_valid():
+                person = form.cleaned_data['person']
+                date = form.cleaned_data['data']
+
+        else:
+            form = CreateHourGraphForm()
+
+        return render(request, self.template_name, {'create_graph_form': form})

@@ -1,0 +1,19 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block breadcrumbs %}
+{{ block.super }}
+{% endblock %}
+
+{% block content %}
+    <p>TBC: Need to Implement Graph</p>
+    <!-- TODO: Need to Implement Graph -->
+    <div class="col-sm-2 text-right" id="create-hour-graph">
+        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#createHourGraphModal">create new
+            task
+        </button>
+    </div>
+
+    <script src="{% static 'js/jquery.min.js' %}"></script>
+    <script src="{% static 'js/bootstrap.min.js' %}"></script>
+{% endblock %}
