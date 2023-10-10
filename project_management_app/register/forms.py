@@ -14,11 +14,13 @@ class RegisterFrom(UserCreationForm):
         constraints = [models.UniqueConstraint(fields='email', name='unique_email')]
         fields = ["username", "first_name", "last_name", "email", "password1", "password2"]
 
+
 class CreateHourGraphForm(forms.ModelForm):
     date = forms.ChoiceField(choices=WorkingHour.objects.values('date').distinct())
     person = forms.ChoiceField(choices=WorkingHour.objects.values('person').distinct())
 
     class Meta:
+        model = WorkingHour
         fields = [
             "date",
             "person"

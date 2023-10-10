@@ -167,11 +167,13 @@ class AdminGraphView(UserPassesTestMixin, View):
         Returns:
             HttpResponse: A response containing the rendered admin graph template.
         """
+        form = CreateHourGraphForm()
         context = {
             'has_permission': self.request.user.is_superuser,
             'is_nav_sidebar_enabled': True,
             'is_popup': False,
             'title': 'Admin Graph',
+            'create_hour_graph_form': form,
         }
         return render(request, self.template_name, context)
 
@@ -213,18 +215,19 @@ class LoginView(LoginView):
         # Otherwise, redirect to your desired page
         else:
             return redirect(reverse_lazy('home'))
-        
-class CreateHourGraphView(View):
-    template_name = 'admin/hour_graph.html'
 
-    def create_graph(self, request):
-        if request.method == "POST":
-            form = CreateHourGraphForm(request.POST)
-            if form.is_valid():
-                person = form.cleaned_data['person']
-                date = form.cleaned_data['data']
 
-        else:
-            form = CreateHourGraphForm()
-
-        return render(request, self.template_name, {'create_graph_form': form})
+# class CreateHourGraphView(View):
+#     template_name = 'admin/hour_graph.html'
+#
+#     def create_graph(self, request):
+#         if request.method == "POST":
+#             form = CreateHourGraphForm(request.POST)
+#             if form.is_valid():
+#                 person = form.cleaned_data['person']
+#                 date = form.cleaned_data['data']
+#
+#         else:
+#             form = CreateHourGraphForm()
+#
+#         return render(request, self.template_name, {'create_hour_graph_form': form})
