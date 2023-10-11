@@ -174,13 +174,11 @@ class AdminGraphView(UserPassesTestMixin, View):
             'title': 'Admin Graph',
         }
 
-        form = CreateHourGraphForm()
         date = WorkingHour.objects.values('date').distinct()
-        person = WorkingHour.objects.values('person').distinct()
+        formatted_date = [value.strftime("%y-%m-%d") for dictionary in date for value in dictionary.values()]
+        form = CreateHourGraphForm(initial={'date': formatted_date})
 
         context['create_hour_graph_form'] = form
-        context['person'] = person
-        context['date'] = date
 
         return render(request, self.template_name, context)
 
