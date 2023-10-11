@@ -25,11 +25,14 @@ class CreateHourGraphForm(forms.ModelForm):
     person = forms.ModelChoiceField(queryset=person_choice, label="Select 1 person")
 
     date_choices = WorkingHour.objects.values_list('date').distinct()
+    choices = [(date[0], date[0].strftime('%Y-%m-%d')) for date in date_choices]
+    choices.insert(0, (None, "---------"))
 
     date = forms.ChoiceField(
-        choices=[(date[0], date[0].strftime('%Y-%m-%d')) for date in date_choices],
+        choices=choices,
         label="Select 1 date for the whole team",
     )
+    # date = forms.ModelChoiceField(queryset=WorkingHour.objects.values('date').distinct())
 
     class Meta:
         model = WorkingHour
