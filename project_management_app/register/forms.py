@@ -16,12 +16,17 @@ class RegisterFrom(UserCreationForm):
 
 
 class CreateHourGraphForm(forms.ModelForm):
-    date = forms.ChoiceField(choices=WorkingHour.objects.values('date').distinct())
-    person = forms.ChoiceField(choices=WorkingHour.objects.values('person').distinct())
+    person = WorkingHour.objects.values('person').distinct()
+    
+
+    date = forms.ModelChoiceField(queryset=WorkingHour.objects.values('date').distinct())
+
+    person = forms.ModelChoiceField(queryset=WorkingHour.objects.values('person').distinct(), to_field_name='name')
 
     class Meta:
         model = WorkingHour
         fields = [
             "date",
-            "person"
+            "person",
         ]
+

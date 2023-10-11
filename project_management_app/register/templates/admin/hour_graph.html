@@ -40,7 +40,7 @@
                     {% csrf_token %}
                     <!-- Modal Header -->
                     <div class="modal-header">
-                        <h5 class="modal-title" id="exampleModalLabel">Create New Task</h5>
+                        <h5 class="modal-title" id="exampleModalLabel">Create Graph</h5>
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
                         </button>
@@ -49,8 +49,8 @@
                     <!-- Modal Body -->
                     <div class="modal-body">
                         <div class="d-grid gap-3 text-start">
-                            {{ create_hour_graph_form.person| as_crispy_field }}
-                            {{ create_hour_graph_form.date| as_crispy_field}}
+                            {{ create_hour_graph_form.person | as_crispy_field }}
+                            {{ create_hour_graph_form.date | as_crispy_field}}
                         </div>
                     </div>
 
@@ -58,7 +58,7 @@
                     <div class="modal-footer">
                         <!-- Action button -->
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary" id="saveChanges">Save changes</button>
+                        <button type="submit" class="btn btn-primary" id="saveChanges">Submit</button>
                     </div>
                 </form>
             </div>
@@ -66,8 +66,8 @@
     </div>
 
     <div class="col-sm-2 text-right" id="create-task-listview">
-        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#createHourGraphModal">create new
-            task
+        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#createHourGraphModal">
+            Create Graph
         </button>
     </div>
 
