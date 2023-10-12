@@ -1,12 +1,17 @@
 {% extends "project_task/base.html" %}
 
 {% block title %}
-<title>Sprint Board</title>
+<!-- <title>Sprint Board</title> -->
+{% for sprint in sprints %}
+    <title>{{ sprint.name }}</title>
+{% endfor %}
 {% endblock %}
 
 <!-- Header -->
 {% block header %}
-    <h1>Sprint Board</h1>
+{% for sprint in sprints %}
+    <h1>{{ sprint.name }}</h1>
+{% endfor %}
 {% endblock %}
 
 {% block content %}
@@ -24,7 +29,7 @@
 <label for="filter">Filter Tag(s):</label>
 <select id="filter" onchange="filterTasks()">
     <option value="">All</option>
-    {% for tag in tags %}
+    {% for tag in tag %}
     {% if tag.name in selected_tags %}
     <option value="{{ tag.name }}" selected>{{ tag.name }}</option>
     {% else %}
@@ -33,9 +38,6 @@
     {% endfor %}
 
 </select>
-
-<!-- Create Graph Button -->
-<button onclick="window.location='{% url 'create_graph' %}'" class="btn btn-primary create-graph-btn" id="createGraphButton">Create Graph</button>
 
 <!-- List view -->
 <div class="container-fluid" id="listView">
@@ -200,6 +202,18 @@
 {% block js %}
 
 <script>
+    function changeView() {
+            const selectedView = document.getElementById("view").value;
+            if (selectedView === "listView") {
+                document.getElementById("listView").style.display = "block";
+                document.getElementById("kanbanView").style.display = "none";
+            } else if (selectedView === "kanbanView") {
+                document.getElementById("listView").style.display = "none";
+                document.getElementById("kanbanView").style.display = "block";
+            }
+        }
+
+
     function filterTasks() {
         const selectedCategory = document.getElementById("filter").value;
         const rows = document.querySelectorAll("#backlogTable tr");

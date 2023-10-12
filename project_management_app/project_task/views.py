@@ -524,7 +524,7 @@ class SprintBoard():
         if sprint.is_completed:
         # Delete tasks that are not completed and associated with the archived sprint
             tasks = tasks.filter(status='COM')
-        return render(request, "project_task/sprint_board.html", {"name": "sprint-board", "tasks": tasks, "statuses": statuses, "tags": tags})
+        return render(request, "project_task/sprint_board.html", {"name": "sprint-board", "tasks": tasks, "statuses": statuses, "tags": tags, "sprints": sprints})
     
 
 
