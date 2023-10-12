@@ -1,17 +1,12 @@
 {% extends "project_task/base.html" %}
 
 {% block title %}
-<!-- <title>Sprint Board</title> -->
-{% for sprint in sprints %}
-    <title>{{ sprint.name }}</title>
-{% endfor %}
+<title>Sprint Board</title>
 {% endblock %}
 
 <!-- Header -->
 {% block header %}
-{% for sprint in sprints %}
-    <h1>{{ sprint.name }}</h1>
-{% endfor %}
+<h1>{{sprint.name}}</h1>
 {% endblock %}
 
 {% block content %}
