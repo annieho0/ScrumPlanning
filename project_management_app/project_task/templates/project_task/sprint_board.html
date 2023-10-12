@@ -34,8 +34,32 @@
 
 </select>
 
-<!-- Create Graph Button -->
-<button onclick="window.location='{% url 'create_graph' %}'" class="btn btn-primary create-graph-btn" id="createGraphButton">Create Graph</button>
+<!-- Add Task Button -->
+<form method="post" action="{% url 'move_selected_tasks_to_sprint' %}">
+    {% csrf_token %}
+    
+    <!-- Loop through tasks to display checkboxes -->
+    {% for task in tasks %}
+        {% if task.status == 'Not Started' %}
+            <tr data-category="{% for tag in task.tags.all %}{{ tag }} {% endfor %}" data-task-id="{{ task.id }}">
+                <td><input type="checkbox" name="selected_tasks" value="{{ task.id }}"></td>
+                <td>
+                    <a href="#" data-toggle="modal" data-target="#editTaskModal" data-task-id="{{ task.id }}" data-task-type="{{ task.type }}" data-task-description="{{ task.description }}" data-task-priority="{{ task.priority }}" data-task-stage="{{ task.stage }}" data-task-created_date="{{ task.created_date }}">{{ task.name }}</a>
+                </td>
+                <td>{{ task.story_point }}</td>
+                <td>
+                    {% for tag in task.tags.all %}
+                        <span class="badge badge-info">{{ tag }}</span>
+                    {% endfor %}
+                </td>
+                <td>{{ task.assignee }}</td>
+            </tr>
+        {% endif %}
+    {% endfor %}
+    
+    <!-- Button to move selected tasks -->
+    <button type="submit" class="btn btn-primary">Add Task</button>
+</form>
 
 <!-- List view -->
 <div class="container-fluid" id="listView">
@@ -154,9 +178,9 @@
                     <div class="form-group">
                         <label for="status">Status:</label>
                         <select class="form-control" id="status" name="status">
-                            <option value='NOT'>Incomplete</option>
-                            <option value='IN_PROG'>In Progress</option>
-                            <option value='COM'>Complete</option>
+                            <option value='NOT STARTED'>Incomplete</option>
+                            <option value='IN_PROGRESS'>In Progress</option>
+                            <option value='COMPLETE'>Complete</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -199,7 +223,36 @@
 
 {% block js %}
 
+
 <script>
+    $(document).ready(function() {
+    $("form").on("submit", function(event) {
+        event.preventDefault();
+
+        var selectedTasks = [];
+        $("input[type='checkbox']:checked").each(function() {
+            selectedTasks.push($(this).val());
+        });
+        if (selectedTasks.length > 0) {
+            $.ajax({
+                url: "{% url 'move_selected_tasks_to_sprint' %}",
+                type: "POST",
+                data: { selected_tasks: selectedTasks },
+                success: function(data) {
+                    if (data.success) {
+                        $('input[type="checkbox"]:checked').closest('tr').remove();
+                    } else {
+                        alert("Failed to move tasks to sprint.");
+                    }
+                },
+                error: function() {
+                    alert("Failed to send data to the server.");
+                }
+            });
+        } 
+    });
+});
+
     function filterTasks() {
         const selectedCategory = document.getElementById("filter").value;
         const rows = document.querySelectorAll("#backlogTable tr");

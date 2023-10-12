@@ -84,6 +84,11 @@ class Task(models.Model):
     # TODO: Sprint is a string for now. Need to connect to sprint model to get the sprint name in future sprint
     sprints = models.ManyToManyField(Sprint)
     # sprint = models.CharField(max_length=200)
+    backlog = models.BooleanField(default=False)
+
+    def add_to_sprint(self, sprint):
+        self.sprint = sprint
+        self.save()
 
 
     def __str__(self):

@@ -4,7 +4,7 @@ from django.http import JsonResponse, HttpResponseBadRequest
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic.edit import View
 from .models import Tag, Task, Sprint
-from .forms import CreateNewTaskForm, EditTaskForm, CreateNewSprintForm
+from .forms import CreateNewTaskForm, EditTaskForm, CreateNewSprintForm, SelectTasksForm
 from django.db.models import Case, When, Value, IntegerField
 from django.contrib import messages
 from datetime import timedelta, date, datetime
@@ -513,7 +513,7 @@ class HomeListView(View):
             return redirect('/login')
 
 
-class SprintBoard():   
+class SprintBoard(View):   
     def sprint_boards(request, sprint_id):
         sprints = Sprint.objects.get(pk=sprint_id)
         sprint = get_object_or_404(Sprint, pk=sprint_id)
@@ -526,7 +526,23 @@ class SprintBoard():
             tasks = tasks.filter(status='COM')
         return render(request, "project_task/sprint_board.html", {"name": "sprint-board", "tasks": tasks, "statuses": statuses, "tags": tags})
     
+    def move_selected_tasks(self, request, sprint_id):
+        # Handle the selection and moving of tasks to the sprint board
+        if request.method == 'POST':
+            form = SelectTasksForm(request.POST)
 
+            if form.is_valid():
+                selected_tasks = form.cleaned_data['tasks']
+                sprint = get_object_or_404(Sprint, pk=sprint_id)
+                
+                for task in selected_tasks:
+                    task.status = 'Not Started'  
+                    task.sprint = sprint
+                    task.save()
+
+                return JsonResponse({'success': True})
+            
+        return JsonResponse({'success': False})
 
     def active_sprints(request):
         # Get all active sprints
