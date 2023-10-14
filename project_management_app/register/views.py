@@ -9,7 +9,6 @@ from django.urls import reverse_lazy, reverse
 from .models import CustomizedUser, WorkingHour
 from django.contrib.auth.mixins import UserPassesTestMixin
 
-
 class RegisterView(FormView):
     """
     Class-based view to handle user registration.
@@ -179,6 +178,61 @@ class AdminGraphView(UserPassesTestMixin, View):
         context['create_hour_graph_form'] = form
 
         return render(request, self.template_name, context)
+
+    def post(self, request):
+        form = CreateHourGraphForm(request.POST)
+
+        if form.is_valid():
+            person = form.cleaned_data['person']
+            date = form.cleaned_data['date']
+            if person is None and date is None:
+                return self.get(request)
+
+            context = {
+                'has_permission': self.request.user.is_superuser,
+                'is_nav_sidebar_enabled': True,
+                'is_popup': False,
+                'title': 'Admin Graph',
+            }
+
+            # plot the hour of a person for each date
+            if person is not None:
+                hours = WorkingHour.objects.filter(person=person).order_by('date')
+                plot_data = {}
+                for hour in hours:
+                    if hour.date not in plot_data:
+                        plot_data[hour.date] = hour.hour
+                    else:
+                        plot_data[hour.date] += hour.hour
+                
+                context['graph_title'] = f"Working hour of {person.first_name + ' ' + person.last_name} from {list(plot_data.keys()[0])} to {list(plot_data.keys())[-1]}"
+                context["x"] = list(plot_data.keys())
+                context["y"] = list(plot_data.values())
+
+                return render(request, 'register/graph.html', )
+
+
+            else:
+                hours = WorkingHour.objects.filter(date=date)
+                plot_data = {}
+                for hour in hours:
+                    if hour.person not in plot_data:
+                        plot_data[hour.person] = hour.hour
+                    else:
+                        plot_data[hour.person] += hour.hour
+                
+                context['graph_title'] = f"Working hour of the whole team on {date}"
+                context["x"] = list(plot_data.keys())
+                context["y"] = list(plot_data.values())
+
+                return render(request, 'register/graph.html', context)
+
+
+        else:
+            return self.get(request)
+
+
+
 
 
 class LoginView(LoginView):

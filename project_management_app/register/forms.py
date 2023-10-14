@@ -32,7 +32,6 @@ class CreateHourGraphForm(forms.ModelForm):
         choices=choices,
         label="Select 1 date for the whole team",
     )
-    # date = forms.ModelChoiceField(queryset=WorkingHour.objects.values('date').distinct())
 
     class Meta:
         model = WorkingHour
