@@ -33,6 +33,49 @@
             padding-top: 0;
         }
 
+        #top-bar {
+            background-color: #2f2f2f;
+            color: white;
+            padding: 10px;
+            height:55px;
+            justify-content: space-between;
+            display: flex;
+            top: 0;
+            width: 100%;
+            position: fixed;
+            z-index: 1;
+        }
+
+        #menu-btn {
+            background-color: #333;
+            color: white;
+            padding: 5px;
+            border: none;
+            cursor: pointer;
+            height: 35px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+       #menu-btn:hover {
+           background-color: #555;
+       }
+
+       .dropdown {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 10px;
+            gap: 10px;
+       }
+
+       .dropdown-menu {
+           min-width: 100%;
+           position: fixed;
+           margin-right: 10px;
+       }
+
         /* Side Navigation Bar and content */
         #sidenav {
             height: 100%;
@@ -56,6 +99,8 @@
             color: #f1f1f1;
         }
         #content {
+            position: relative;
+            margin-top: 60px;
             margin-left: 160px;
             padding: 0 10px;
         }
@@ -162,44 +207,6 @@
             color: #ffffff;
             background-color: #818181;
         }
-        #top-bar {
-            background-color: #2f2f2f;
-            color: white;
-            padding: 10px;
-            height:55px;
-            justify-content: space-between;
-            display: flex;
-        }
-
-        #menu-btn {
-            background-color: #333;
-            color: white;
-            padding: 5px;
-            border: none;
-            cursor: pointer;
-            height: 35px;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
-        }
-
-       #menu-btn:hover {
-           background-color: #555;
-       }
-
-       .dropdown {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 10px;
-            gap: 10px;
-       }
-
-       .dropdown-menu {
-           width: auto;
-           min-width: 100%;
-           margin: 0 0 0 -7px;
-       }
     </style>
     {% endblock %}
 </head>
