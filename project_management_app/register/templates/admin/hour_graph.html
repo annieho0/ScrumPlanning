@@ -50,6 +50,8 @@
                     <div class="modal-body">
                         <div class="d-grid gap-3 text-start">
                             {{ create_hour_graph_form.person | as_crispy_field }}
+                            {{ create_hour_graph_form.start_date | as_crispy_field }}
+                            {{ create_hour_graph_form.end_date | as_crispy_field }}
                             OR
                             {{ create_hour_graph_form.date | as_crispy_field}}
                         </div>
