@@ -313,6 +313,7 @@ class TaskListView(View):
 
         # Generate an empty CreateNewTask form and EditTask form
         create_new_task_form = CreateNewTaskForm()
+        create_new_sprint_form = CreateNewSprintForm()
         edit_task_form = EditTaskForm()
 
         # Extract sorting, view, and date created sort parameters from the URL or use default values
@@ -342,6 +343,7 @@ class TaskListView(View):
             "priority_sort": priority_sort,
             "selected_tags": selected_tags,
             "date_sort": date_sort,
+            "create_new_sprint_form": create_new_sprint_form,
         }
 
         # Render and return the template with the prepared context
@@ -360,6 +362,14 @@ class TaskListView(View):
         Returns:
             JsonResponse: A JSON response indicating the success or failure of task creation.
         """
+        create_new_sprint_form = CreateNewSprintForm(request.POST)
+
+        if create_new_sprint_form.is_valid():
+            sprint = create_new_sprint_form.save()
+            return redirect('sprint_backlog')
+        else:
+            print("Form is not valid:", create_new_sprint_form.errors)
+
 
         # Attempt to create a new task using the TaskManager utility
         success, message, task_details = TaskManager.create_task(request.POST)
@@ -372,7 +382,8 @@ class TaskListView(View):
         tags_list = [str(tag) for tag in task_details['tags']]
 
         # Respond with a JSON indicating successful task creation and task details
-        return JsonResponse({'status': 'success', 'message': message, 'task': {**task_details, 'tags': tags_list}})
+        return JsonResponse({'status': 'success', 'message': message, 'task': {**task_details, 'tags': tags_list}, 'create_new_sprint_form': create_new_sprint_form})
+
 
 
 class TaskEditView(View):
@@ -496,14 +507,6 @@ class HomeListView(View):
         return render(request, self.template_name, {"sprint_form": sprint_form})
 
     def post(self,request):
-        sprint_form = CreateNewSprintForm(request.POST)
-
-        if sprint_form.is_valid():
-            sprint = sprint_form.save()
-            return redirect('sprint_backlog')
-        else:
-            print("Form is not valid:", sprint_form.errors)
-            return render(request, "project_task/sprint_backlog.html", {"sprint_form": sprint_form})
 
         if request.user.is_authenticated:
             # Render and return the home page template with the prepared context
