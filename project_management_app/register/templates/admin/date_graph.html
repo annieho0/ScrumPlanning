@@ -9,17 +9,26 @@
     <script>
 
         document.addEventListener("DOMContentLoaded", function() {
-            {#var graphTitle = {{ graph_title | safe }};#}
             var ctx = document.getElementById('line-chart').getContext('2d');
+            var average = {{ average | safe }};
+            var hour = {{ y | safe }};
+            var labels = {{ x | safe }};
             var lineChart = new Chart(ctx, {
-                type: 'line',
+                type: 'bar',
                 data: {
-                    labels: {{ x|safe }},
+                    labels: labels,
                     datasets: [{
-                    label: "Hours",
-                    data: {{ y|safe }},
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    borderWidth: 2,
+                        label: "Hours",
+                        data: hour,
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 2,
+                    },
+                    {
+                        label: 'Average',
+                        type: "line",
+                        data: Array(hour.length).fill(average),
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1
                     }]
                 },
                 options: {
@@ -30,7 +39,7 @@
                             fontSize: 8,
                             fontColor: '#333', // Title text color
                             fontStyle: 'bold' // Title font style (e.g., 'normal', 'italic', 'bold')
-                        }
+                        },
                     },
                     responsive: true,
                     maintainAspectRatio: false,

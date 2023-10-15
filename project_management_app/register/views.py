@@ -235,7 +235,7 @@ class AdminGraphView(UserPassesTestMixin, View):
             context['graph_title'] = f"Working hour of the whole team on {date}"
             context["x"] = list(plot_data.keys())
             context["y"] = [working_hour / datetime.timedelta(hours=1) for working_hour in plot_data.values()]
-
+            context["average"] = sum(context["y"]) / len(context["y"])
             return render(request, 'admin/date_graph.html', context)
 
 
