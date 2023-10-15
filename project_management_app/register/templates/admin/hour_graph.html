@@ -31,12 +31,12 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 
 
-    <!-- Create New Task Modal -->
-    <div class="modal fade" id="createHourGraphModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+    <!-- Person Graph Modal -->
+    <div class="modal fade" id="PersonGraphModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
          aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
-                <form id="createHourGraphForm" method="POST">
+                <form id="PersonGraphForm" method="POST">
                     {% csrf_token %}
                     <!-- Modal Header -->
                     <div class="modal-header">
@@ -49,11 +49,42 @@
                     <!-- Modal Body -->
                     <div class="modal-body">
                         <div class="d-grid gap-3 text-start">
-                            {{ create_hour_graph_form.person | as_crispy_field }}
-                            {{ create_hour_graph_form.start_date | as_crispy_field }}
-                            {{ create_hour_graph_form.end_date | as_crispy_field }}
-                            OR
-                            {{ create_hour_graph_form.date | as_crispy_field}}
+                            {{ person_graph_form.person | as_crispy_field }}
+                            {{ person_graph_form.start_date | as_crispy_field }}
+                            {{ person_graph_form.end_date | as_crispy_field }}
+                        </div>
+                    </div>
+
+                    <!-- Modal Footer -->
+                    <div class="modal-footer">
+                        <!-- Action button -->
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="saveChanges">Submit</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Date Graph Modal -->
+    <div class="modal fade" id="DateGraphModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <form id="DateGraphForm" method="POST">
+                    {% csrf_token %}
+                    <!-- Modal Header -->
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">Create Graph</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+
+                    <!-- Modal Body -->
+                    <div class="modal-body">
+                        <div class="d-grid gap-3 text-start">
+                            {{ date_graph_form.date | as_crispy_field }}
                         </div>
                     </div>
 
@@ -69,8 +100,14 @@
     </div>
 
     <div class="col-sm-2 text-right" id="create-task-listview">
-        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#createHourGraphModal">
-            Create Graph
+        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#DateGraphModal">
+            Create Graph for the whole team on a day
+        </button>
+    </div>
+
+    <div class="col-sm-2 text-right" id="create-task-listview">
+        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#PersonGraphModal">
+            Create Graph for a person
         </button>
     </div>
 

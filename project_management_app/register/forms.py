@@ -16,24 +16,10 @@ class RegisterFrom(UserCreationForm):
         fields = ["username", "first_name", "last_name", "email", "password1", "password2"]
 
 
-class CreateHourGraphForm(forms.ModelForm):
+class DateGraphForm(forms.ModelForm):
     """
     This class is used to create a form for drawing the graphs
     """
-    person = WorkingHour.objects.values('person').distinct()
-    person_choice = CustomizedUser.objects.filter(id__in=person)
-    person = forms.ModelChoiceField(queryset=person_choice,
-                                    label="Select 1 person",
-                                    required=False)
-
-    start_date = forms.DateField(required=False,
-                                 label="Select a start date",
-                                 widget=forms.DateInput(attrs={'type': 'date'}))
-
-    end_date = forms.DateField(required=False,
-                               label="Select an end date",
-                               widget=forms.DateInput(attrs={'type': 'date'}))
-
     date_choices = WorkingHour.objects.values_list('date').distinct()
     choices = [(date[0], date[0].strftime('%Y-%m-%d')) for date in date_choices]
     choices.insert(0, (None, "---------"))
@@ -48,8 +34,28 @@ class CreateHourGraphForm(forms.ModelForm):
         model = WorkingHour
         fields = [
             "date",
+        ]
+
+
+class PersonGraphForm(forms.ModelForm):
+    person = WorkingHour.objects.values('person').distinct()
+    person_choice = CustomizedUser.objects.filter(id__in=person)
+    person = forms.ModelChoiceField(queryset=person_choice,
+                                    label="Select 1 person",
+                                    required=False)
+
+    start_date = forms.DateField(required=False,
+                                 label="Select a start date",
+                                 widget=forms.DateInput(attrs={'type': 'date'}))
+
+    end_date = forms.DateField(required=False,
+                               label="Select an end date",
+                               widget=forms.DateInput(attrs={'type': 'date'}))
+
+    class Meta:
+        model = WorkingHour
+        fields = [
             "start_date",
             "end_date",
             "person",
         ]
-
