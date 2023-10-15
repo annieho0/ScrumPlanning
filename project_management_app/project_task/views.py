@@ -4,13 +4,17 @@ from django.http import JsonResponse, HttpResponseBadRequest
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic.edit import View
 from .models import Tag, Task, Sprint
-from .forms import CreateNewTaskForm, EditTaskForm, CreateNewSprintForm
+from .forms import CreateNewTaskForm, EditTaskForm, CreateNewTaskForm, SprintBoardTaskForm
 from django.db.models import Case, When, Value, IntegerField
 from django.contrib import messages
 from datetime import timedelta, date, datetime
 from django.db import models
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
+from register.models import CustomizedUser
+from django.core import serializers
+
+
 
 
 
@@ -568,51 +572,16 @@ class SprintBoard():
         # Redirect back to the Sprint Backlog page after archiving
         return redirect('sprint_backlog')
     
-    def get_task(request, task_id):
-        try:
-            task = Task.objects.get(pk=task_id)
-            assignee = task.assignee
-            status = task.status  # Assuming 'assignee' is the name of the field
-            type = task.type
-            description = task.description
-            priority = task.priority 
-            stage = task.stage 
-            created_date = task.created_date
-            return JsonResponse({'assignee': assignee, 'status': status, 'type': type, 'description': description, 'priority': priority, 'stage':stage, 'created_date': created_date})
-        except Task.DoesNotExist:
-            return JsonResponse({'error': 'Task not found'}, status=404)
-    
-
-    def update_task(request, task_id):
-
+    def edit_task(request, task_id):
+        task = Task.objects.get(pk=task_id)
         if request.method == 'POST':
-            task_name = request.POST.get('name')
-            task_assignee = request.POST.get('assignee')
-            task_status = request.POST.get('status')
-            task_type = request.POST.get('type')
-            task_description = request.POST.get('description')
-            task_priority = request.POST.get('priority')
-            task_stage = request.POST.get('stage')
-            task_created_date = request.POST.get('created_date')
-
-        try:
-            task = get_object_or_404(Task, pk=task_id)
-            task.name = task_name
-            task.assignee = task_assignee
-            task.status = task_status
-            task.type = task_type
-            task.description = task_description
-            task.priority = task_priority
-            task.stage = task_stage
-            task.created_date = task_created_date
-            task.save()
-            success = True
-        except Task.DoesNotExist:
-            success = False
-
-        return JsonResponse({'success': success})
-
-
+            form = SprintBoardTaskForm(request.POST, instance=task)
+            if form.is_valid():
+                form.save()
+                return JsonResponse({'success': True})
+        else:
+            form = SprintBoardTaskForm(instance=task)
+        return render(request, "project_task/sprint_board.html", {'form': form, 'task_id': task_id})
 
 class CreateGraphView(View):
     """

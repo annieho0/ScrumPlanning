@@ -65,7 +65,9 @@
             <tr data-category="{% for tag in task.tags.all %}{{ tag }} {% endfor %}" data-task-id="{{ task.id }}">
                 
                 <td>
-                    <a href="#" data-toggle="modal" data-target="#editTaskModal" data-task-id="{{ task.id }}" data-task-type ="{{ task.type}}" data-task-description ="{{ task.description }}" data-task-priority = "{{ task.priority }}" data-task-stage = "{{ task.stage }}" data-task-created_date = "{{ task.created_date}}">{{ task.name }}</a>
+                    <a href="#" data-toggle="modal" data-target="#editTaskModal" data-task-id="{{ task.id }}">{{ task.name }}</a>
+
+                    <!-- <a href="#" data-toggle="modal" data-target="#editTaskModal" data-task-id="{{ task.id }}" data-task-type ="{{ task.type}}" data-task-description ="{{ task.description }}" data-task-priority = "{{ task.priority }}" data-task-stage = "{{ task.stage }}" data-task-created_date = "{{ task.created_date}}">{{ task.name }}</a> -->
                 </td>
                 <td>{{task.story_point}}</td>       
                 <td>{% for tag in task.tags.all %}
@@ -117,80 +119,31 @@
 </div> <!-- End of container -->
 
 
-{% for task in tasks %}
-<div class="modal fade" id="editTaskModal" tabindex="-1" role="dialog" aria-labelledby="editTaskModalLabel" aria-hidden="true">
+{% load crispy_forms_tags %}
+{% load crispy_forms_filters %}
+
+<div class="modal" id="editTaskModal">
     <div class="modal-dialog">
         <div class="modal-content">
-
-            <!-- Modal Header -->
-            <div class="modal-header">
-                <h4 class="modal-title">Edit Task</h4>
-                <button type="button" class="close" data-dismiss="modal">&times;</button>
-            </div>
-
-            <!-- Modal body -->
-            <form id="editTaskForm" method="post" action="{% url 'update_task' task.id %}">
+            <form method="post" id="editTaskForm">
                 {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Task</h5>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
                 <div class="modal-body">
-                    <div class="form-group">
-                        <label for="name">Name:</label>
-                        <input type="text" class="form-control" id="name" name="name" value="" readonly>
-                    </div>
-                    <div class="form-group">
-                        <label for="assignee">Assignee:</label>
-                        <input type="text" class="form-control" id="assignee" name="assignee" value="">
-                    </div>
-                    <div class="form-group">
-                        <label for="editTaskHours">Log Hours</label>
-                        <input type="number" class="form-control" id="editTaskHours" min="0">
-                    </div>
-                    <div class="form-group">
-                        <label for="editTaskTotalHours">Total Hours</label>
-                        <input type="text" class="form-control" id="editTaskTotalHours" readonly>
-                    </div>
-                    <div class="form-group">
-                        <label for="status">Status:</label>
-                        <select class="form-control" id="status" name="status">
-                            <option value='NOT'>Incomplete</option>
-                            <option value='IN_PROG'>In Progress</option>
-                            <option value='COM'>Complete</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="type">Type:</label>
-                        <input type="text" class="form-control" id="type" name="type" value="" readonly>
-                    </div>
-                    <div class="form-group">
-                        <label for="priority">Priority:</label>
-                        <input type="text" class="form-control" id="priority" name="priority" value="" readonly>
-                    </div>
-                    <div class="form-group">
-                        <label for="story_point">Story Point:</label>
-                        <input type="text" class="form-control" id="story_point" name="story_point" value="" readonly>
-                    </div>
-                    <div class="form-group">
-                        <label for="tags">Tags:</label>
-                        <input type="text" class="form-control" id="tags" name="tags" value="" readonly>
-                    </div>
-                    <div class="form-group">
-                        <label for="stage">Stage:</label>
-                        <input type="text" class="form-control" id="stage" name="stage" value="" readonly>
-                    </div>
-                    <div class="form-group">
-                        <label for="created_date">Created Date:</label>
-                        <input type="text" class="form-control" id="created_date" name="created_date" value="" readonly>
-                    </div>
+                    {% crispy form %}
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary" id="updateChanges">Update changes</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                 </div>
             </form>
-
         </div>
     </div>
 </div>
-{% endfor %}
+
+
 
 {% endblock %}
 
@@ -241,79 +194,24 @@
             }
         });
     }
+    $(document).ready(function () {
+            $('#editTaskForm').submit(function (e) {
+                e.preventDefault();
+                $.ajax({
+                    type: 'POST',
+                    url: '{% url "edit_task" task_id %}',
+                    data: $('#editTaskForm').serialize(),
+                    success: function (data) {
+                        if (data.success) {
+                            $('#editTaskModal').modal('hide');
+                        }
+                    }
+                });
+            });
+        });
+    
 
     
-    $(document).on('click', 'a[data-toggle="modal"][data-target="#editTaskModal"]', function () {
-        var taskId = $(this).data('task-id');
-        var taskName = $(this).text();
-        var taskType = $(this).data('task-type');
-        var taskDescription = $(this).data('task-description');
-        var taskPriority = $(this).data('task-priority');
-        var taskStage = $(this).data('task-stage');
-        var taskCreatedDate =  $(this).data('task-created_date');
-
-        
-        var logHoursInput = $("#editTaskHours");
-        var totalHoursInput = $("#editTaskTotalHours");
-        logHoursInput.on("input", function () {
-            var loggedHours = parseFloat(logHoursInput.val()) || 0;
-            totalHoursInput.val(loggedHours);
-        });
-        $.ajax({
-            url: `/sprint-boards/get_task/${taskId}/`, 
-            method: 'GET',
-            dataType: 'json',
-            success: function (data) {
-                
-                var taskAssignee = data.assignee; 
-                var taskStatus = data.status;
-                var taskType = data.type;
-                var taskDescription = data.description; 
-                var taskPriority = data.priority;
-                var taskStage = data.stage; 
-                var taskCreatedDate = data.created_date;
-                
-                // Update the modal form fields for name, status, and type
-                $('#editTaskModal #name').val(taskName);
-                $('#editTaskModal #assignee').val(taskAssignee);
-                $('#editTaskModal #status').val(taskStatus);
-                $('#editTaskModal #type').val(taskType);
-                $('#editTaskModal #type').val(taskDescription);
-                $('#editTaskModal #priority').val(taskPriority);
-                $('#editTaskModal #stage').val(taskStage);
-                $('#editTaskModal #created_date').val(taskCreatedDate);
-
-            },
-            error: function () {
-                // Handle error if the AJAX request fails
-                console.error('Failed to fetch assignee data');
-            }
-        });
-
-    });
-
-    // Event listener for submitting the edit task form
-    $('#editTaskForm').on('submit', function (e) {
-        e.preventDefault();
-
-        var taskId = $(this).attr('action').split('=')[1]; 
-        var formData = $(this).serialize();
-
-        $.ajax({
-            type: 'POST',
-            url: $(this).attr('action'),
-            data: formData,
-            success: function (data) {
-                if (data.success) {
-                    $('#editTaskModal').modal('hide');
-                    
-                }
-            },
-            error: function (error) {
-                console.error("Error:", error);
-            }
-        });
-    });
 
 </script>
 {% endblock %}
