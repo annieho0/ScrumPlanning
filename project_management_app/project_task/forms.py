@@ -3,6 +3,9 @@ from django import forms
 from .models import Task, Tag
 from .models import Sprint
 from django.utils import timezone
+from crispy_forms.helper import FormHelper
+from crispy_forms.layout import Layout, Submit, HTML
+
 
 
 class CreateNewTaskForm(forms.ModelForm):
@@ -86,15 +89,7 @@ class EditTaskForm(forms.ModelForm):
         super(EditTaskForm, self).__init__(*args, **kwargs)
         self.fields['created_date'].initial = timezone.now()
 
-
 class CreateNewSprintForm(forms.ModelForm):
-    """
-    A form for creating a new sprint.
-
-    This form provides fields for creating a new sprint, including name, start date, and end date.
-    The start date and end date fields use the default DateInput widget.
-    """
-
     class Meta:
         model = Sprint
         fields = [
@@ -104,10 +99,39 @@ class CreateNewSprintForm(forms.ModelForm):
         ]
 
     widgets = {
-        'start_date': forms.DateInput(),
-        'end_date': forms.DateInput()
+    'start_date': forms.DateInput(),
+    'end_date': forms.DateInput()
     }
 
     def __init__(self, *args, **kwargs):
         super(CreateNewSprintForm, self).__init__(*args, **kwargs)
 
+
+class SprintBoardTaskForm(forms.ModelForm):
+
+    tags = forms.ModelMultipleChoiceField(
+        queryset=Tag.objects.all(),
+        widget=forms.SelectMultiple(attrs={'class': 'form-control'}),
+        required=True
+    )
+
+    class Meta:
+        model = Task
+        fields = [
+            "name",
+            "type",
+            "priority",
+            "description",
+            "story_point",
+            "tags",
+            "status",
+            "stage",
+            "assignee",
+            "created_date",
+        ]
+
+    def __init__(self, *args, **kwargs):
+        super(SprintBoardTaskForm, self).__init__(*args, **kwargs)
+        for field_name in self.fields:
+            if field_name not in ["assignee", "status"]:
+                self.fields[field_name].disabled = True
