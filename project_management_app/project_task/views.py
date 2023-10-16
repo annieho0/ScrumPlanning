@@ -529,23 +529,26 @@ class SprintBoard(View):
             tasks = tasks.filter(status='COM')
         return render(request, "project_task/sprint_board.html", {"name": "sprint-board", "tasks": tasks, "statuses": statuses, "tags": tags})
     
-    def move_selected_tasks(self, request, sprint_id):
-        # Handle the selection and moving of tasks to the sprint board
+    def move_selected_tasks(request, sprint_id):
+        sprint = get_object_or_404(Sprint, pk=sprint_id)
+        backlog_tasks = Task.objects.filter(sprints=None) 
+
         if request.method == 'POST':
             form = SelectTasksForm(request.POST)
-
             if form.is_valid():
-                selected_tasks = form.cleaned_data['tasks']
-                sprint = get_object_or_404(Sprint, pk=sprint_id)
-                
+                selected_task_ids = form.cleaned_data.get('selected_tasks')
+                selected_tasks = Task.objects.filter(id__in=selected_task_ids)
                 for task in selected_tasks:
-                    task.status = 'Not Started'  
-                    task.sprint = sprint
+                    task.sprints.add(sprint)  
+                    task.status = Task.NOT_STARTED 
                     task.save()
 
-                return JsonResponse({'success': True})
-            
-        return JsonResponse({'success': False})
+        context = {
+            'sprint': sprint,
+            'backlog_tasks': backlog_tasks,
+        }
+
+        return render(request, 'sprint_board.html', context)
 
     def active_sprints(request):
         # Get all active sprints

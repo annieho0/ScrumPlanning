@@ -34,32 +34,31 @@
 
 </select>
 
-<!-- Add Task Button -->
-<form method="post" action="{% url 'move_selected_tasks_to_sprint' %}">
-    {% csrf_token %}
-    
-    <!-- Loop through tasks to display checkboxes -->
-    {% for task in tasks %}
-        {% if task.status == 'Not Started' %}
-            <tr data-category="{% for tag in task.tags.all %}{{ tag }} {% endfor %}" data-task-id="{{ task.id }}">
-                <td><input type="checkbox" name="selected_tasks" value="{{ task.id }}"></td>
-                <td>
-                    <a href="#" data-toggle="modal" data-target="#editTaskModal" data-task-id="{{ task.id }}" data-task-type="{{ task.type }}" data-task-description="{{ task.description }}" data-task-priority="{{ task.priority }}" data-task-stage="{{ task.stage }}" data-task-created_date="{{ task.created_date }}">{{ task.name }}</a>
-                </td>
-                <td>{{ task.story_point }}</td>
-                <td>
-                    {% for tag in task.tags.all %}
-                        <span class="badge badge-info">{{ tag }}</span>
-                    {% endfor %}
-                </td>
-                <td>{{ task.assignee }}</td>
-            </tr>
-        {% endif %}
-    {% endfor %}
-    
-    <!-- Button to move selected tasks -->
-    <button type="submit" class="btn btn-primary">Add Task</button>
-</form>
+<button id="addTaskButton" class="btn btn-primary">Add Task to Sprint</button>
+
+<!-- Modal -->
+<div class="modal" id="taskSelectionModal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Select Tasks to Move to Sprint Board</h5>
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <!-- Task list with checkboxes -->
+        {% for task in tasks %}
+          <div class="form-check">
+            <input type="checkbox" class="form-check-input" name="selected_tasks" value="{{ task.id }}">
+            <label class="form-check-label">{{ task.name }}</label>
+          </div>
+        {% endfor %}
+      </div>
+      <div class="modal-footer">
+        <button id="moveTasksButton" class="btn btn-primary" onclick="submitForm('SelectTasksForm')">Move Selected Tasks</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- List view -->
 <div class="container-fluid" id="listView">
@@ -225,34 +224,28 @@
 
 
 <script>
-    $(document).ready(function() {
-    $("form").on("submit", function(event) {
-        event.preventDefault();
-
-        var selectedTasks = [];
-        $("input[type='checkbox']:checked").each(function() {
-            selectedTasks.push($(this).val());
-        });
-        if (selectedTasks.length > 0) {
-            $.ajax({
-                url: "{% url 'move_selected_tasks_to_sprint' %}",
-                type: "POST",
-                data: { selected_tasks: selectedTasks },
-                success: function(data) {
-                    if (data.success) {
-                        $('input[type="checkbox"]:checked').closest('tr').remove();
-                    } else {
-                        alert("Failed to move tasks to sprint.");
-                    }
-                },
-                error: function() {
-                    alert("Failed to send data to the server.");
-                }
-            });
-        } 
-    });
+    document.getElementById("addTaskButton").addEventListener("click", function() {
+  $('#taskSelectionModal').modal('show');
 });
 
+    document.getElementById("moveTasksButton").addEventListener("click", function() {
+    const selectedTasks = document.querySelectorAll('input[name="selected_tasks"]:checked');
+    const taskIds = Array.from(selectedTasks).map(task => task.value);
+    fetch('{% url 'move_selected_tasks_to_sprint' %}', {
+        method: 'POST',
+        body: JSON.stringify({ task_ids: taskIds }),
+        headers: {
+        'X-CSRFToken': csrf_token ,
+        'Content-Type': 'application/json',
+        },
+    })
+    .then(response => {
+        if (response.ok) {
+        $('#taskSelectionModal').modal('hide');
+        } else {
+        }
+    });
+    });
     function filterTasks() {
         const selectedCategory = document.getElementById("filter").value;
         const rows = document.querySelectorAll("#backlogTable tr");

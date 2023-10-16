@@ -116,9 +116,5 @@ class SelectTasksForm(forms.Form):
         label='Select tasks to move to the sprint',
         queryset=Task.objects.filter(status='Backlog'),
         widget=forms.CheckboxSelectMultiple,
+        required = False 
     )
-    def clean_tasks(self):
-        selected_tasks = self.cleaned_data['tasks']
-        if not selected_tasks:
-            raise forms.ValidationError('You must select at least one task.')
-        return selected_tasks
