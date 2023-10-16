@@ -521,13 +521,14 @@ class SprintBoard(View):
         sprints = Sprint.objects.get(pk=sprint_id)
         sprint = get_object_or_404(Sprint, pk=sprint_id)
         tasks = Task.objects.filter(sprints=sprints)
+        backlog_tasks = Task.objects.filter(sprints=None)
         # Fetch unique tags associated with tasks
         tags = Tag.objects.filter(task__isnull=False).distinct()
         statuses = [('NOT', 'Incomplete'), ('IN_PROG', 'In Progress'), ('COM', 'Complete')]
         if sprint.is_completed:
         # Delete tasks that are not completed and associated with the archived sprint
             tasks = tasks.filter(status='COM')
-        return render(request, "project_task/sprint_board.html", {"name": "sprint-board", "tasks": tasks, "statuses": statuses, "tags": tags})
+        return render(request, "project_task/sprint_board.html", {"name": "sprint-board", "tasks": tasks, "statuses": statuses, "tags": tags,"backlog_tasks": backlog_tasks})
     
     def move_selected_tasks(request, sprint_id):
         sprint = get_object_or_404(Sprint, pk=sprint_id)
@@ -539,8 +540,8 @@ class SprintBoard(View):
                 selected_task_ids = form.cleaned_data.get('selected_tasks')
                 selected_tasks = Task.objects.filter(id__in=selected_task_ids)
                 for task in selected_tasks:
-                    task.sprints.add(sprint)  
-                    task.status = Task.NOT_STARTED 
+                    task.add_to_sprint(sprint)
+                    task.status = Task.NOT_STARTED
                     task.save()
 
         context = {
@@ -548,7 +549,7 @@ class SprintBoard(View):
             'backlog_tasks': backlog_tasks,
         }
 
-        return render(request, 'sprint_board.html', context)
+        return render(request, 'sprint_boards.html', context)
 
     def active_sprints(request):
         # Get all active sprints

@@ -112,7 +112,7 @@ class CreateNewSprintForm(forms.ModelForm):
         super(CreateNewSprintForm, self).__init__(*args, **kwargs)
 
 class SelectTasksForm(forms.Form):
-    tasks = forms.ModelMultipleChoiceField(
+    selected_tasks = forms.ModelMultipleChoiceField(
         label='Select tasks to move to the sprint',
         queryset=Task.objects.filter(status='Backlog'),
         widget=forms.CheckboxSelectMultiple,
