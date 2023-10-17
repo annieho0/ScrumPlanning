@@ -616,6 +616,9 @@ class SprintBoard():
                     task.hours_logged = int(hours_logged)
                 except ValueError:
                     return JsonResponse({'message': 'Invalid hours logged value'}, status=400)
+
+            # if task.status == Task.COMPLETED and not task.completed_date:
+            #     task.completed_date = timezone.now().date()
             task.save()
 
             updated_task = {
@@ -646,6 +649,24 @@ class SprintBoard():
     #     else:
     #         return JsonResponse({'message': 'Invalid request method'}, status=400)
 
+
+# def accumulated_hours_data(sprint):
+#     start_date = sprint.start_date
+#     end_date = sprint.end_date
+#
+#     accumulated_hours_per_day = []
+#     total_hours = 0
+#     current_date = start_date
+#
+#     while current_date <= end_date:
+#         hours_logged_today = \
+#             Task.objects.filter(sprints=sprint).aggregate(sum_hours=Sum('hours_logged'))[
+#                 'sum_hours'] or 0
+#         total_hours += hours_logged_today
+#         accumulated_hours_per_day.append(total_hours)
+#         current_date += timedelta(days=1)
+#
+#     return accumulated_hours_per_day
 def accumulated_hours_data(sprint):
     start_date = sprint.start_date
     end_date = sprint.end_date
@@ -655,14 +676,17 @@ def accumulated_hours_data(sprint):
     current_date = start_date
 
     while current_date <= end_date:
+        # Filter tasks by the current date and accumulate the hours logged for that day
         hours_logged_today = \
-            Task.objects.filter(sprints=sprint).aggregate(sum_hours=Sum('hours_logged'))[
-                'sum_hours'] or 0
+            Task.objects.filter(sprints=sprint, logged_date=current_date).aggregate(
+                sum_hours=Sum('hours_logged'))['sum_hours'] or 0
+
         total_hours += hours_logged_today
         accumulated_hours_per_day.append(total_hours)
         current_date += timedelta(days=1)
 
     return accumulated_hours_per_day
+
 
 def remaining_story_points_data(sprint):
     start_date = sprint.start_date
@@ -675,21 +699,27 @@ def remaining_story_points_data(sprint):
 
     while current_date <= end_date:
         points_burned_today = \
-            Task.objects.filter(sprints=sprint, taskhistory__status="COM",
-                                taskhistory__date=current_date).aggregate(
-                total=Sum('story_point'))['total'] or 0
+        Task.objects.filter(sprints=sprint, status=Task.COMPLETED, completed_date=current_date).aggregate(
+            total=Sum('story_point'))['total'] or 0
+
         total_story_points -= points_burned_today
+
+        # Instead of ideal_remaining, you'll just append the current total_story_points
         remaining_points_per_day.append(total_story_points)
+
         current_date += timedelta(days=1)
 
     return remaining_points_per_day
+
+
 
 def calculate_ideal_effort(sprint, total_story_points):
     num_days_in_sprint = (sprint.end_date - sprint.start_date).days + 1
     ideal_decrease_per_day = total_story_points / (
             num_days_in_sprint - 1)  # Subtract one to reach 0 on the last day
 
-    ideal_effort = [max(0, total_story_points - (i * ideal_decrease_per_day)) for i in range(num_days_in_sprint)]
+    # ideal_effort = [max(0, total_story_points - (i * ideal_decrease_per_day)) for i in range(num_days_in_sprint)]
+    ideal_effort = [total_story_points - i * ideal_decrease_per_day for i in range(num_days_in_sprint)]
     return ideal_effort
 
 
@@ -704,7 +734,7 @@ class CreateGraphView(View):
         # Fetch accumulated hours for the given sprint
         accumulated_hours = accumulated_hours_data(sprint)
 
-        remaining_points = remaining_story_points_data(sprint)
+        remaining_effort = remaining_story_points_data(sprint)
 
         total_story_points = Task.objects.filter(sprints=sprint).aggregate(total=Sum('story_point'))['total'] or 0
 
@@ -715,11 +745,9 @@ class CreateGraphView(View):
 
         days = ["Day {}".format(i + 1) for i in range(num_days_in_sprint)]
 
-        # remaining_effort = [100, 85, 70, 45, 15, 10]
-
         context = {
             "days": days,
-            "remaining_effort": remaining_points,
+            "remaining_effort": remaining_effort,
             "accumulated_hours": accumulated_hours,
             "ideal_effort": ideal_effort,
         }

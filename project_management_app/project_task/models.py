@@ -2,6 +2,7 @@ from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
 
+
 class Tag(models.Model):
     """
     A model for a tag that can be associated with a task.
@@ -11,6 +12,7 @@ class Tag(models.Model):
     def __str__(self):
         return self.name
 
+
 class Sprint(models.Model):
     name = models.CharField(max_length=255)
     start_date = models.DateField(default=timezone.now)
@@ -19,6 +21,7 @@ class Sprint(models.Model):
 
     def __str__(self):
         return self.name
+
 
 class Task(models.Model):
     """
@@ -74,7 +77,8 @@ class Task(models.Model):
     priority = models.CharField(max_length=3, choices=PRIORITY_CHOICES)
     stage = models.CharField(max_length=3, choices=STAGE_CHOICES)
     tags = models.ManyToManyField('Tag', blank=False)
-    story_point = models.PositiveIntegerField(validators=[MinValueValidator(0), MaxValueValidator(10)], null=True, blank=True)
+    story_point = models.PositiveIntegerField(validators=[MinValueValidator(0), MaxValueValidator(10)], null=True,
+                                              blank=True)
     # TODO: Assignee is a string for now. Need to connect to user model to get the user name in future sprint
     assignee = models.ForeignKey('register.CustomizedUser', on_delete=models.SET_NULL, null=True, blank=True)
     created_date = models.DateField(default=timezone.now)
@@ -85,9 +89,14 @@ class Task(models.Model):
     sprints = models.ManyToManyField(Sprint)
     # sprint = models.CharField(max_length=200)
     hours_logged = models.PositiveIntegerField(default=0)
+    logged_date = models.DateField(null=True, blank=True)
+    completed_date = models.DateField(null=True, blank=True)
 
     def __str__(self):
         return self.name
-    
 
-   
+
+class TaskHistory(models.Model):
+    task = models.ForeignKey(Task, on_delete=models.CASCADE)
+    status = models.CharField(max_length=10, choices=Task.STATUS_CHOICES)
+    date = models.DateField(auto_now_add=True)

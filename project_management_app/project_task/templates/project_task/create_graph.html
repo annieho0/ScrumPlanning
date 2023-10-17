@@ -53,7 +53,8 @@
     // Burndown Chart graph logic
         var ctx = document.getElementById('burndownChart').getContext('2d')
         var actualData = {{ remaining_effort|safe }};
-        var idealData = [100, 80, 60, 40, 20, 0];
+        var idealData = {{ ideal_effort|safe }}
+        var accumulatedData = {{ accumulated_hours|safe }}
         var myChart = new Chart(ctx, {
             type: 'line',
             data: {
@@ -113,7 +114,8 @@
                 labels: {{ days|safe }},
                 datasets:[{
                     label: 'Accumulated Hours',
-                    data: {{ accumulated_hours|safe }},
+                    {#data: {{ accumulated_hours|safe }},#}
+                    data: accumulatedData,
                     backgroundColor: 'rgba(153, 102, 255, 0.2)',
                     borderColor: 'rgba(153, 102, 255, 1)',
                     borderWidth: 1
