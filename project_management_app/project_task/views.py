@@ -517,7 +517,7 @@ class HomeListView(View):
             return redirect('/login')
 
 
-class SprintBoard(View):   
+class SprintBoard():   
     def sprint_boards(request, sprint_id):
 
         form = SprintBoardTaskForm() 
@@ -532,7 +532,7 @@ class SprintBoard(View):
         if sprint.is_completed:
         # Delete tasks that are not completed and associated with the archived sprint
             tasks = tasks.filter(status='COM')
-        return render(request, "project_task/sprint_board.html", {"name": "sprint-board", "tasks": tasks, "statuses": statuses, "tags": tags,"backlog_tasks": backlog_tasks, 'sprint_id': sprint_id})
+        return render(request, "project_task/sprint_board.html", {"name": "sprint-board", "tasks": tasks, "statuses": statuses, "tags": tags,"backlog_tasks": backlog_tasks, 'sprint_id': sprint_id, 'sprint': sprint, 'form': form})
     
     def move_selected_tasks(request):
         # Handle the selection and moving of tasks to the sprint board
