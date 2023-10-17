@@ -504,7 +504,7 @@ class HomeListView(View):
         """
         sprint_form = CreateNewSprintForm()
 
-    
+
         return render(request, self.template_name, {"sprint_form": sprint_form})
 
     def post(self,request):
@@ -517,10 +517,10 @@ class HomeListView(View):
             return redirect('/login')
 
 
-class SprintBoard():   
+class SprintBoard():
     def sprint_boards(request, sprint_id):
 
-        form = SprintBoardTaskForm() 
+        form = SprintBoardTaskForm()
 
         sprints = Sprint.objects.get(pk=sprint_id)
         sprint = get_object_or_404(Sprint, pk=sprint_id)
@@ -533,7 +533,7 @@ class SprintBoard():
         # Delete tasks that are not completed and associated with the archived sprint
             tasks = tasks.filter(status='COM')
         return render(request, "project_task/sprint_board.html", {"name": "sprint-board", "tasks": tasks, "statuses": statuses, "tags": tags,"backlog_tasks": backlog_tasks, 'sprint_id': sprint_id, 'sprint': sprint, 'form': form})
-    
+
     def move_selected_tasks(request):
         # Handle the selection and moving of tasks to the sprint board
         if request.method == 'POST':
@@ -569,15 +569,15 @@ class SprintBoard():
     def archive_sprint_backlog(request, sprint_id):
         try:
             sprint = get_object_or_404(Sprint, id=sprint_id)
-            
+
             if not sprint.is_completed:
                 # If the sprint is not completed, set the end_date to today
                 sprint.end_date = timezone.now()
-            
+
             sprint.is_completed = True  # Mark the sprint as completed
-            
+
             sprint.save()
-            
+
         except Sprint.DoesNotExist:
             # Handle the case where the sprint does not exist
             pass
@@ -586,53 +586,26 @@ class SprintBoard():
         return redirect('sprint_backlog')
 
     def get_task_data(request, task_id):
-        task = Task.objects.get(pk=task_id)
+        # Fetch the task details using the TaskManager utility
+        status, message, task_data = TaskManager.get_task_details(task_id)
 
-        # Retrieve the assignee's user ID from the task
-        assignee_id = task.assignee.id
-        assignee_username = task.assignee.username  # Assuming 'username' is an attribute of CustomizedUser
+        # If the task was successfully fetched, send a success response
+        if status:
+            return JsonResponse({'status': 'success', 'message': message, 'task_data': task_data})
 
-        data = {
-            'name': task.name,
-            'type': task.type,
-            'priority': task.priority,
-            'story_point': task.story_point,
-            'assignee_id': assignee_id,  # Include the user ID
-            'assignee_username': assignee_username,  # Include the username
-            'status': task.status,
-            'stage': task.stage,
-            'created_date': task.created_date,
-            'description': task.description,
- 
-        }
+        # If the task wasn't found or there was an issue, send an error response
+        return JsonResponse({'status': 'error', 'message': message, 'task_data': task_data})
 
-        return JsonResponse(data)
-
-    
     def edit_tasks(request, task_id):
-        if request.method == 'POST':
-            task = Task.objects.get(pk=task_id)
+        # Attempt to update the task using the TaskManager utility
+        success, message, task_data = TaskManager.update_task(task_id, request.POST)
 
-            # Retrieve the assignee's user ID from the POST data
-            assignee_id = request.POST.get('assignee')
+        # If the task was successfully updated, send a success response
+        if success:
+            return JsonResponse({'status': 'success', 'message': message, 'task_data': task_data})
 
-            # Get the CustomizedUser instance corresponding to the user ID
-            assignee = get_object_or_404(CustomizedUser, pk=assignee_id)
-
-            task.assignee = assignee
-            task.status = request.POST.get('status')
-            task.save()
-            
-            updated_task = {
-                'assignee': task.assignee.username,  # Example: you can access the username of the user
-                'status': task.status,
-            }
-
-            return JsonResponse({'message': 'Task updated successfully', 'updated_task': updated_task})
-        else:
-            return JsonResponse({'message': 'Invalid request method'}, status=400)
-        
-    
+        # If there were issues during the update (e.g., form validation errors), send an error response
+        return JsonResponse({'status': 'error', 'message': message})
 
     # def edit_task(request, task_id):
     #     if request.method == 'POST':
@@ -640,7 +613,7 @@ class SprintBoard():
     #         task.assignee = request.POST.get('assignee')
     #         task.status = request.POST.get('status')
     #         task.save()
-            
+
     #         updated_task = {
     #             'assignee': task.assignee,
     #             'status': task.status,
@@ -653,7 +626,7 @@ class SprintBoard():
     #         return JsonResponse({'message': 'Invalid request method'}, status=400)
 
 
-    
+
 
 
 class CreateGraphView(View):
