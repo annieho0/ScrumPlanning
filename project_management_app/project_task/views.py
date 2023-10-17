@@ -669,7 +669,6 @@ def remaining_story_points_data(sprint):
 
         total_story_points -= points_burned_today
 
-        # Instead of ideal_remaining, you'll just append the current total_story_points
         remaining_points_per_day.append(total_story_points)
 
         current_date += timedelta(days=1)
