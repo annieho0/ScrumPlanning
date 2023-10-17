@@ -101,7 +101,7 @@ class CustomizedUser(AbstractBaseUser, PermissionsMixin):
 
     # Permission
     is_superuser = models.BooleanField(default=False, verbose_name=_("Superuser"))
-    is_staff = models.BooleanField(default=False, verbose_name=_("Staff"))
+    is_staff = models.BooleanField(default=True, verbose_name=_("Staff"))
     is_active = models.BooleanField(default=True, verbose_name=_("Active"))
 
     # Additional info

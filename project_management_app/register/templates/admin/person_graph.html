@@ -1,0 +1,46 @@
+{% extends "admin/base_site.html" %}
+{% block title %}Created Graph {% endblock %}
+
+{% block content %}
+    <div> <!-- Set the container dimensions -->
+      <canvas id="line-chart" ></canvas> <!-- Set canvas dimensions -->
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+
+        document.addEventListener("DOMContentLoaded", function() {
+            {#var graphTitle = {{ graph_title | safe }};#}
+            var ctx = document.getElementById('line-chart').getContext('2d');
+            var lineChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: {{ x|safe }},
+                    datasets: [{
+                    label: "Hours",
+                    data: {{ y|safe }},
+                    borderColor: 'rgba(65, 118, 144, 1)',
+                    borderWidth: 2,
+                    }]
+                },
+                options: {
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: "{{ graph_title | safe }}",
+                            fontSize: 8,
+                            fontColor: '#333', // Title text color
+                            fontStyle: 'bold' // Title font style (e.g., 'normal', 'italic', 'bold')
+                        }
+                    },
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                          beginAtZero: true
+                        }
+                    },
+                }
+            });
+        });
+    </script>
+{% endblock %}
