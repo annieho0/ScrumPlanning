@@ -1,11 +1,10 @@
-
 from django.urls import reverse_lazy
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic.edit import View
 from .models import Tag, Task, Sprint
 from .forms import CreateNewTaskForm, EditTaskForm, CreateNewSprintForm, SprintBoardTaskForm
-from django.db.models import Case, When, Value, IntegerField
+from django.db.models import Case, When, Value, IntegerField, Sum
 from django.contrib import messages
 from datetime import timedelta, date, datetime
 from django.db import models
@@ -269,7 +268,6 @@ class TaskManager:
                 tag_ids.append(tag.id)
         return tag_ids
 
-
     @staticmethod
     def _read_task(task_id):
         """
@@ -330,7 +328,8 @@ class TaskListView(View):
         selected_tags = selected_tags_string.split(",") if selected_tags_string else []
 
         # Fetch tasks based on filtering and sorting parameters using TaskManager utility
-        tasks = TaskManager.list_tasks(tag_filter=selected_tags, priority_sort=priority_sort, date_created_sort=date_sort)
+        tasks = TaskManager.list_tasks(tag_filter=selected_tags, priority_sort=priority_sort,
+                                       date_created_sort=date_sort)
 
         # Construct the context for the template
         context = {
@@ -493,10 +492,9 @@ class HomeListView(View):
         """
         sprint_form = CreateNewSprintForm()
 
-    
         return render(request, self.template_name, {"sprint_form": sprint_form})
 
-    def post(self,request):
+    def post(self, request):
         sprint_form = CreateNewSprintForm(request.POST)
 
         if sprint_form.is_valid():
@@ -514,10 +512,10 @@ class HomeListView(View):
             return redirect('/login')
 
 
-class SprintBoard():   
+class SprintBoard():
     def sprint_boards(request, sprint_id):
 
-        form = SprintBoardTaskForm() 
+        form = SprintBoardTaskForm()
 
         sprints = Sprint.objects.get(pk=sprint_id)
         sprint = get_object_or_404(Sprint, pk=sprint_id)
@@ -526,11 +524,11 @@ class SprintBoard():
         tags = Tag.objects.filter(task__isnull=False).distinct()
         statuses = [('NOT', 'Incomplete'), ('IN_PROG', 'In Progress'), ('COM', 'Complete')]
         if sprint.is_completed:
-        # Delete tasks that are not completed and associated with the archived sprint
+            # Delete tasks that are not completed and associated with the archived sprint
             tasks = tasks.filter(status='COM')
-        return render(request, "project_task/sprint_board.html", {"name": "sprint-board", "tasks": tasks, "statuses": statuses, "tags": tags, "sprint": sprint, "form": form})
-    
-
+        return render(request, "project_task/sprint_board.html",
+                      {"name": "sprint-board", "tasks": tasks, "statuses": statuses, "tags": tags, "sprint": sprint,
+                       "form": form})
 
     def active_sprints(request):
         # Get all active sprints
@@ -551,20 +549,21 @@ class SprintBoard():
 
     def archived_sprints(request):
         sprint_backlog_archived = Sprint.objects.filter(is_completed=True)
-        return render(request, 'project_task/sprint_backlog_archived.html', {'sprint_backlog_archived': sprint_backlog_archived})
+        return render(request, 'project_task/sprint_backlog_archived.html',
+                      {'sprint_backlog_archived': sprint_backlog_archived})
 
     def archive_sprint_backlog(request, sprint_id):
         try:
             sprint = get_object_or_404(Sprint, id=sprint_id)
-            
+
             if not sprint.is_completed:
                 # If the sprint is not completed, set the end_date to today
                 sprint.end_date = timezone.now()
-            
+
             sprint.is_completed = True  # Mark the sprint as completed
-            
+
             sprint.save()
-            
+
         except Sprint.DoesNotExist:
             # Handle the case where the sprint does not exist
             pass
@@ -590,12 +589,11 @@ class SprintBoard():
             'stage': task.stage,
             'created_date': task.created_date,
             'description': task.description,
- 
+
         }
 
         return JsonResponse(data)
 
-    
     def edit_task(request, task_id):
         if request.method == 'POST':
             task = Task.objects.get(pk=task_id)
@@ -608,18 +606,27 @@ class SprintBoard():
 
             task.assignee = assignee
             task.status = request.POST.get('status')
+
+            # Fetch the 'hours_logged' data from the POST request
+            hours_logged = request.POST.get('hours_logged')
+
+            # Update the task's hours_logged attribute
+            if hours_logged:
+                try:
+                    task.hours_logged = int(hours_logged)
+                except ValueError:
+                    return JsonResponse({'message': 'Invalid hours logged value'}, status=400)
             task.save()
-            
+
             updated_task = {
                 'assignee': task.assignee.username,  # Example: you can access the username of the user
                 'status': task.status,
+                'hours logged': task.hours_logged
             }
 
             return JsonResponse({'message': 'Task updated successfully', 'updated_task': updated_task})
         else:
             return JsonResponse({'message': 'Invalid request method'}, status=400)
-        
-    
 
     # def edit_task(request, task_id):
     #     if request.method == 'POST':
@@ -627,7 +634,7 @@ class SprintBoard():
     #         task.assignee = request.POST.get('assignee')
     #         task.status = request.POST.get('status')
     #         task.save()
-            
+
     #         updated_task = {
     #             'assignee': task.assignee,
     #             'status': task.status,
@@ -639,8 +646,51 @@ class SprintBoard():
     #     else:
     #         return JsonResponse({'message': 'Invalid request method'}, status=400)
 
+    def accumulated_hours_data(sprint):
+        start_date = sprint.start_date
+        end_date = sprint.end_date
 
-    
+        accumulated_hours_per_day = []
+        total_hours = 0
+        current_date = start_date
+
+        while current_date <= end_date:
+            hours_logged_today = \
+                Task.objects.filter(sprints=sprint).aggregate(sum_hours=Sum('hours_logged'))[
+                    'sum_hours'] or 0
+            total_hours += hours_logged_today
+            accumulated_hours_per_day.append(total_hours)
+            current_date += timedelta(days=1)
+
+        return accumulated_hours_per_day
+
+    def remaining_story_points_data(sprint):
+        start_date = sprint.start_date
+        end_date = sprint.end_date
+
+        remaining_points_per_day = []
+        total_story_points = Task.objects.filter(sprints=sprint).aggregate(total=Sum('story_point'))['total'] or 0
+
+        current_date = start_date
+
+        while current_date <= end_date:
+            points_burned_today = \
+                Task.objects.filter(sprints=sprint, taskhistory__status="COM",
+                                    taskhistory__date=current_date).aggregate(
+                    total=Sum('story_point'))['total'] or 0
+            total_story_points -= points_burned_today
+            remaining_points_per_day.append(total_story_points)
+            current_date += timedelta(days=1)
+
+        return remaining_points_per_day
+
+    def calculate_ideal_effort(sprint, total_story_points):
+        num_days_in_sprint = (sprint.end_date - sprint.start_date).days + 1
+        ideal_decrease_per_day = total_story_points / (
+                num_days_in_sprint - 1)  # Subtract one to reach 0 on the last day
+
+        ideal_effort = [max(0, total_story_points - (i * ideal_decrease_per_day)) for i in range(num_days_in_sprint)]
+        return ideal_effort
 
 
 class CreateGraphView(View):
@@ -649,85 +699,47 @@ class CreateGraphView(View):
     """
     template_name = 'create_graph.html'
 
-    def get(self, request):
-        # Hard coded data to test chartjs graphs
-        days = ["Day 1", "Day 2", "Day 3", "Day 4 ", "Day 5","Day 6"]
-        remaining_effort = [100, 85, 70, 45, 15, 10]
-        accumulated_hours = [0, 5, 12, 20, 28, 37]
+    def get(self, request, sprint_id):
+        sprint = get_object_or_404(Sprint, pk=sprint_id)
+        # Fetch accumulated hours for the given sprint
+        accumulated_hours = accumulated_hours_data(sprint)
+
+        remaining_points = remaining_story_points_data(sprint)
+
+        total_story_points = Task.objects.filter(sprints=sprint).aggregate(total=Sum('story_point'))['total'] or 0
+
+        ideal_effort = calculate_ideal_effort(sprint, total_story_points)
+
+        # Calculate the number of days in the sprint
+        num_days_in_sprint = (sprint.end_date - sprint.start_date).days + 1
+
+        days = ["Day {}".format(i + 1) for i in range(num_days_in_sprint)]
+
+        # remaining_effort = [100, 85, 70, 45, 15, 10]
 
         context = {
             "days": days,
-            "remaining_effort": remaining_effort,
+            "remaining_effort": remaining_points,
             "accumulated_hours": accumulated_hours,
+            "ideal_effort": ideal_effort,
         }
         return render(request, 'project_task/create_graph.html', context)
 
-    # def dispatch(self, *args, **kwargs):
-    #     self.total_effort = None
-    #     self.tasks = None
-    #     self.end_date = None
-    #     self.start_date = None
-    #     return super().dispatch(*args, **kwargs)
-
-    # def get(self, request):
-    #     # Fetch the currently active sprint
-    #     current_sprint = Sprint.objects.get(is_active=True)  # Will cause error if there are multiple sprints
-    #     # Set the start and end dates from the fetched sprint
-    #     self.start_date = current_sprint.start_date
-    #     self.end_date = current_sprint.end_date
-    #
-    #     self.tasks = Task.objects.filter(sprint=current_sprint)
-    #
-    #     # Calculate the total effort (in story points) for the sprint
-    #     self.total_effort = sum(task.story_point or 0 for task in self.tasks)
-    #
-    #     context = {
-    #         "days": [self.start_date + timedelta(days=i) for i in
-    #                  range((self.end_date - self.start_date).days + 1)],
-    #         "remaining_effort": self.burndown_data(),
-    #         "accumulated_hours": self.accumulation_data(),
-    #     }
-    #     return render(request, 'project_task/create_graph.html', context)
-
-    # def burndown_data(self):
-    #     """
-    #     Generates burndown data for a given sprint
-    #
-    #     Returns:
-    #         list: A list containing the remaining effort for each day of the sprint
-    #     """
-    #     total_effort = self.total_effort
-    #     remaining_effort = [total_effort]
-    #     current_date = self.start_date
-    #     while current_date <= self.end_date:
-    #         logged_hours_on_date = \
-    #             TimeLog.objects.filter(task__in=self.tasks, date=current_date).aggregate(models.Sum('hours_logged'))[
-    #                 'hours_logged__sum'] or 0
-    #         total_effort -= logged_hours_on_date
-    #         remaining_effort.append(total_effort)
-    #         current_date += timedelta(days=1)
-    #     return remaining_effort
-
-    # def accumulation_data(self):
-    #     """
-    #     Generates an accumulation of effort data for a given sprint
-    #
-    #     Returns:
-    #        list: A list containing the accumulated hours for each day of the sprint
-    #     """
-    #     accumulated_effort = [0]
-    #     accumulated_hours = 0
-    #
-    #     current_date = self.start_date
-    #     while current_date <= self.end_date:
-    #         logged_hours_on_date = \
-    #             TimeLog.objects.filter(task__in=self.tasks, date=current_date).aggregate(models.Sum('hours_logged'))[
-    #                 'hours_logged__sum'] or 0
-    #
-    #         accumulated_hours += logged_hours_on_date
-    #         accumulated_effort.append(accumulated_hours)
-    #
-    #         current_date += timedelta(days=1)
-    #
-    #     return accumulated_effort
-
+# class CreateGraphView(View):
+#     """
+#        View class for creating graphs
+#     """
+#     template_name = 'create_graph.html'
+#
+#     def get(self, request):
+#         # Hard coded data to test chartjs graphs
+#         days = ["Day 1", "Day 2", "Day 3", "Day 4 ", "Day 5","Day 6"]
+#         remaining_effort = [100, 85, 70, 45, 15, 10]
+#         accumulated_hours = [0, 5, 12, 20, 28, 37]
+#
+#         context = {
+#             "days": days,
+#             "remaining_effort": remaining_effort,
+#             "accumulated_hours": accumulated_hours,
+#         }
+#         return render(request, 'project_task/create_graph.html', context)
