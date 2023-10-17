@@ -631,42 +631,7 @@ class SprintBoard():
         else:
             return JsonResponse({'message': 'Invalid request method'}, status=400)
 
-    # def edit_task(request, task_id):
-    #     if request.method == 'POST':
-    #         task = Task.objects.get(pk=task_id)
-    #         task.assignee = request.POST.get('assignee')
-    #         task.status = request.POST.get('status')
-    #         task.save()
 
-    #         updated_task = {
-    #             'assignee': task.assignee,
-    #             'status': task.status,
-    #         }
-
-    #         print('Task updated successfully:', updated_task)  # Debugging statement
-
-    #         return JsonResponse({'message': 'Task updated successfully', 'updated_task': updated_task})
-    #     else:
-    #         return JsonResponse({'message': 'Invalid request method'}, status=400)
-
-
-# def accumulated_hours_data(sprint):
-#     start_date = sprint.start_date
-#     end_date = sprint.end_date
-#
-#     accumulated_hours_per_day = []
-#     total_hours = 0
-#     current_date = start_date
-#
-#     while current_date <= end_date:
-#         hours_logged_today = \
-#             Task.objects.filter(sprints=sprint).aggregate(sum_hours=Sum('hours_logged'))[
-#                 'sum_hours'] or 0
-#         total_hours += hours_logged_today
-#         accumulated_hours_per_day.append(total_hours)
-#         current_date += timedelta(days=1)
-#
-#     return accumulated_hours_per_day
 def accumulated_hours_data(sprint):
     start_date = sprint.start_date
     end_date = sprint.end_date
@@ -753,21 +718,3 @@ class CreateGraphView(View):
         }
         return render(request, 'project_task/create_graph.html', context)
 
-# class CreateGraphView(View):
-#     """
-#        View class for creating graphs
-#     """
-#     template_name = 'create_graph.html'
-#
-#     def get(self, request):
-#         # Hard coded data to test chartjs graphs
-#         days = ["Day 1", "Day 2", "Day 3", "Day 4 ", "Day 5","Day 6"]
-#         remaining_effort = [100, 85, 70, 45, 15, 10]
-#         accumulated_hours = [0, 5, 12, 20, 28, 37]
-#
-#         context = {
-#             "days": days,
-#             "remaining_effort": remaining_effort,
-#             "accumulated_hours": accumulated_hours,
-#         }
-#         return render(request, 'project_task/create_graph.html', context)
