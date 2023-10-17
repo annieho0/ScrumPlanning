@@ -1,8 +1,8 @@
 <!-- View options and Create New Task button -->
-<div class="container-fluid mb-4 mt-4">
-    <div class="row mb-2 mt-2">
+<div class="container-sm container-md container-lg container-xl mb-4 mt-4">
+    <div class="row justify-content-start mb-2 mt-2">
         <!-- View options -->
-        <div class="col-sm-2">
+        <div class="col-sm-12 col-md-6 col-lg-2 col-xl-2 mb-2 mt-2">
             <label for="view">View:</label>
             <select id="view" onchange="updateSortAndFilter()">
                 {% if current_view == 'list_view' %}
@@ -14,17 +14,9 @@
                 {% endif %}
             </select>
         </div>
-        <!-- Create New Task Button trigger modal -->
-        <div class="col-sm-2 text-right" id="create-task-listview">
-            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#createNewTaskModal">create new
-                task
-            </button>
-        </div>
-    </div>
 
-    <div class="row mt-4">
         <!-- Priority Sort options -->
-        <div class="col-sm-2">
+        <div class="col-sm-12 col-md-6 col-lg-2 col-xl-2 mb-2 mt-2">
             <label for="priority_sort">Priority:</label>
             <select id="priority_sort" onchange="updateSortAndFilter()">
                 {% if priority_sort == 'priority_ascending' %}
@@ -38,7 +30,7 @@
         </div>
 
         <!-- Date Sort options -->
-        <div class="col-sm-2">
+        <div class="col-sm-12 col-md-6 col-lg-2 col-xl-2 mb-2 mt-2">
             <label for="date_sort">Date:</label>
             <select id="date_sort" onchange="updateSortAndFilter()">
                 {% if date_sort == 'date_ascending' %}
@@ -52,9 +44,9 @@
         </div>
 
         <!-- Tags Filter options -->
-        <div class="col-sm-8 d-flex">
+        <div class="col-sm-12 col-md-6 col-lg-6 col-xl-6 d-flex mb-2 mt-2">
             <label for="tags_filter">Tags:</label>
-            <select id="tags_filter" multiple="multiple" style="width: 50%" onchange="updateSortAndFilter()">
+            <select id="tags_filter" multiple="multiple" style="width: 50%;" onchange="updateSortAndFilter()">
                 {% for tag in tags %}
                 {% if tag.name in selected_tags %}
                 <option value="{{ tag.name }}" selected>{{ tag.name }}</option>

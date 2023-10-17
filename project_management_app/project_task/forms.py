@@ -78,11 +78,9 @@ class EditTaskForm(forms.ModelForm):
             "description",
             "story_point",
             "tags",
-            "status",
             "stage",
             "assignee",
             "created_date",
-            "sprints",
         ]
 
     def __init__(self, *args, **kwargs):
@@ -132,6 +130,4 @@ class SprintBoardTaskForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(SprintBoardTaskForm, self).__init__(*args, **kwargs)
-        for field_name in self.fields:
-            if field_name not in ["assignee", "status"]:
-                self.fields[field_name].disabled = True
+        self.fields["created_date"].disabled = True

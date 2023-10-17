@@ -82,8 +82,13 @@ class Task(models.Model):
     # created_date = models.DateField(default=timezone.now().date())
     # status = models.CharField(max_length=7, choices=STATUS_CHOICES, default=NOT_STARTED)
     # TODO: Sprint is a string for now. Need to connect to sprint model to get the sprint name in future sprint
-    sprints = models.ManyToManyField(Sprint)
-   
+    sprints = models.ManyToManyField(Sprint, blank= True)
+    # sprint = models.CharField(max_length=200)
+    backlog = models.BooleanField(default=False)
+
+    def add_to_sprint(self, sprint):
+        self.sprints.add(sprint)
+        self.save()
 
 
     def __str__(self):
