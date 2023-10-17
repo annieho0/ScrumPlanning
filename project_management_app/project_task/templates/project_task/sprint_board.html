@@ -34,30 +34,37 @@
 
 </select>
 
-<button id="addTaskButton" class="btn btn-primary">Add Task to Sprint</button>
+<button id="addTaskButton" class="btn btn-primary" data-toggle="modal" data-target="#taskSelectionModal">
+    Add Task to Sprint
+</button>
 
 <!-- Modal -->
 <div class="modal" id="taskSelectionModal">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Select Tasks to Move to Sprint Board</h5>
-        <button type="button" class="close" data-dismiss="modal">&times;</button>
-      </div>
-      <div class="modal-body">
-        <!-- Task list with checkboxes -->
-        {% for task in backlog_tasks %}
-          <div class="form-check">
-            <input type="checkbox" class="form-check-input" name="selected_tasks" value="{{ task.id }}">
-            <label class="form-check-label">{{ task.name }}</label>
-          </div>
-        {% endfor %}
-      </div>
-      <div class="modal-footer">
-        <button id="moveTasksButton" class="btn btn-primary" onclick="submitForm('SelectTasksForm')">Move Selected Tasks</button>
-      </div>
+    <div class="modal-dialog">
+        <form id="selectTasksForm" method="POST" action="{% url 'move_selected_tasks_to_sprint' %}">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Select Tasks to Move to Sprint Board</h5>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <!-- Task list with checkboxes -->
+                    {% csrf_token %}
+                    <input type="hidden" name="sprint_id" value="{{ sprint_id }}">
+                    <!-- Task list with checkboxes -->
+                    {% for task in backlog_tasks %}
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" name="selected_tasks" value="{{ task.id }}">
+                        <label class="form-check-label">{{ task.name }}</label>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="modal-footer">
+                    <button id="moveTasksButton" class="btn btn-primary" type="submit">Move Selected Tasks</button>
+                </div>
+            </div>
+        </form>
     </div>
-  </div>
 </div>
 
 <!-- List view -->
@@ -224,30 +231,7 @@
 
 
 <script>
-    document.getElementById("addTaskButton").addEventListener("click", function() {
-  $('#taskSelectionModal').modal('show');
-});
 
-    document.getElementById("moveTasksButton").addEventListener("click", function() {
-    const selectedTasks = document.querySelectorAll('input[name="selected_tasks"]:checked');
-    const taskIds = Array.from(selectedTasks).map(task => task.value);
-    fetch('{% url 'move_selected_tasks_to_sprint' %}', {
-        method: 'POST',
-        body: JSON.stringify({ task_ids: taskIds }),
-        headers: {
-        'X-CSRFToken': csrf_token ,
-        'Content-Type': 'application/json',
-        },
-    })
-    .then(response => {
-        if (response.ok) {
-        $('#taskSelectionModal').modal('hide');
-        } else {
-        }
-    });
-    });
-
-    
     function filterTasks() {
         const selectedCategory = document.getElementById("filter").value;
         const rows = document.querySelectorAll("#backlogTable tr");
@@ -281,7 +265,7 @@
         });
     }
 
-    
+
     $(document).on('click', 'a[data-toggle="modal"][data-target="#editTaskModal"]', function () {
         var taskId = $(this).data('task-id');
         var taskName = $(this).text();
@@ -289,9 +273,9 @@
         var taskDescription = $(this).data('task-description');
         var taskPriority = $(this).data('task-priority');
         var taskStage = $(this).data('task-stage');
-        var taskCreatedDate =  $(this).data('task-created_date');
+        var taskCreatedDate = $(this).data('task-created_date');
 
-        
+
         var logHoursInput = $("#editTaskHours");
         var totalHoursInput = $("#editTaskTotalHours");
         logHoursInput.on("input", function () {
@@ -299,19 +283,19 @@
             totalHoursInput.val(loggedHours);
         });
         $.ajax({
-            url: `/sprint-boards/get_task/${taskId}/`, 
+            url: `/sprint-boards/get_task/${taskId}/`,
             method: 'GET',
             dataType: 'json',
             success: function (data) {
-                
-                var taskAssignee = data.assignee; 
+
+                var taskAssignee = data.assignee;
                 var taskStatus = data.status;
                 var taskType = data.type;
-                var taskDescription = data.description; 
+                var taskDescription = data.description;
                 var taskPriority = data.priority;
-                var taskStage = data.stage; 
+                var taskStage = data.stage;
                 var taskCreatedDate = data.created_date;
-                
+
                 // Update the modal form fields for name, status, and type
                 $('#editTaskModal #name').val(taskName);
                 $('#editTaskModal #assignee').val(taskAssignee);
@@ -335,7 +319,7 @@
     $('#editTaskForm').on('submit', function (e) {
         e.preventDefault();
 
-        var taskId = $(this).attr('action').split('=')[1]; 
+        var taskId = $(this).attr('action').split('=')[1];
         var formData = $(this).serialize();
 
         $.ajax({
@@ -345,7 +329,7 @@
             success: function (data) {
                 if (data.success) {
                     $('#editTaskModal').modal('hide');
-                    
+
                 }
             },
             error: function (error) {

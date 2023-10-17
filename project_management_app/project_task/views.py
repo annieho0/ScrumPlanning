@@ -528,28 +528,18 @@ class SprintBoard(View):
         if sprint.is_completed:
         # Delete tasks that are not completed and associated with the archived sprint
             tasks = tasks.filter(status='COM')
-        return render(request, "project_task/sprint_board.html", {"name": "sprint-board", "tasks": tasks, "statuses": statuses, "tags": tags,"backlog_tasks": backlog_tasks})
+        return render(request, "project_task/sprint_board.html", {"name": "sprint-board", "tasks": tasks, "statuses": statuses, "tags": tags,"backlog_tasks": backlog_tasks, 'sprint_id': sprint_id})
     
-    def move_selected_tasks(request, sprint_id):
-        sprint = get_object_or_404(Sprint, pk=sprint_id)
-        backlog_tasks = Task.objects.filter(sprints=None) 
-
+    def move_selected_tasks(request):
+        # Handle the selection and moving of tasks to the sprint board
         if request.method == 'POST':
-            form = SelectTasksForm(request.POST)
-            if form.is_valid():
-                selected_task_ids = form.cleaned_data.get('selected_tasks')
-                selected_tasks = Task.objects.filter(id__in=selected_task_ids)
-                for task in selected_tasks:
-                    task.add_to_sprint(sprint)
-                    task.status = Task.NOT_STARTED
-                    task.save()
-
-        context = {
-            'sprint': sprint,
-            'backlog_tasks': backlog_tasks,
-        }
-
-        return render(request, 'sprint_boards.html', context)
+            selected_tasks = request.POST.getlist('selected_tasks')  # extract the list of selected tasks
+            sprint_id = request.POST.get('sprint_id')  # extract the sprint id
+            for task_id in selected_tasks:  # loop through the list of selected tasks
+                task = get_object_or_404(Task, pk=task_id)  # TODO: need error handling redundancy here if task does not exist
+                task.sprints.add(sprint_id)
+                task.save()
+        return redirect('sprint_boards', sprint_id=sprint_id)
 
     def active_sprints(request):
         # Get all active sprints
