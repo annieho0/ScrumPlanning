@@ -1,7 +1,7 @@
 
 from django.urls import reverse_lazy
 from django.http import JsonResponse, HttpResponseBadRequest
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect, get_object_or_404, reverse
 from django.views.generic.edit import View
 from .models import Tag, Task, Sprint
 from .forms import CreateNewTaskForm, EditTaskForm, CreateNewSprintForm, SprintBoardTaskForm
@@ -492,9 +492,14 @@ class HomeListView(View):
             HttpResponse: Rendered home page with any relevant context.
         """
         sprint_form = CreateNewSprintForm()
+        # Check if there is an active sprint
+        active_sprints = Sprint.objects.filter(is_completed=False).order_by('start_date')
 
-    
-        return render(request, self.template_name, {"sprint_form": sprint_form})
+        if active_sprints.exists():
+            first_active_sprint = active_sprints.first()
+            return redirect(reverse("sprint_boards", args=[first_active_sprint.pk]))
+        else:
+            return redirect(reverse("project_backlog"))
 
     def post(self,request):
         sprint_form = CreateNewSprintForm(request.POST)
@@ -512,8 +517,6 @@ class HomeListView(View):
         else:
             # Render and return the home page template
             return redirect('/login')
-
-
 class SprintBoard():   
     def sprint_boards(request, sprint_id):
 
