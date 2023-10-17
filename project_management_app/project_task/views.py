@@ -1,12 +1,11 @@
 
 from django.urls import reverse_lazy, reverse
 from django.http import JsonResponse, HttpResponseBadRequest
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect, get_object_or_404, reverse
 from django.views.generic.edit import View
 from .models import Tag, Task, Sprint
 from .forms import CreateNewTaskForm, EditTaskForm, CreateNewSprintForm, SprintBoardTaskForm
 from django.db.models import Case, When, Value, IntegerField
-from django.contrib import messages
 from datetime import timedelta, date, datetime
 from django.db import models
 from django.utils import timezone
@@ -502,6 +501,7 @@ class HomeListView(View):
         Returns:
             HttpResponse: Rendered home page with any relevant context.
         """
+        sprint_form = CreateNewSprintForm()
         # Check if there is an active sprint
         active_sprints = Sprint.objects.filter(is_completed=False).order_by('start_date')
 
@@ -519,8 +519,6 @@ class HomeListView(View):
         else:
             # Render and return the home page template
             return redirect('/login')
-
-
 class SprintBoard():   
     def sprint_boards(request, sprint_id):
 
