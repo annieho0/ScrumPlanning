@@ -14,7 +14,9 @@
 
 {% block content %}
 <!-- Create Graph Button -->
-<button onclick="window.location='{% url 'create_graph' %}'" class="btn btn-primary create-graph-btn" id="createGraphButton">Create Graph</button>
+{% if sprint.id %}
+    <button onclick="window.location='{% url 'create_graph' sprint.id %}'" class="btn btn-primary create-graph-btn" id="createGraphButton">Create Graph</button>
+    {% endif %}
 
 <!-- View options -->
 <label for="view">View:</label>
