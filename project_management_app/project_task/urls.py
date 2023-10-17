@@ -8,9 +8,9 @@ urlpatterns = [
     path("project-backlog/", TaskListView.as_view(), name="project_backlog"),
     path("project-backlog/edit_task/<int:task_id>/", TaskEditView.as_view(), name="edit_task"),
     path("project-backlog/delete_task/<int:task_id>/", TaskDeleteView.as_view(), name="delete_task"),
-    # path("sprint-board/", SprintBoard.sprint_board, name="sprint_board"),
-    path("sprint-boards/update_task/<int:task_id>/", SprintBoard.update_task, name="update_task"),
-    path("sprint-boards/get_task/<int:task_id>/", SprintBoard.get_task, name="get_task"),
+    # path("sprint-boards/get_updated_data/", SprintBoard.get_updated_data, name="get_updated_data"),
+    path("sprint-boards/get_task_data/<int:task_id>/", SprintBoard.get_task_data, name="get_task_data"),
+    path("sprint-boards/edit_task/<int:task_id>/", SprintBoard.edit_task, name="edit_task"),
     path('sprint_boards/<int:sprint_id>/', SprintBoard.sprint_boards, name='sprint_boards'),
     # path('redirect_to_sprint_board/<int:sprint_id>/', SprintBoard.redirect_to_sprint_board, name='redirect_to_sprint_board'),
     
