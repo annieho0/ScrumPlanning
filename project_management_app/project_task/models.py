@@ -83,7 +83,7 @@ class Task(models.Model):
     # status = models.CharField(max_length=7, choices=STATUS_CHOICES, default=NOT_STARTED)
     # TODO: Sprint is a string for now. Need to connect to sprint model to get the sprint name in future sprint
     sprints = models.ManyToManyField(Sprint)
-    # sprint = models.CharField(max_length=200)
+   
 
 
     def __str__(self):
