@@ -609,7 +609,7 @@ class SprintBoard():
         return JsonResponse(data)
 
     
-    def edit_task(request, task_id):
+    def edit_tasks(request, task_id):
         if request.method == 'POST':
             task = Task.objects.get(pk=task_id)
 
