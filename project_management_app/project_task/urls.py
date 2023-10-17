@@ -19,5 +19,7 @@ urlpatterns = [
     path('sprint_backlog/archive_sprint_backlog/<int:sprint_id>/', SprintBoard.archive_sprint_backlog, name='archive_sprint_backlog'),
 
     path("create-graph/", CreateGraphView.as_view(), name="create_graph"),
+    path('move_selected_tasks_to_sprint/', SprintBoard.move_selected_tasks, name='move_selected_tasks_to_sprint'),
+    #path("get_sprint_tasks/", SprintBoard.get_sprint_tasks, name="get_task")
 ]
 

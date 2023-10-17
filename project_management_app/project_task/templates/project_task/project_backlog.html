@@ -28,6 +28,8 @@
 <!-- Alert Message container -->
 <div id="messages-container"></div>
 
+<!--Create New Sprint Modal -->
+{% include "project_task/pb_create_new_sprint.html" %}
 
 <!-- View options and Create New Task button -->
 {% include "project_task/pb_create_new_task.html" %}
@@ -407,6 +409,10 @@
                     displayMessage('danger', response.message);
                 }
             });
+        });
+
+        $('#createNewSprint').on('shown.bs.modal', function () {
+        $('#sprintForm input:first').trigger('focus');
         });
 
 
