@@ -113,6 +113,10 @@ class SprintBoardTaskForm(forms.ModelForm):
         required=True
     )
 
+    hour = forms.DurationField(
+        widget=forms.TimeInput(attrs={'class': 'form-control'})
+    )
+
     class Meta:
         model = Task
         fields = [
@@ -126,7 +130,9 @@ class SprintBoardTaskForm(forms.ModelForm):
             "stage",
             "assignee",
             "created_date",
+            "hour", 
         ]
+
 
     def __init__(self, *args, **kwargs):
         super(SprintBoardTaskForm, self).__init__(*args, **kwargs)

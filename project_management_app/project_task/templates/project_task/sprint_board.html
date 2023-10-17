@@ -27,15 +27,15 @@
 <label for="filter">Filter Tag(s):</label>
 <select id="filter" onchange="filterTasks()">
     <option value="">All</option>
-    {% for tag in tag %}
-    {% if tag.name in selected_tags %}
-    <option value="{{ tag.name }}" selected>{{ tag.name }}</option>
-    {% else %}
-    <option value="{{ tag.name }}">{{ tag.name }}</option>
-    {% endif %}
+    {% for tag in tags %}
+        {% if tag.name in selected_tags %}
+        <option value="{{ tag.name }}" selected>{{ tag.name }}</option>
+        {% else %}
+        <option value="{{ tag.name }}">{{ tag.name }}</option>
+        {% endif %}
     {% endfor %}
-
 </select>
+
 
 <button id="addTaskButton" class="btn btn-primary" data-toggle="modal" data-target="#taskSelectionModal">
     Add Task to Sprint
@@ -182,6 +182,7 @@
                     {{ form.stage|as_crispy_field }}
                     {{ form.assignee|as_crispy_field }}
                     {{ form.created_date|as_crispy_field }}
+                    {{ form.hour|as_crispy_field }}
                 </div>
 
                 <!-- Modal Footer -->
@@ -345,7 +346,7 @@
                     // Handle success response
                     // Close the modal
                     $('#editTaskModal').modal('hide');
-                    updateTaskOnScreen(response.updated_task);
+                    // updateTaskOnScreen(response.updated_task);
                     
                 },
                 error: function(xhr, status, error) {
@@ -355,67 +356,7 @@
         });
     });
  
-    // Attach a click event handler to elements with the "open-modal" class
-    // $(document).on('click', '.open-modal', function(e) {
-    //     e.preventDefault();  // Prevent the default behavior of the anchor tag
-
-    //     var taskId = $(this).data('task-id');
-    //     var url = '/sprint-boards/get_task_data/' + taskId + '/'; 
-
-    //     // Make an AJAX request to fetch task data
-    //     $.get(url, function(data) {
-    //         // Populate form fields with the retrieved data
-    //         $('#editTaskModal #id_name').val(data.name);
-    //         $('#editTaskModal #id_type').val(data.type);
-    //         $('#editTaskModal #id_priority').val(data.priority);
-    //         $('#editTaskModal #id_story_point').val(data.story_point);
-    //         $('#editTaskModal #id_description').val(data.description);
-    //         $('#editTaskModal #id_assignee').val(data.assignee); 
-    //         $('#editTaskModal #id_status').val(data.status);  
-    //         $('#editTaskModal #id_stage').val(data.stage);
-    //         $('#editTaskModal #id_created_date').val(data.created_date);
-    //     });
-
-    //     // Show the modal
-    //     $('#editTaskModal').modal('show');
-    // });
-
-    // $(document).ready(function() {
-    //     var taskId = $(this).data('task-id');
-    //     console.log(taskId);
-    //     var url = '/sprint-boards/edit_task/' + taskId + '/';
-
-
-    //     $('#editTaskForm').submit(function(event) {
-    //         event.preventDefault();
-            
-    //         // Retrieve the task ID from the button's data attribute
-    //         var taskId = $('#updateChanges').data('task-id');
-            
-    //         // Check if taskId is undefined and handle it
-    //         if (typeof taskId === 'undefined') {
-    //             console.error('Task ID is undefined. Make sure the data-task-id attribute is set on the button.');
-    //             return;
-    //         }
-            
-    //         // Serialize the form data
-    //         var formData = $(this).serialize();
-
-    //         // Send an AJAX request to update the task
-    //         $.ajax({
-    //             url: '/sprint-boards/edit_task/' + taskId + '/',
-    //             method: 'POST',
-    //             data: formData,
-    //             success: function(response) {
-                   
-    //             },
-    //             error: function(xhr, status, error) {
-                    
-    //                 console.error(xhr.responseText);
-    //             }
-    //         });
-    //     });
-    // });
+    
 
 
 </script>
