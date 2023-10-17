@@ -1,5 +1,4 @@
 from django import forms
-from django.contrib.auth import login, authenticate
 from django.contrib.auth.forms import UserCreationForm
 from .models import CustomizedUser, WorkingHour
 from django.db import models
@@ -20,15 +19,20 @@ class DateGraphForm(forms.ModelForm):
     """
     This class is used to create a form for drawing the graphs
     """
-    date_choices = WorkingHour.objects.values_list('date').distinct()
-    choices = [(date[0], date[0].strftime('%Y-%m-%d')) for date in date_choices]
-    choices.insert(0, (None, "---------"))
-
     date = forms.ChoiceField(
-        choices=choices,
+        choices=[(None, "---------")],  # Start with a default choice
         label="Select 1 date for the whole team",
         required=False,
     )
+
+    def __init__(self, *args, **kwargs):
+        super(DateGraphForm, self).__init__(*args, **kwargs)
+
+        # Populate the 'date' field choices from the database
+        date_choices = WorkingHour.objects.values_list('date').distinct()
+        choices = [(date[0], date[0].strftime('%Y-%m-%d')) for date in date_choices]
+        choices.insert(0, (None, "---------"))
+        self.fields['date'].choices = choices
 
     class Meta:
         model = WorkingHour
