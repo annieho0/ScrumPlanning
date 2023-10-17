@@ -664,8 +664,8 @@ def remaining_story_points_data(sprint):
 
     while current_date <= end_date:
         points_burned_today = \
-        Task.objects.filter(sprints=sprint, status=Task.COMPLETED, completed_date=current_date).aggregate(
-            total=Sum('story_point'))['total'] or 0
+            Task.objects.filter(sprints=sprint, status=Task.COMPLETED, completed_date=current_date).aggregate(
+                total=Sum('story_point'))['total'] or 0
 
         total_story_points -= points_burned_today
 
@@ -674,7 +674,6 @@ def remaining_story_points_data(sprint):
         current_date += timedelta(days=1)
 
     return remaining_points_per_day
-
 
 
 def calculate_ideal_effort(sprint, total_story_points):
@@ -716,4 +715,3 @@ class CreateGraphView(View):
             "ideal_effort": ideal_effort,
         }
         return render(request, 'project_task/create_graph.html', context)
-
