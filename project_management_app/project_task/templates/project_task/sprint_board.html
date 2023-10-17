@@ -6,8 +6,11 @@
 
 <!-- Header -->
 {% block header %}
-    <h1>Sprint Board</h1>
+<h1>{{sprint.name}}</h1>
 {% endblock %}
+
+{% load crispy_forms_tags %}
+{% load crispy_forms_filters %}
 
 {% block content %}
 <!-- Create Graph Button -->
@@ -24,7 +27,7 @@
 <label for="filter">Filter Tag(s):</label>
 <select id="filter" onchange="filterTasks()">
     <option value="">All</option>
-    {% for tag in tags %}
+    {% for tag in tag %}
     {% if tag.name in selected_tags %}
     <option value="{{ tag.name }}" selected>{{ tag.name }}</option>
     {% else %}
@@ -34,8 +37,40 @@
 
 </select>
 
-<!-- Create Graph Button -->
-<button onclick="window.location='{% url 'create_graph' %}'" class="btn btn-primary create-graph-btn" id="createGraphButton">Create Graph</button>
+<button id="addTaskButton" class="btn btn-primary" data-toggle="modal" data-target="#taskSelectionModal">
+    Add Task to Sprint
+</button>
+
+<!-- Modal -->
+<div class="modal" id="taskSelectionModal">
+    <div class="modal-dialog">
+        <form id="selectTasksForm" method="POST" action="{% url 'move_selected_tasks_to_sprint' %}">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Select Tasks to Move to Sprint Board</h5>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <!-- Task list with checkboxes -->
+                    {% csrf_token %}
+                    <input type="hidden" name="sprint_id" value="{{ sprint_id }}">
+                    <!-- Task list with checkboxes -->
+                    {% for task in backlog_tasks %}
+                    <div class="form-check">
+                        <input type="checkbox" class="form-check-input" name="selected_tasks" value="{{ task.id }}">
+                        <label class="form-check-label">{{ task.name }}</label>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="modal-footer">
+                    <button id="moveTasksButton" class="btn btn-primary" type="submit">Move Selected Tasks</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
 
 <!-- List view -->
 <div class="container-fluid" id="listView">
@@ -68,14 +103,16 @@
             <tr data-category="{% for tag in task.tags.all %}{{ tag }} {% endfor %}" data-task-id="{{ task.id }}">
                 
                 <td>
-                    <a href="#" data-toggle="modal" data-target="#editTaskModal" data-task-id="{{ task.id }}" data-task-type ="{{ task.type}}" data-task-description ="{{ task.description }}" data-task-priority = "{{ task.priority }}" data-task-stage = "{{ task.stage }}" data-task-created_date = "{{ task.created_date}}">{{ task.name }}</a>
+                    <a href="#" class="open-modal" data-toggle="modal" data-target="#editTaskModal" data-task-id="{{ task.id }}">{{ task.name }}</a>
+
+                    <!-- <a href="#" data-toggle="modal" data-target="#editTaskModal" data-task-id="{{ task.id }}" data-task-type ="{{ task.type}}" data-task-description ="{{ task.description }}" data-task-priority = "{{ task.priority }}" data-task-stage = "{{ task.stage }}" data-task-created_date = "{{ task.created_date}}">{{ task.name }}</a> -->
                 </td>
                 <td>{{task.story_point}}</td>       
                 <td>{% for tag in task.tags.all %}
                     <span class="badge badge-info">{{ tag }}</span>
                 {% endfor %}
                 </td>
-                <td>{{task.assignee}}</td>       
+                <td><span id="assignee">{{ task.assignee }}</span></td>       
                 
             </tr>
             {% endif %}
@@ -88,26 +125,28 @@
 
 
 <!-- Card View Section -->
-<div class="container-fluid" id="kanbanView" style="display: none;">
+<div class="container-sm container-md container-lg container-xl p-3" id="kanbanView" style="display: none;">
     <div class="row">        
         {% for status_title in statuses %}
             <!-- {{ status_title.1 }} Column -->
-            <div class="col-sm-4">
+            <div class="col-sm-12 col-md-6 col-lg-4 col-xl-3">
                 <div class="card">
                     <div class="card-header"><h2>{{ status_title.1 }}</h2></div>
                     <div class="card-body">
                         {% for task in tasks %}
                             {% if task.status == status_title.0 %}
-                                <div class="card mb-3" style="width: 10rem;" id="{{task.tags.name}}" >
-                                    <div class="card-body">
-                                        <h5 class="card-title">
-                                            <a href="#" data-toggle="modal" data-target="#editTaskModal" data-task-id="{{ task.id }}">{{ task.name }}</a></h5>
-                                        <h6 class="card-subtitle mb-2 text-muted"><strong>Story Point:</strong> {{task.story_point}}</h6>
-                                        <h6 class="card-text mb-2 text-muted"><strong>Assignee:</strong> {{task.assignee}}</h6>
-                                        <h6 class="card-text mb-2 text-muted"><strong>Tags:</strong>{% for tag in task.tags.all %}
-                                                <span class="badge badge-info"> {{ tag }}</span>
-                                            {% endfor %}
-                                        </h6>                                                                      
+                                <div class="col-sm-12 col-md-6 col-lg-4 col-xl-3">
+                                    <div class="card mb-3 mt-3" style="width: 10rem;" id="{{task.tags.name}}" >
+                                        <div class="card-body">
+                                            <h5 class="card-title">
+                                                <a href="#"  class="open-modal" data-toggle="modal" data-target="#editTaskModal" data-task-id="{{ task.id }}">{{ task.name }}</a></h5>
+                                            <h6 class="card-subtitle mb-2 text-muted"><strong>Story Point:</strong> {{task.story_point}}</h6>
+                                            <h6 class="card-text mb-2 text-muted"><strong>Assignee:</strong> {{task.assignee}}</h6>
+                                            <h6 class="card-text mb-2 text-muted"><strong>Tags:</strong>{% for tag in task.tags.all %}
+                                                    <span class="badge badge-info"> {{ tag }}</span>
+                                                {% endfor %}
+                                            </h6>                                                                      
+                                        </div>
                                     </div>
                                 </div>
                             {% endif %}
@@ -119,87 +158,64 @@
     </div> <!-- End of row -->
 </div> <!-- End of container -->
 
-
-{% for task in tasks %}
+<!-- Modal -->
 <div class="modal fade" id="editTaskModal" tabindex="-1" role="dialog" aria-labelledby="editTaskModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog" role="document">
         <div class="modal-content">
-
-            <!-- Modal Header -->
-            <div class="modal-header">
-                <h4 class="modal-title">Edit Task</h4>
-                <button type="button" class="close" data-dismiss="modal">&times;</button>
-            </div>
-
-            <!-- Modal body -->
-            <form id="editTaskForm" method="post" action="{% url 'update_task' task.id %}">
+            <form id="editTaskForm" method="post">
                 {% csrf_token %}
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label for="name">Name:</label>
-                        <input type="text" class="form-control" id="name" name="name" value="" readonly>
-                    </div>
-                    <div class="form-group">
-                        <label for="assignee">Assignee:</label>
-                        <input type="text" class="form-control" id="assignee" name="assignee" value="">
-                    </div>
-                    <div class="form-group">
-                        <label for="editTaskHours">Log Hours</label>
-                        <input type="number" class="form-control" id="editTaskHours" min="0">
-                    </div>
-                    <div class="form-group">
-                        <label for="editTaskTotalHours">Total Hours</label>
-                        <input type="text" class="form-control" id="editTaskTotalHours" readonly>
-                    </div>
-                    <div class="form-group">
-                        <label for="status">Status:</label>
-                        <select class="form-control" id="status" name="status">
-                            <option value='NOT'>Incomplete</option>
-                            <option value='IN_PROG'>In Progress</option>
-                            <option value='COM'>Complete</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="type">Type:</label>
-                        <input type="text" class="form-control" id="type" name="type" value="" readonly>
-                    </div>
-                    <div class="form-group">
-                        <label for="priority">Priority:</label>
-                        <input type="text" class="form-control" id="priority" name="priority" value="" readonly>
-                    </div>
-                    <div class="form-group">
-                        <label for="story_point">Story Point:</label>
-                        <input type="text" class="form-control" id="story_point" name="story_point" value="" readonly>
-                    </div>
-                    <div class="form-group">
-                        <label for="tags">Tags:</label>
-                        <input type="text" class="form-control" id="tags" name="tags" value="" readonly>
-                    </div>
-                    <div class="form-group">
-                        <label for="stage">Stage:</label>
-                        <input type="text" class="form-control" id="stage" name="stage" value="" readonly>
-                    </div>
-                    <div class="form-group">
-                        <label for="created_date">Created Date:</label>
-                        <input type="text" class="form-control" id="created_date" name="created_date" value="" readonly>
-                    </div>
+                <!-- Modal Header -->
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editTaskTitle">Edit Task</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
                 </div>
+
+                <!-- Modal Body -->
+                <div class="modal-body">
+                    {{ form.name|as_crispy_field }}
+                    {{ form.type|as_crispy_field }}
+                    {{ form.priority|as_crispy_field }}
+                    {{ form.description|as_crispy_field }}
+                    {{ form.story_point|as_crispy_field }}
+                    {{ form.tags|as_crispy_field }}
+                    {{ form.status|as_crispy_field }}
+                    {{ form.stage|as_crispy_field }}
+                    {{ form.assignee|as_crispy_field }}
+                    {{ form.created_date|as_crispy_field }}
+                </div>
+
+                <!-- Modal Footer -->
                 <div class="modal-footer">
+                    <!-- Action button -->
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary" id="updateChanges">Update changes</button>
+                    <button type="submit" class="btn btn-primary" id="updateChanges" data-task-id="{{ task.id }}">Update changes</button>
                 </div>
             </form>
-
         </div>
     </div>
 </div>
-{% endfor %}
-
 {% endblock %}
+
+
 
 {% block js %}
 
+
 <script>
+    function changeView() {
+            const selectedView = document.getElementById("view").value;
+            if (selectedView === "listView") {
+                document.getElementById("listView").style.display = "block";
+                document.getElementById("kanbanView").style.display = "none";
+            } else if (selectedView === "kanbanView") {
+                document.getElementById("listView").style.display = "none";
+                document.getElementById("kanbanView").style.display = "block";
+            }
+        }
+
+
     function filterTasks() {
         const selectedCategory = document.getElementById("filter").value;
         const rows = document.querySelectorAll("#backlogTable tr");
@@ -212,7 +228,6 @@
             } else {
                 row.style.display = "none";
             }
-        });
 
         cards.forEach(card => {
             const cardTags = card.querySelectorAll(".badge-info"); // Get tags within the card
@@ -233,78 +248,140 @@
         });
     }
 
-    
-    $(document).on('click', 'a[data-toggle="modal"][data-target="#editTaskModal"]', function () {
-        var taskId = $(this).data('task-id');
-        var taskName = $(this).text();
-        var taskType = $(this).data('task-type');
-        var taskDescription = $(this).data('task-description');
-        var taskPriority = $(this).data('task-priority');
-        var taskStage = $(this).data('task-stage');
-        var taskCreatedDate =  $(this).data('task-created_date');
+    function updateTaskOnScreen(updatedData) {
 
-        
-        var logHoursInput = $("#editTaskHours");
-        var totalHoursInput = $("#editTaskTotalHours");
-        logHoursInput.on("input", function () {
-            var loggedHours = parseFloat(logHoursInput.val()) || 0;
-            totalHoursInput.val(loggedHours);
-        });
-        $.ajax({
-            url: `/sprint-boards/get_task/${taskId}/`, 
-            method: 'GET',
-            dataType: 'json',
-            success: function (data) {
-                
-                var taskAssignee = data.assignee; 
-                var taskStatus = data.status;
-                var taskType = data.type;
-                var taskDescription = data.description; 
-                var taskPriority = data.priority;
-                var taskStage = data.stage; 
-                var taskCreatedDate = data.created_date;
-                
-                // Update the modal form fields for name, status, and type
-                $('#editTaskModal #name').val(taskName);
-                $('#editTaskModal #assignee').val(taskAssignee);
-                $('#editTaskModal #status').val(taskStatus);
-                $('#editTaskModal #type').val(taskType);
-                $('#editTaskModal #type').val(taskDescription);
-                $('#editTaskModal #priority').val(taskPriority);
-                $('#editTaskModal #stage').val(taskStage);
-                $('#editTaskModal #created_date').val(taskCreatedDate);
+        var taskId = updatedData.id;
+        var taskElement = $('#task_' + taskId); // Adjust this selector based on your HTML structure
 
-            },
-            error: function () {
-                // Handle error if the AJAX request fails
-                console.error('Failed to fetch assignee data');
-            }
-        });
+        // Update the task element with the new data
+        taskElement.find('.task-name').text(updatedData.name);
+        taskElement.find('.task-status').text(updatedData.status);
+        // Update other properties as needed
+    }
 
-    });
 
-    // Event listener for submitting the edit task form
-    $('#editTaskForm').on('submit', function (e) {
+    $(document).on('click', '.open-modal', function(e) {
         e.preventDefault();
 
-        var taskId = $(this).attr('action').split('=')[1]; 
-        var formData = $(this).serialize();
+        var taskId = $(this).data('task-id');
+        var url = '/sprint-boards/get_task_data/' + taskId + '/';
 
-        $.ajax({
-            type: 'POST',
-            url: $(this).attr('action'),
-            data: formData,
-            success: function (data) {
-                if (data.success) {
-                    $('#editTaskModal').modal('hide');
-                    
-                }
-            },
-            error: function (error) {
-                console.error("Error:", error);
+        // Make an AJAX request to fetch task data
+        $.get(url, function(data) {
+            // Populate form fields with the retrieved data
+            $('#editTaskModal #id_name').val(data.name);
+            $('#editTaskModal #id_type').val(data.type);
+            $('#editTaskModal #id_priority').val(data.priority);
+            $('#editTaskModal #id_story_point').val(data.story_point);
+            $('#editTaskModal #id_description').val(data.description);
+            $('#editTaskModal #id_assignee_id').val(data.assignee_id);
+            $('#editTaskModal #id_status').val(data.status);
+            $('#editTaskModal #id_stage').val(data.stage);
+            $('#editTaskModal #id_created_date').val(data.created_date);
+            $('#updateChanges').data('task-id', taskId);
+        });
+
+        // Show the modal
+        $('#editTaskModal').modal('show');
+    });
+
+    $(document).ready(function() {
+        $('#editTaskForm').submit(function(event) {
+            event.preventDefault();
+
+            // Retrieve the task ID from the update button's data attribute
+            var taskId = $('#updateChanges').data('task-id');
+
+            // Check if taskId is undefined and handle it
+            if (typeof taskId === 'undefined') {
+                console.error('Task ID is undefined. Make sure the data-task-id attribute is set on the button.');
+                return;
             }
+
+            // Serialize the form data
+            var formData = $(this).serialize();
+
+            // Send an AJAX request to update the task
+            $.ajax({
+                url: '/sprint-boards/edit_tasks/' + taskId + '/',
+                method: 'POST',
+                data: formData,
+                success: function(response) {
+                    // Handle success response
+                    // Close the modal
+                    $('#editTaskModal').modal('hide');
+                    updateTaskOnScreen(response.updated_task);
+                    
+                },
+                error: function(xhr, status, error) {
+                    console.error(xhr.responseText);
+                }
+            });
         });
     });
+ 
+    // Attach a click event handler to elements with the "open-modal" class
+    // $(document).on('click', '.open-modal', function(e) {
+    //     e.preventDefault();  // Prevent the default behavior of the anchor tag
+
+    //     var taskId = $(this).data('task-id');
+    //     var url = '/sprint-boards/get_task_data/' + taskId + '/'; 
+
+    //     // Make an AJAX request to fetch task data
+    //     $.get(url, function(data) {
+    //         // Populate form fields with the retrieved data
+    //         $('#editTaskModal #id_name').val(data.name);
+    //         $('#editTaskModal #id_type').val(data.type);
+    //         $('#editTaskModal #id_priority').val(data.priority);
+    //         $('#editTaskModal #id_story_point').val(data.story_point);
+    //         $('#editTaskModal #id_description').val(data.description);
+    //         $('#editTaskModal #id_assignee').val(data.assignee); 
+    //         $('#editTaskModal #id_status').val(data.status);  
+    //         $('#editTaskModal #id_stage').val(data.stage);
+    //         $('#editTaskModal #id_created_date').val(data.created_date);
+    //     });
+
+    //     // Show the modal
+    //     $('#editTaskModal').modal('show');
+    // });
+
+    // $(document).ready(function() {
+    //     var taskId = $(this).data('task-id');
+    //     console.log(taskId);
+    //     var url = '/sprint-boards/edit_task/' + taskId + '/';
+
+
+    //     $('#editTaskForm').submit(function(event) {
+    //         event.preventDefault();
+            
+    //         // Retrieve the task ID from the button's data attribute
+    //         var taskId = $('#updateChanges').data('task-id');
+            
+    //         // Check if taskId is undefined and handle it
+    //         if (typeof taskId === 'undefined') {
+    //             console.error('Task ID is undefined. Make sure the data-task-id attribute is set on the button.');
+    //             return;
+    //         }
+            
+    //         // Serialize the form data
+    //         var formData = $(this).serialize();
+
+    //         // Send an AJAX request to update the task
+    //         $.ajax({
+    //             url: '/sprint-boards/edit_task/' + taskId + '/',
+    //             method: 'POST',
+    //             data: formData,
+    //             success: function(response) {
+                   
+    //             },
+    //             error: function(xhr, status, error) {
+                    
+    //                 console.error(xhr.responseText);
+    //             }
+    //         });
+    //     });
+    // });
+
 
 </script>
 {% endblock %}
