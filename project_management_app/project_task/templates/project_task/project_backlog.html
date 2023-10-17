@@ -8,12 +8,23 @@
 
 {% block extra_styles %}
 <style>
-    #create-task-listview {
-        position: fixed;
-        bottom: 10%;
-        right: 50px;
-        z-index: 1;
-        height: 50px;
+
+    .tags-container {
+
+        max-height: 1.5em; /* This might need adjustment based on your badge height */
+
+        overflow: hidden;
+        position: relative;
+    }
+
+    .tags-container::after {
+        content: "...";
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(to right, transparent, white 50%);
+        padding-left: 10px;
+        pointer-events: none; /* Prevent the pseudo-element from being clickable */
     }
 </style>
 {% endblock %}
@@ -28,8 +39,6 @@
 <!-- Alert Message container -->
 <div id="messages-container"></div>
 
-<!--Create New Sprint Modal -->
-{% include "project_task/pb_create_new_sprint.html" %}
 
 <!-- View options and Create New Task button -->
 {% include "project_task/pb_create_new_task.html" %}
@@ -73,14 +82,6 @@
         </div>
     </div>
 </div>
-
-<!-- Create New Task Button trigger modal -->
-<button id="create-task-listview" type="button" class="btn btn-primary" data-toggle="modal" data-target="#createNewTaskModal">
-    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus" viewBox="0 0 12 12">
-      <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
-    </svg>
-    New Task
-</button>
 
 {% endblock %}
 
@@ -347,7 +348,7 @@
 
         // Create HTML for the task in card view
         const cardViewHtml = `
-            <div class="col-sm-12 col-md-6 col-lg-4 col-xl-3" id="task-card-${task.id}">
+            <div class="col-sm-3" id="task-card-${task.id}">
                 <div class="card mb-3" style="height: 14rem;">
                     <div class="card-body">
                         <h4 class="card-title"><a href="#" data-toggle="modal" data-target="#editTaskModal" data-task-id="${task.id}">${task.name}</a></h4>
@@ -409,10 +410,6 @@
                     displayMessage('danger', response.message);
                 }
             });
-        });
-
-        $('#createNewSprint').on('shown.bs.modal', function () {
-        $('#sprintForm input:first').trigger('focus');
         });
 
 

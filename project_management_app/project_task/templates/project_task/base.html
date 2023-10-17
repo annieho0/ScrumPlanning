@@ -33,56 +33,13 @@
             padding-top: 0;
         }
 
-        #top-bar {
-            background-color: #2f2f2f;
-            color: white;
-            padding: 10px;
-            height:55px;
-            justify-content: space-between;
-            display: flex;
-            top: 0;
-            width: 100%;
-            position: fixed;
-            z-index: 1;
-        }
-
-        #menu-btn {
-            background-color: #333;
-            color: white;
-            padding: 5px;
-            border: none;
-            cursor: pointer;
-            height: 35px;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
-        }
-
-       #menu-btn:hover {
-           background-color: #555;
-       }
-
-       .dropdown {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 10px;
-            gap: 10px;
-       }
-
-       .dropdown-menu {
-           min-width: 100%;
-           position: fixed;
-           margin-right: 10px;
-       }
-
         /* Side Navigation Bar and content */
         #sidenav {
             height: 100%;
             width: 160px;
             position: fixed;
             z-index: 1;
-            top: 55px;
+            top: 0;
             left: 0;
             background-color: #111;
             overflow-x: hidden;
@@ -98,9 +55,11 @@
         #sidenav a:hover {
             color: #f1f1f1;
         }
+        #logout-sidenav {
+            position: fixed;
+            bottom: 20px;
+        }
         #content {
-            position: relative;
-            margin-top: 60px;
             margin-left: 160px;
             padding: 0 10px;
         }
@@ -226,26 +185,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
 
     {% if user.is_authenticated %}
-    <!-- Top bar -->
-    <nav id="top-bar">
-        <!-- Hamburger button -->
-        <button id="menu-btn" onclick="toggleSideNav()">&#9776; Menu</button>
-        <!-- User button -->
-        <div class="dropdown ms-auto">
-            <!-- Show user profile picture in circle-->
-            <button class="btn btn-secondary dropdown-toggle" type="button" id="user-menu" data-toggle="dropdown" aria-expanded="false">
-                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" class="bi bi-person-circle" viewBox="0 0 16 16"><path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/><path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"/></svg>
-                {{ user.username }}
-            </button>
-
-            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton1">
-                <li><a class="dropdown-item" href="{% url 'logout' %}">Log Out</a></li>
-                <li><a class="dropdown-item" href="{% url 'password_reset' %}">Change Password</a></li>
-                <!-- Add more menu items here if needed -->
-            </ul>
-        </div>
-    </nav>
-
     <!-- Content -->
     <div id="content">
         <div id="headerContainer">
@@ -278,9 +217,11 @@
         </div>
         <!-- Sidenav -->
         <div id="sidenav">
+            <a href="{% url 'home' %}">Home</a>
             <a href="{% url 'project_backlog' %}">Project Backlog</a>
             <a href="{% url 'sprint_backlog' %}">Sprint Backlog</a>
             <a href="{% url 'sprint_backlog_archived' %}"> Archived Sprints</a>
+            <a id="logout-sidenav" href="{% url 'logout' %}">Logout</a>
         </div>
 
         <!-- Help Modal -->
@@ -358,28 +299,10 @@
             // Initial Setup for theme and font size based on stored settings or defaults
             const storedTheme = localStorage.getItem('theme') || CONFIG.themes.LIGHT;
             const storedFontSize = localStorage.getItem('fontSize') || CONFIG.fontSizes.MED;
-            const storedIsSideNavOpen = localStorage.getItem('isSideNavOpen') || true;
-            BODY.classList.add(storedTheme, storedFontSize, storedIsSideNavOpen);
+            BODY.classList.add(storedTheme, storedFontSize);
             updateThemeButton(storedTheme);
             updateFontSizeButton(storedFontSize);
-            updateSideNav(storedIsSideNavOpen);
         });
-
-        function toggleSideNav() {
-            const isOpen = localStorage.getItem('isSideNavOpen') !== 'true';
-            updateSideNav(isOpen);
-        }
-
-        function updateSideNav (isOpen) {
-            if (isOpen) {
-                document.getElementById('sidenav').style.width = '160px';
-                document.getElementById('content').style.marginLeft = '160px';
-            } else {
-                document.getElementById('sidenav').style.width = '0';
-                document.getElementById('content').style.marginLeft = '0';
-            }
-            localStorage.setItem('isSideNavOpen', isOpen);
-        }
 
         /**
          * Toggles the theme between light and dark mode and updates the local storage and button label accordingly.
