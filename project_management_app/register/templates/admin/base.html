@@ -107,9 +107,8 @@
         <button class="sticky toggle-nav-sidebar" id="toggle-nav-sidebar" aria-label="{% translate 'Toggle navigation' %}"></button>
         <nav class="sticky" id="nav-sidebar" aria-label="{% translate 'Sidebar' %}">
             <div id="side-nav-bar">
-                <a href="{% url 'admin:index' %}">Dashboard</a>
+                <a href="{% url 'hour_graph' %}">Graph</a>
                 <a href="/admin/register/customizeduser">User</a>
-                <a href="{% url 'hour_graph' %}">Chart</a>
             </div>
         </nav>
         {% endblock %}
