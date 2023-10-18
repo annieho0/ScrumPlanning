@@ -517,7 +517,7 @@ class HomeListView(View):
             return redirect('/login')
 
 
-class SprintBoard():
+class SprintBoard:
     def sprint_boards(request, sprint_id):
 
         form = SprintBoardTaskForm()
@@ -683,7 +683,7 @@ class SprintBoard():
     #         return JsonResponse({'message': 'Invalid request method'}, status=400)
 
 
-class CreateGraph():
+class CreateGraph:
     """
        class for creating graphs
     """
