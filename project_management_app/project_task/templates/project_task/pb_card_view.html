@@ -1,10 +1,10 @@
 <!-- Card View Section -->
-<div class="container-fluid" id="cardView">
+<div class="container-sm container-md container-lg container-xl p-3" id="cardView">
     <div class="row">
         {% for task in tasks %}
         <!-- Create a card for each task -->
-        <div class="col-sm-3" id="task-card-{{ task.id }}">
-            <div class="card mb-3" style="height: 14rem;">
+        <div class="col-sm-12 col-md-6 col-lg-4 col-xl-3" id="task-card-{{ task.id }}">
+            <div class="card mb-3 mt-3" style="height: 15rem;">
                 <div class="card-body">
                     <h4 class="card-title">
                         <a href="#" data-toggle="modal" data-target="#editTaskModal" data-task-id="{{ task.id }}">{{task.name}}</a>
