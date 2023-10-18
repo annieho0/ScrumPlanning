@@ -247,7 +247,7 @@
                 row.style.display = "table-row";
             } else {
                 row.style.display = "none";
-            }
+            }})
 
         cards.forEach(card => {
             const cardTags = card.querySelectorAll(".badge-info"); // Get tags within the card
@@ -267,6 +267,7 @@
             }
         });
     }
+
 
     function updateTaskOnScreen(updatedData) {
 
