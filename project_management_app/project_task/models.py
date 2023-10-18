@@ -2,6 +2,7 @@ from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
 
+
 class Tag(models.Model):
     """
     A model for a tag that can be associated with a task.
@@ -11,6 +12,7 @@ class Tag(models.Model):
     def __str__(self):
         return self.name
 
+
 class Sprint(models.Model):
     name = models.CharField(max_length=255)
     start_date = models.DateField(default=timezone.now)
@@ -19,6 +21,7 @@ class Sprint(models.Model):
 
     def __str__(self):
         return self.name
+
 
 class Task(models.Model):
     """
@@ -74,19 +77,18 @@ class Task(models.Model):
     priority = models.CharField(max_length=3, choices=PRIORITY_CHOICES)
     stage = models.CharField(max_length=3, choices=STAGE_CHOICES)
     tags = models.ManyToManyField('Tag', blank=False)
-    story_point = models.PositiveIntegerField(validators=[MinValueValidator(0), MaxValueValidator(10)], null=True, blank=True)
+    story_point = models.PositiveIntegerField(validators=[MinValueValidator(0), MaxValueValidator(10)], null=True,
+                                              blank=True)
     assignee = models.ForeignKey('register.CustomizedUser', on_delete=models.SET_NULL, null=True, blank=True)
     created_date = models.DateField(default=timezone.now)
     status = models.CharField(max_length=7, choices=STATUS_CHOICES, default=NOT_STARTED)
-    sprints = models.ManyToManyField(Sprint, blank= True)
+    sprints = models.ManyToManyField(Sprint, blank=True)
     backlog = models.BooleanField(default=False)
     completed_date = models.DateField(null=True, blank=True)
+
     def add_to_sprint(self, sprint):
         self.sprints.add(sprint)
         self.save()
 
     def __str__(self):
         return self.name
-    
-
-   

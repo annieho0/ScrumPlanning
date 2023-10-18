@@ -636,7 +636,8 @@ class SprintBoard:
 
             tasks.assignee = assignee
             tasks.status = request.POST.get('status')
-
+            if tasks.status == Task.COMPLETED and not tasks.completed_date:
+                tasks.completed_date = timezone.now().date()
             hour_str = request.POST.get('hour')
             time = parse_duration(hour_str)
 
@@ -651,7 +652,6 @@ class SprintBoard:
             )
             working_hour.hour = time
             working_hour.save()
-
             tasks.save()
 
             updated_task = {
@@ -709,7 +709,7 @@ class CreateGraph:
         return accumulated_hours_per_day
 
     @staticmethod
-    def remaining_story_points_data(sprint):
+    def remaining_effort_data(sprint):
         start_date = sprint.start_date
         end_date = sprint.end_date
 
@@ -732,7 +732,7 @@ class CreateGraph:
         return remaining_points_per_day
 
     @staticmethod
-    def calculate_ideal_effort(sprint, total_story_points):
+    def ideal_effort_data(sprint, total_story_points):
         num_days_in_sprint = (sprint.end_date - sprint.start_date).days + 1
         ideal_decrease_per_day = total_story_points / (
                 num_days_in_sprint - 1)  # Subtract one to reach 0 on the last day
@@ -747,11 +747,11 @@ class CreateGraph:
         # Fetch accumulated hours for the given sprint
         accumulated_hours = CreateGraph.accumulated_hours_data(sprint)
 
-        remaining_effort = CreateGraph.remaining_story_points_data(sprint)
+        remaining_effort = CreateGraph.remaining_effort_data(sprint)
 
         total_story_points = Task.objects.filter(sprints=sprint).aggregate(total=Sum('story_point'))['total'] or 0
 
-        ideal_effort = CreateGraph.calculate_ideal_effort(sprint, total_story_points)
+        ideal_effort = CreateGraph.ideal_effort_data(sprint, total_story_points)
 
         # Calculate the number of days in the sprint
         num_days_in_sprint = (sprint.end_date - sprint.start_date).days + 1
