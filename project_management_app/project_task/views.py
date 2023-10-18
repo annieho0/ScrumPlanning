@@ -642,6 +642,8 @@ class SprintBoard:
 
             tasks.assignee = assignee
             tasks.status = request.POST.get('status')
+            if tasks.status == Task.COMPLETED and not tasks.completed_date:
+                tasks.completed_date = timezone.now().date()
 
             hour_str = request.POST.get('hour')
             time = parse_duration(hour_str)
@@ -744,10 +746,10 @@ class CreateGraph:
     @staticmethod
     def ideal_effort_data(sprint, total_story_points):
         num_days_in_sprint = (sprint.end_date - sprint.start_date).days + 1
-        ideal_decrease_per_day = total_story_points / (
-                num_days_in_sprint - 1)  # Subtract one to reach 0 on the last day
-
-        # ideal_effort = [max(0, total_story_points - (i * ideal_decrease_per_day)) for i in range(num_days_in_sprint)]
+        if num_days_in_sprint == 1:
+            ideal_decrease_per_day = total_story_points  # Or however you want to handle this special case
+        else:
+            ideal_decrease_per_day = total_story_points / (num_days_in_sprint - 1)
         ideal_effort = [total_story_points - i * ideal_decrease_per_day for i in range(num_days_in_sprint)]
         return ideal_effort
 
