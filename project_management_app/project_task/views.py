@@ -369,6 +369,7 @@ class TaskListView(View):
         if create_new_sprint_form.is_valid():
             sprint = create_new_sprint_form.save()
             return redirect('sprint_backlog')
+            return render(request, create_new_sprint_form)
         else:
             print("Form is not valid:", create_new_sprint_form.errors)
 
@@ -384,7 +385,7 @@ class TaskListView(View):
         tags_list = [str(tag) for tag in task_details['tags']]
 
         # Respond with a JSON indicating successful task creation and task details
-        return JsonResponse({'status': 'success', 'message': message, 'task': {**task_details, 'tags': tags_list}, 'create_new_sprint_form': create_new_sprint_form})
+        return JsonResponse({'status': 'success', 'message': message, 'task': {**task_details, 'tags': tags_list}})
 
 
 
