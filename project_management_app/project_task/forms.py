@@ -77,11 +77,9 @@ class EditTaskForm(forms.ModelForm):
             "description",
             "story_point",
             "tags",
-            "status",
             "stage",
             "assignee",
             "created_date",
-            "sprints",
         ]
 
     def __init__(self, *args, **kwargs):
@@ -114,33 +112,14 @@ class SprintBoardTaskForm(forms.ModelForm):
         required=True
     )
 
-    class Meta:
-        model = Task
-        fields = [
-            "name",
-            "type",
-            "priority",
-            "description",
-            "story_point",
-            "tags",
-            "status",
-            "stage",
-            "assignee",
-            "created_date",
-        ]
+    hour = forms.DurationField(
+        required=False,
+        widget=forms.TimeInput(attrs={'class': 'form-control'})
+    )
 
-    def __init__(self, *args, **kwargs):
-        super(SprintBoardTaskForm, self).__init__(*args, **kwargs)
-        for field_name in self.fields:
-            if field_name not in ["assignee", "status"]:
-                self.fields[field_name].disabled = True
-
-class SprintBoardTaskForm(forms.ModelForm):
-
-    tags = forms.ModelMultipleChoiceField(
-        queryset=Tag.objects.all(),
-        widget=forms.SelectMultiple(attrs={'class': 'form-control'}),
-        required=True
+    total_hour = forms.DurationField(
+        required=False,
+        widget=forms.TimeInput(attrs={'readonly': 'readonly'})
     )
 
     class Meta:
@@ -156,38 +135,11 @@ class SprintBoardTaskForm(forms.ModelForm):
             "stage",
             "assignee",
             "created_date",
+            "hour", 
+            "total_hour",
         ]
+
 
     def __init__(self, *args, **kwargs):
         super(SprintBoardTaskForm, self).__init__(*args, **kwargs)
-        for field_name in self.fields:
-            if field_name not in ["assignee", "status"]:
-                self.fields[field_name].disabled = True
-
-class SprintBoardTaskForm(forms.ModelForm):
-    tags = forms.ModelMultipleChoiceField(
-        queryset=Tag.objects.all(),
-        widget=forms.SelectMultiple(attrs={'class': 'form-control'}),
-        required=True
-    )
-
-    class Meta:
-        model = Task
-        fields = [
-            "name",
-            "type",
-            "priority",
-            "description",
-            "story_point",
-            "tags",
-            "status",
-            "stage",
-            "assignee",
-            "created_date",
-        ]
-
-    def __init__(self, *args, **kwargs):
-        super(SprintBoardTaskForm, self).__init__(*args, **kwargs)
-        for field_name in self.fields:
-            if field_name not in ["assignee", "status"]:
-                self.fields[field_name].disabled = True
+        self.fields["created_date"].disabled = True

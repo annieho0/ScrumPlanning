@@ -27,15 +27,15 @@
 <label for="filter">Filter Tag(s):</label>
 <select id="filter" onchange="filterTasks()">
     <option value="">All</option>
-    {% for tag in tag %}
-    {% if tag.name in selected_tags %}
-    <option value="{{ tag.name }}" selected>{{ tag.name }}</option>
-    {% else %}
-    <option value="{{ tag.name }}">{{ tag.name }}</option>
-    {% endif %}
+    {% for tag in tags %}
+        {% if tag.name in selected_tags %}
+        <option value="{{ tag.name }}" selected>{{ tag.name }}</option>
+        {% else %}
+        <option value="{{ tag.name }}">{{ tag.name }}</option>
+        {% endif %}
     {% endfor %}
-
 </select>
+
 
 <button id="addTaskButton" class="btn btn-primary" data-toggle="modal" data-target="#taskSelectionModal">
     Add Task to Sprint
@@ -183,6 +183,8 @@
                     {{ form.status|as_crispy_field }}
                     {{ form.stage|as_crispy_field }}
                     {{ form.assignee|as_crispy_field }}
+                    {{ form.hour|as_crispy_field }}
+                    {{ form.total_hour|as_crispy_field }}
                     {{ form.created_date|as_crispy_field }}
                 </div>
 
@@ -204,6 +206,24 @@
 
 
 <script>
+    /**
+     * Initialize the tag filter using the Select2 library.
+     * This function sets up the Select2 configuration for both
+     * the task creation and task editing modals.
+     *
+     * @param {string} selector - The DOM selector for the tag input.
+     * @param {boolean} allowTagCreation - Whether to allow creating new tags or not.
+     */
+    function initializeTagFilter(selector, allowTagCreation) {
+        // Initialize the Select2 plugin on the specified selector
+        $(selector).select2({
+            tags: allowTagCreation, // Enable or disable tag creation based on the allowTagCreation parameter
+            tokenSeparators: [','], // Specify the separators used to tokenize tags
+            allowClear: true, // Allow clearing the selected tag(s)
+            placeholder: 'Select tag(s)', // Set the placeholder text for the tag input
+            theme: 'bootstrap', // Set the theme for the Select2 dropdown
+        });
+    }
     function changeView() {
             const selectedView = document.getElementById("view").value;
             if (selectedView === "listView") {
@@ -262,12 +282,30 @@
 
     $(document).on('click', '.open-modal', function(e) {
         e.preventDefault();
-
+        initializeTagFilter('#editTaskModal #id_tags', true);   //Initialize the Select2 tag filter in the edit task modal. Function at top of the script section.
         var taskId = $(this).data('task-id');
         var url = '/sprint-boards/get_task_data/' + taskId + '/';
 
         // Make an AJAX request to fetch task data
-        $.get(url, function(data) {
+        $.get(url, function(request) {
+            const data = request.task_data; // extract the task data from the JSON response
+
+            const tags = data.tags; // extract the tags from the task data
+            // Select the tags in the select2 field
+            $('#editTaskModal #id_tags option').each(function () {
+                // Check if the tag is included in the task's tags
+                if (tags.includes($(this).text())) {
+                    $(this).prop('selected', true);
+                }
+            });
+             // Update the select2 field
+            $('#editTaskModal #id_tags').trigger('change');
+
+            // Set the assignee field value if selected
+            if (data.assignee) {
+                $('#editTaskModal #id_assignee').val(data.assignee.id);
+            }
+
             // Populate form fields with the retrieved data
             $('#editTaskModal #id_name').val(data.name);
             $('#editTaskModal #id_type').val(data.type);
@@ -278,6 +316,7 @@
             $('#editTaskModal #id_status').val(data.status);
             $('#editTaskModal #id_stage').val(data.stage);
             $('#editTaskModal #id_created_date').val(data.created_date);
+            $('#editTaskModal #id_total_hour').val(data.total_hour);
             $('#updateChanges').data('task-id', taskId);
         });
 
@@ -319,68 +358,9 @@
             });
         });
     });
+    
  
-    // Attach a click event handler to elements with the "open-modal" class
-    // $(document).on('click', '.open-modal', function(e) {
-    //     e.preventDefault();  // Prevent the default behavior of the anchor tag
-
-    //     var taskId = $(this).data('task-id');
-    //     var url = '/sprint-boards/get_task_data/' + taskId + '/'; 
-
-    //     // Make an AJAX request to fetch task data
-    //     $.get(url, function(data) {
-    //         // Populate form fields with the retrieved data
-    //         $('#editTaskModal #id_name').val(data.name);
-    //         $('#editTaskModal #id_type').val(data.type);
-    //         $('#editTaskModal #id_priority').val(data.priority);
-    //         $('#editTaskModal #id_story_point').val(data.story_point);
-    //         $('#editTaskModal #id_description').val(data.description);
-    //         $('#editTaskModal #id_assignee').val(data.assignee); 
-    //         $('#editTaskModal #id_status').val(data.status);  
-    //         $('#editTaskModal #id_stage').val(data.stage);
-    //         $('#editTaskModal #id_created_date').val(data.created_date);
-    //     });
-
-    //     // Show the modal
-    //     $('#editTaskModal').modal('show');
-    // });
-
-    // $(document).ready(function() {
-    //     var taskId = $(this).data('task-id');
-    //     console.log(taskId);
-    //     var url = '/sprint-boards/edit_task/' + taskId + '/';
-
-
-    //     $('#editTaskForm').submit(function(event) {
-    //         event.preventDefault();
-            
-    //         // Retrieve the task ID from the button's data attribute
-    //         var taskId = $('#updateChanges').data('task-id');
-            
-    //         // Check if taskId is undefined and handle it
-    //         if (typeof taskId === 'undefined') {
-    //             console.error('Task ID is undefined. Make sure the data-task-id attribute is set on the button.');
-    //             return;
-    //         }
-            
-    //         // Serialize the form data
-    //         var formData = $(this).serialize();
-
-    //         // Send an AJAX request to update the task
-    //         $.ajax({
-    //             url: '/sprint-boards/edit_task/' + taskId + '/',
-    //             method: 'POST',
-    //             data: formData,
-    //             success: function(response) {
-                   
-    //             },
-    //             error: function(xhr, status, error) {
-                    
-    //                 console.error(xhr.responseText);
-    //             }
-    //         });
-    //     });
-    // });
+    
 
 
 </script>

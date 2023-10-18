@@ -9,9 +9,11 @@ from django.db.models import Case, When, Value, IntegerField
 from datetime import timedelta, date, datetime
 from django.db import models
 from django.utils import timezone
-from register.models import CustomizedUser
+from register.models import CustomizedUser, WorkingHour
 from django.core import serializers
 from django.core.serializers.json import DjangoJSONEncoder
+from django.utils.dateparse import parse_duration
+from django.db.models import Sum
 
 
 class TaskManager:
@@ -505,11 +507,8 @@ class HomeListView(View):
         # Check if there is an active sprint
         active_sprints = Sprint.objects.filter(is_completed=False).order_by('start_date')
 
-        if active_sprints.exists():
-            first_active_sprint = active_sprints.first()
-            return redirect(reverse("sprint_boards", args=[first_active_sprint.pk]))
-        else:
-            return redirect(reverse("project_backlog"))
+
+        return render(request, self.template_name, {"sprint_form": sprint_form})
 
     def post(self,request):
 
@@ -519,10 +518,12 @@ class HomeListView(View):
         else:
             # Render and return the home page template
             return redirect('/login')
-class SprintBoard():   
+
+
+class SprintBoard():
     def sprint_boards(request, sprint_id):
 
-        form = SprintBoardTaskForm() 
+        form = SprintBoardTaskForm()
 
         sprints = Sprint.objects.get(pk=sprint_id)
         sprint = get_object_or_404(Sprint, pk=sprint_id)
@@ -535,7 +536,7 @@ class SprintBoard():
         # Delete tasks that are not completed and associated with the archived sprint
             tasks = tasks.filter(status='COM')
         return render(request, "project_task/sprint_board.html", {"name": "sprint-board", "tasks": tasks, "statuses": statuses, "tags": tags,"backlog_tasks": backlog_tasks, 'sprint_id': sprint_id, 'sprint': sprint, 'form': form})
-    
+
     def move_selected_tasks(request):
         # Handle the selection and moving of tasks to the sprint board
         if request.method == 'POST':
@@ -571,91 +572,98 @@ class SprintBoard():
     def archive_sprint_backlog(request, sprint_id):
         try:
             sprint = get_object_or_404(Sprint, id=sprint_id)
-            
+
             if not sprint.is_completed:
                 # If the sprint is not completed, set the end_date to today
                 sprint.end_date = timezone.now()
-            
+
             sprint.is_completed = True  # Mark the sprint as completed
-            
+
             sprint.save()
-            
+
         except Sprint.DoesNotExist:
             # Handle the case where the sprint does not exist
             pass
 
         # Redirect back to the Sprint Backlog page after archiving
         return redirect('sprint_backlog')
+    
+    def get_total_hours(request, task_id):
+        try:
+            # Filter WorkingHour objects based on task 
+            total_hours = WorkingHour.objects.filter(task_id=task_id).aggregate(Sum('hour'))['hour__sum']
+
+            if total_hours is not None:
+                return JsonResponse({'status': 'success', 'message': 'Total hours retrieved successfully', 'total_hours': total_hours.total_seconds() / 3600})
+            else:
+                return JsonResponse({'status': 'success', 'message': 'No hours found for the given task and person', 'total_hours': 0.0})
+
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
 
     def get_task_data(request, task_id):
-        task = Task.objects.get(pk=task_id)
+        # Fetch the task details using the TaskManager utility
+        status, message, task_data = TaskManager.get_task_details(task_id)
+        
+        # If the task was successfully fetched, send a success response
+        if status:
+            total_hours = WorkingHour.objects.filter(task_id=task_id).aggregate(Sum('hour'))['hour__sum']
+            total_hours_in_hours = total_hours.total_seconds() if total_hours is not None else 0.0
 
-        # Retrieve the assignee's user ID from the task
-        assignee_id = task.assignee.id
-        assignee_username = task.assignee.username  # Assuming 'username' is an attribute of CustomizedUser
+            # You can add total_hours_in_hours to the task_data dictionary
+            task_data['total_hour'] = total_hours_in_hours
 
-        data = {
-            'name': task.name,
-            'type': task.type,
-            'priority': task.priority,
-            'story_point': task.story_point,
-            'assignee_id': assignee_id,  # Include the user ID
-            'assignee_username': assignee_username,  # Include the username
-            'status': task.status,
-            'stage': task.stage,
-            'created_date': task.created_date,
-            'description': task.description,
- 
-        }
+            return JsonResponse({'status': 'success', 'message': message, 'task_data': task_data})
 
-        return JsonResponse(data)
+        # If the task wasn't found or there was an issue, send an error response
+        return JsonResponse({'status': 'error', 'message': message, 'task_data': task_data})
 
-    
+
     def edit_tasks(request, task_id):
         if request.method == 'POST':
-            task = Task.objects.get(pk=task_id)
-
+            tasks = Task.objects.get(pk=task_id)
+    
             # Retrieve the assignee's user ID from the POST data
             assignee_id = request.POST.get('assignee')
 
             # Get the CustomizedUser instance corresponding to the user ID
-            assignee = get_object_or_404(CustomizedUser, pk=assignee_id)
+            if assignee_id is not None:
+                assignee = get_object_or_404(CustomizedUser, pk=assignee_id)
+            else:
+                assignee = None
 
-            task.assignee = assignee
-            task.status = request.POST.get('status')
-            task.save()
+            tasks.assignee = assignee
+            tasks.status = request.POST.get('status')
+
+            hour_str = request.POST.get('hour')
+            time = parse_duration(hour_str)
+
             
+            person = request.user
+
+            # Update the WorkingHour instance associated with the task
+            working_hour, created = WorkingHour.objects.get_or_create(
+                task=tasks,
+                person=person, 
+                date = timezone.now(),
+                hour = time,
+            )
+            working_hour.hour = time
+            working_hour.save()
+
+            tasks.save()
+            
+
             updated_task = {
-                'assignee': task.assignee.username,  # Example: you can access the username of the user
-                'status': task.status,
+                'assignee': tasks.assignee.username,
+                'status': tasks.status,
+                'hour': str(working_hour.hour)
             }
 
             return JsonResponse({'message': 'Task updated successfully', 'updated_task': updated_task})
         else:
             return JsonResponse({'message': 'Invalid request method'}, status=400)
-        
-    
 
-    # def edit_task(request, task_id):
-    #     if request.method == 'POST':
-    #         task = Task.objects.get(pk=task_id)
-    #         task.assignee = request.POST.get('assignee')
-    #         task.status = request.POST.get('status')
-    #         task.save()
-            
-    #         updated_task = {
-    #             'assignee': task.assignee,
-    #             'status': task.status,
-    #         }
-
-    #         print('Task updated successfully:', updated_task)  # Debugging statement
-
-    #         return JsonResponse({'message': 'Task updated successfully', 'updated_task': updated_task})
-    #     else:
-    #         return JsonResponse({'message': 'Invalid request method'}, status=400)
-
-
-    
 
 
     # def edit_task(request, task_id):
