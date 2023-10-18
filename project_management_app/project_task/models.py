@@ -80,7 +80,7 @@ class Task(models.Model):
     status = models.CharField(max_length=7, choices=STATUS_CHOICES, default=NOT_STARTED)
     sprints = models.ManyToManyField(Sprint, blank= True)
     backlog = models.BooleanField(default=False)
-
+    completed_date = models.DateField(null=True, blank=True)
     def add_to_sprint(self, sprint):
         self.sprints.add(sprint)
         self.save()

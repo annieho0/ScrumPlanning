@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import HomeListView, TaskListView, TaskEditView, TaskDeleteView, SprintBoard, CreateGraphView
+from .views import HomeListView, TaskListView, TaskEditView, TaskDeleteView, SprintBoard, CreateGraph
 
 
 urlpatterns = [
@@ -18,8 +18,9 @@ urlpatterns = [
     path('sprint_backlog_archived', SprintBoard.archived_sprints, name='sprint_backlog_archived'),
     path('sprint_backlog/archive_sprint_backlog/<int:sprint_id>/', SprintBoard.archive_sprint_backlog, name='archive_sprint_backlog'),
 
-    path("create-graph/", CreateGraphView.as_view(), name="create_graph"),
+    path("create-graph/<int:sprint_id>/", CreateGraph.create_graph, name="create_graph"),
     path('move_selected_tasks_to_sprint/', SprintBoard.move_selected_tasks, name='move_selected_tasks_to_sprint'),
     #path("get_sprint_tasks/", SprintBoard.get_sprint_tasks, name="get_task")
+
 ]
 
