@@ -1,12 +1,11 @@
 
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from django.http import JsonResponse, HttpResponseBadRequest
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect, get_object_or_404, reverse
 from django.views.generic.edit import View
 from .models import Tag, Task, Sprint
 from .forms import CreateNewTaskForm, EditTaskForm, CreateNewSprintForm, SprintBoardTaskForm
 from django.db.models import Case, When, Value, IntegerField
-from django.contrib import messages
 from datetime import timedelta, date, datetime
 from django.db import models
 from django.utils import timezone
@@ -161,7 +160,7 @@ class TaskManager:
         """
 
         # Fetch all tasks initially
-        tasks = Task.objects.all()
+        tasks = Task.objects.all().filter(sprints__isnull=False)
 
         # Apply tag filter if provided
         if tag_filter:
@@ -505,6 +504,8 @@ class HomeListView(View):
             HttpResponse: Rendered home page with any relevant context.
         """
         sprint_form = CreateNewSprintForm()
+        # Check if there is an active sprint
+        active_sprints = Sprint.objects.filter(is_completed=False).order_by('start_date')
 
 
         return render(request, self.template_name, {"sprint_form": sprint_form})
@@ -663,6 +664,28 @@ class SprintBoard():
         else:
             return JsonResponse({'message': 'Invalid request method'}, status=400)
 
+
+
+    # def edit_task(request, task_id):
+    #     if request.method == 'POST':
+    #         task = Task.objects.get(pk=task_id)
+    #         task.assignee = request.POST.get('assignee')
+    #         task.status = request.POST.get('status')
+    #         task.save()
+            
+    #         updated_task = {
+    #             'assignee': task.assignee,
+    #             'status': task.status,
+    #         }
+
+    #         print('Task updated successfully:', updated_task)  # Debugging statement
+
+    #         return JsonResponse({'message': 'Task updated successfully', 'updated_task': updated_task})
+    #     else:
+    #         return JsonResponse({'message': 'Invalid request method'}, status=400)
+
+
+    
 
 
 class CreateGraphView(View):

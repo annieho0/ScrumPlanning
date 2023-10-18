@@ -75,21 +75,15 @@ class Task(models.Model):
     stage = models.CharField(max_length=3, choices=STAGE_CHOICES)
     tags = models.ManyToManyField('Tag', blank=False)
     story_point = models.PositiveIntegerField(validators=[MinValueValidator(0), MaxValueValidator(10)], null=True, blank=True)
-    # TODO: Assignee is a string for now. Need to connect to user model to get the user name in future sprint
     assignee = models.ForeignKey('register.CustomizedUser', on_delete=models.SET_NULL, null=True, blank=True)
     created_date = models.DateField(default=timezone.now)
     status = models.CharField(max_length=7, choices=STATUS_CHOICES, default=NOT_STARTED)
-    # created_date = models.DateField(default=timezone.now().date())
-    # status = models.CharField(max_length=7, choices=STATUS_CHOICES, default=NOT_STARTED)
-    # TODO: Sprint is a string for now. Need to connect to sprint model to get the sprint name in future sprint
     sprints = models.ManyToManyField(Sprint, blank= True)
-    # sprint = models.CharField(max_length=200)
     backlog = models.BooleanField(default=False)
 
     def add_to_sprint(self, sprint):
         self.sprints.add(sprint)
         self.save()
-
 
     def __str__(self):
         return self.name

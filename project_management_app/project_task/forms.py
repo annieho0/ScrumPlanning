@@ -7,7 +7,6 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout, Submit, HTML
 
 
-
 class CreateNewTaskForm(forms.ModelForm):
     """
     A form for creating a new task.

@@ -62,6 +62,8 @@
                     </div>
                     {% endfor %}
                 </div>
+
+                <!-- Modal Footer -->
                 <div class="modal-footer">
                     <button id="moveTasksButton" class="btn btn-primary" type="submit">Move Selected Tasks</button>
                 </div>
@@ -246,7 +248,6 @@
             } else {
                 row.style.display = "none";
             }
-        });
 
         cards.forEach(card => {
             const cardTags = card.querySelectorAll(".badge-info"); // Get tags within the card

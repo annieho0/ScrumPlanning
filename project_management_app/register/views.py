@@ -4,12 +4,11 @@ from django.core.mail import send_mail
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.views.generic import FormView, View
-from .forms import RegisterFrom
+from .forms import RegisterFrom, PersonGraphForm, DateGraphForm
 from django.urls import reverse_lazy, reverse
-from .models import CustomizedUser
+from .models import CustomizedUser, WorkingHour
 from django.contrib.auth.mixins import UserPassesTestMixin
-
-
+import datetime
 class RegisterView(FormView):
     """
     Class-based view to handle user registration.
@@ -173,7 +172,71 @@ class AdminGraphView(UserPassesTestMixin, View):
             'is_popup': False,
             'title': 'Admin Graph',
         }
+
+        person_graph_form = PersonGraphForm()
+        date_graph_form = DateGraphForm()
+
+        context['person_graph_form'] = person_graph_form
+        context['date_graph_form'] = date_graph_form
+
         return render(request, self.template_name, context)
+
+    def post(self, request):
+        person_graph_form = PersonGraphForm(request.POST)
+        date_graph_form = DateGraphForm(request.POST)
+
+        if not person_graph_form.is_valid() or not date_graph_form.is_valid():
+            return self.get(request)
+
+        person = person_graph_form.cleaned_data['person']
+        date = date_graph_form.cleaned_data['date']
+
+        if person is None and date == "":
+            return self.get(request)
+
+        context = {
+            'has_permission': self.request.user.is_superuser,
+            'is_nav_sidebar_enabled': True,
+            'is_popup': False,
+            'title': 'Admin Graph',
+        }
+
+        if person is not None:
+            # plot the hour of a person for each date
+            hours = WorkingHour.objects.filter(person=person).order_by('date')
+            start_date = person_graph_form.cleaned_data['start_date']
+            end_date = person_graph_form.cleaned_data['end_date']
+
+            plot_data = {}
+            for hour in hours:
+                if start_date <= hour.date <= end_date:
+                    date = hour.date.strftime('%Y-%m-%d')
+                    if hour.date not in plot_data:
+                        plot_data[date] = hour.hour
+                    else:
+                        plot_data[date] += hour.hour
+
+            context['graph_title'] = (f"Working hour of {person.first_name + ' ' + person.last_name} from "
+                                      f"{list(plot_data.keys())[0]} to {list(plot_data.keys())[-1]}")
+            context["x"] = list(plot_data.keys())
+            context["y"] = [working_hour / datetime.timedelta(hours=1) for working_hour in plot_data.values()]
+
+            return render(request, 'admin/person_graph.html', context)
+
+        else:
+            hours = WorkingHour.objects.filter(date=date)
+            plot_data = {}
+            for hour in hours:
+                if hour.person not in plot_data:
+                    plot_data[hour.person.first_name] = hour.hour
+                else:
+                    plot_data[hour.person.first_name] += hour.hour
+
+            context['graph_title'] = f"Working hour of the whole team on {date}"
+            context["x"] = list(plot_data.keys())
+            context["y"] = [working_hour / datetime.timedelta(hours=1) for working_hour in plot_data.values()]
+            context["average"] = sum(context["y"]) / len(context["y"])
+            return render(request, 'admin/date_graph.html', context)
 
 
 class LoginView(LoginView):
