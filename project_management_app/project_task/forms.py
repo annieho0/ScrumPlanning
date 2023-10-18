@@ -114,7 +114,13 @@ class SprintBoardTaskForm(forms.ModelForm):
     )
 
     hour = forms.DurationField(
+        required=False,
         widget=forms.TimeInput(attrs={'class': 'form-control'})
+    )
+
+    total_hour = forms.DurationField(
+        required=False,
+        widget=forms.TimeInput(attrs={'readonly': 'readonly'})
     )
 
     class Meta:
@@ -131,6 +137,7 @@ class SprintBoardTaskForm(forms.ModelForm):
             "assignee",
             "created_date",
             "hour", 
+            "total_hour",
         ]
 
 

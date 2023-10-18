@@ -13,6 +13,8 @@ from django.utils import timezone
 from register.models import CustomizedUser, WorkingHour
 from django.core import serializers
 from django.core.serializers.json import DjangoJSONEncoder
+from django.utils.dateparse import parse_duration
+from django.db.models import Sum
 
 
 class TaskManager:
@@ -584,102 +586,82 @@ class SprintBoard():
 
         # Redirect back to the Sprint Backlog page after archiving
         return redirect('sprint_backlog')
+    
+    def get_total_hours(request, task_id):
+        try:
+            # Filter WorkingHour objects based on task 
+            total_hours = WorkingHour.objects.filter(task_id=task_id).aggregate(Sum('hour'))['hour__sum']
+
+            if total_hours is not None:
+                return JsonResponse({'status': 'success', 'message': 'Total hours retrieved successfully', 'total_hours': total_hours.total_seconds() / 3600})
+            else:
+                return JsonResponse({'status': 'success', 'message': 'No hours found for the given task and person', 'total_hours': 0.0})
+
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
 
     def get_task_data(request, task_id):
         # Fetch the task details using the TaskManager utility
         status, message, task_data = TaskManager.get_task_details(task_id)
-
+        
         # If the task was successfully fetched, send a success response
         if status:
+            total_hours = WorkingHour.objects.filter(task_id=task_id).aggregate(Sum('hour'))['hour__sum']
+            total_hours_in_hours = total_hours.total_seconds() if total_hours is not None else 0.0
+
+            # You can add total_hours_in_hours to the task_data dictionary
+            task_data['total_hour'] = total_hours_in_hours
+
             return JsonResponse({'status': 'success', 'message': message, 'task_data': task_data})
 
         # If the task wasn't found or there was an issue, send an error response
         return JsonResponse({'status': 'error', 'message': message, 'task_data': task_data})
 
-    # def edit_tasks(request, task_id):
-    #     # Attempt to update the task using the TaskManager utility
-    #     success, message, task_data = TaskManager.update_task(task_id, request.POST)
-
-    #     # If the task was successfully updated, send a success response
-    #     if success:
-    #         return JsonResponse({'status': 'success', 'message': message, 'task_data': task_data})
-
-    #     # If there were issues during the update (e.g., form validation errors), send an error response
-    #     return JsonResponse({'status': 'error', 'message': message})
-    
-    # def edit_tasks(request, task_id):
-    #     if request.method == 'POST':
-    #         task = Task.objects.get(pk=task_id)
-    #         # Retrieve the assignee's user ID from the POST data
-    #         assignee_id = request.POST.get('assignee')
-
-    #         # Get the CustomizedUser instance corresponding to the user ID
-    #         assignee = get_object_or_404(CustomizedUser, pk=assignee_id)
-
-    #         task.assignee = assignee
-    #         task.status = request.POST.get('status')
-    #         # time.hour = request.POST.get('hour')
-    #         task.save()
-            
-            
-    #         updated_task = {
-    #             'assignee': task.assignee.username,  # Example: you can access the username of the user
-    #             'status': task.status,
-    #         }
-
-    #         return JsonResponse({'message': 'Task updated successfully', 'updated_task': updated_task})
-    #     else:
-    #         return JsonResponse({'message': 'Invalid request method'}, status=400)
 
     def edit_tasks(request, task_id):
         if request.method == 'POST':
-            task = Task.objects.get(pk=task_id)
-            time, created = WorkingHour.objects.get_or_create(task=task, defaults={'hour': request.POST.get('hour')})
-
+            tasks = Task.objects.get(pk=task_id)
+    
             # Retrieve the assignee's user ID from the POST data
             assignee_id = request.POST.get('assignee')
 
             # Get the CustomizedUser instance corresponding to the user ID
-            assignee = get_object_or_404(CustomizedUser, pk=assignee_id)
+            if assignee_id is not None:
+                assignee = get_object_or_404(CustomizedUser, pk=assignee_id)
+            else:
+                assignee = None
 
-            task.assignee = assignee
-            task.status = request.POST.get('status')
+            tasks.assignee = assignee
+            tasks.status = request.POST.get('status')
 
-            # Convert the string to a duration (time) object
-            time.hour = request.POST.get('hour')
+            hour_str = request.POST.get('hour')
+            time = parse_duration(hour_str)
 
-            task.save()
-            time.save()
+            
+            person = request.user
+
+            # Update the WorkingHour instance associated with the task
+            working_hour, created = WorkingHour.objects.get_or_create(
+                task=tasks,
+                person=person, 
+                date = timezone.now(),
+                hour = time,
+            )
+            working_hour.hour = time
+            working_hour.save()
+
+            tasks.save()
+            
 
             updated_task = {
-                'assignee': task.assignee.username,
-                'status': task.status,
+                'assignee': tasks.assignee.username,
+                'status': tasks.status,
+                'hour': str(working_hour.hour)
             }
 
             return JsonResponse({'message': 'Task updated successfully', 'updated_task': updated_task})
         else:
             return JsonResponse({'message': 'Invalid request method'}, status=400)
-
-
-    # def edit_task(request, task_id):
-    #     if request.method == 'POST':
-    #         task = Task.objects.get(pk=task_id)
-    #         task.assignee = request.POST.get('assignee')
-    #         task.status = request.POST.get('status')
-    #         task.save()
-
-    #         updated_task = {
-    #             'assignee': task.assignee,
-    #             'status': task.status,
-    #         }
-
-    #         print('Task updated successfully:', updated_task)  # Debugging statement
-
-    #         return JsonResponse({'message': 'Task updated successfully', 'updated_task': updated_task})
-    #     else:
-    #         return JsonResponse({'message': 'Invalid request method'}, status=400)
-
-
 
 
 

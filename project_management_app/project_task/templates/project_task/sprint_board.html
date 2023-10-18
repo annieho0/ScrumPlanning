@@ -181,8 +181,9 @@
                     {{ form.status|as_crispy_field }}
                     {{ form.stage|as_crispy_field }}
                     {{ form.assignee|as_crispy_field }}
-                    {{ form.created_date|as_crispy_field }}
                     {{ form.hour|as_crispy_field }}
+                    {{ form.total_hour|as_crispy_field }}
+                    {{ form.created_date|as_crispy_field }}
                 </div>
 
                 <!-- Modal Footer -->
@@ -314,6 +315,7 @@
             $('#editTaskModal #id_status').val(data.status);
             $('#editTaskModal #id_stage').val(data.stage);
             $('#editTaskModal #id_created_date').val(data.created_date);
+            $('#editTaskModal #id_total_hour').val(data.total_hour);
             $('#updateChanges').data('task-id', taskId);
         });
 

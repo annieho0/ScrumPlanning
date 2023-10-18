@@ -137,7 +137,7 @@ class WorkingHour(models.Model):
     """
     task = models.ForeignKey('project_task.Task', on_delete=models.CASCADE, blank=True, null=True)
     person = models.ForeignKey('CustomizedUser', on_delete=models.CASCADE)
-    date = models.DateField()
+    date = models.DateField(default=timezone.now)
     hour = models.DurationField()
 
 
