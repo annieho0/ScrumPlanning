@@ -160,7 +160,7 @@ class TaskManager:
         """
 
         # Fetch all tasks initially
-        tasks = Task.objects.all().filter(sprints__isnull=False)
+        tasks = Task.objects.all().filter(sprints__isnull=True)
 
         # Apply tag filter if provided
         if tag_filter:
