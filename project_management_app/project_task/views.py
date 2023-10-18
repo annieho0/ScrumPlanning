@@ -36,7 +36,6 @@ class TaskManager:
                 - str: Success or error message.
                 - dict or None: Cleaned data from the form if the task was successfully created, None otherwise.
         """
-        print(f'Tags: {response_data.getlist("tags")}')
         # Create tags and get their IDs
         tag_ids = TaskManager._create_tags(response_data.getlist('tags'))
 
@@ -57,7 +56,9 @@ class TaskManager:
             # Save the task to the database
             new_task.save()
             task_form.save_m2m()
-            return True, f"Task '{str(new_task)}' successfully created!", task_form.cleaned_data
+            task_data = task_form.cleaned_data
+            task_data['id'] = new_task.id
+            return True, f"Task '{str(new_task)}' successfully created!", task_data
         else:
             # Convert the error messages to a string format
             error_message = '; '.join([': '.join([key, val[0]]) for key, val in task_form.errors.items()])
@@ -364,28 +365,29 @@ class TaskListView(View):
         Returns:
             JsonResponse: A JSON response indicating the success or failure of task creation.
         """
-        create_new_sprint_form = CreateNewSprintForm(request.POST)
+        # TODO: Need to separate this logic into different function or view and use separate URL
+        # currently checking if contain element of form
+        if 'start_date' in request.POST:
+            create_new_sprint_form = CreateNewSprintForm(request.POST)
 
-        if create_new_sprint_form.is_valid():
-            sprint = create_new_sprint_form.save()
-            return redirect('sprint_backlog')
-            return render(request, create_new_sprint_form)
+            if create_new_sprint_form.is_valid():
+                create_new_sprint_form.save()
+                return redirect('sprint_backlog')
+            else:
+                return JsonResponse({'status': 'success', 'message': create_new_sprint_form.errors})
+
         else:
-            print("Form is not valid:", create_new_sprint_form.errors)
+            # Attempt to create a new task using the TaskManager utility
+            success, message, task_details = TaskManager.create_task(request.POST)
+            # Handle unsuccessful task creation (e.g., form validation errors)
+            if not success:
+                return JsonResponse({'status': 'error', 'message': message})
 
+            # Convert task tags into a list of strings
+            tags_list = [str(tag) for tag in task_details['tags']]
 
-        # Attempt to create a new task using the TaskManager utility
-        success, message, task_details = TaskManager.create_task(request.POST)
-
-        # Handle unsuccessful task creation (e.g., form validation errors)
-        if not success:
-            return JsonResponse({'status': 'error', 'message': message})
-
-        # Convert task tags into a list of strings
-        tags_list = [str(tag) for tag in task_details['tags']]
-
-        # Respond with a JSON indicating successful task creation and task details
-        return JsonResponse({'status': 'success', 'message': message, 'task': {**task_details, 'tags': tags_list}})
+            # Respond with a JSON indicating successful task creation and task details
+            return JsonResponse({'status': 'success', 'message': message, 'task': {**task_details, 'tags': tags_list}})
 
 
 
