@@ -17,6 +17,16 @@
 
 
 {% block content %}
+    <style>
+        .button-container {
+            display: inline-block;
+        }
+
+        .btn {
+            margin-right: 10px;
+            margin-left: 10px;
+        }
+    </style>
     <!-- jQuery Library -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <!-- Popper.js -->
@@ -99,16 +109,18 @@
         </div>
     </div>
 
-    <div class="col-sm-2 text-right" id="create-task-listview">
-        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#DateGraphModal">
-            Create Graph for the whole team on a day
-        </button>
-    </div>
+    <div class="button-container">
+        <div class="col-sm-2 text-right" id="create-task-listview">
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#DateGraphModal">
+                Create Graph for the whole team on a day
+            </button>
+        </div>
 
-    <div class="col-sm-2 text-right" id="create-task-listview">
-        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#PersonGraphModal">
-            Create Graph for a person
-        </button>
+        <div class="col-sm-2 text-right" id="create-task-listview">
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#PersonGraphModal">
+                Create Graph for a person
+            </button>
+        </div>
     </div>
 
 {% endblock %}
