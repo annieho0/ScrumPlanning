@@ -160,7 +160,7 @@ class TaskManager:
         """
 
         # Fetch all tasks initially
-        tasks = Task.objects.all().filter(sprints__isnull=False)
+        tasks = Task.objects.all().filter(sprints__isnull=True)
 
         # Apply tag filter if provided
         if tag_filter:
@@ -369,6 +369,7 @@ class TaskListView(View):
         if create_new_sprint_form.is_valid():
             sprint = create_new_sprint_form.save()
             return redirect('sprint_backlog')
+            return render(request, create_new_sprint_form)
         else:
             print("Form is not valid:", create_new_sprint_form.errors)
 
@@ -384,7 +385,7 @@ class TaskListView(View):
         tags_list = [str(tag) for tag in task_details['tags']]
 
         # Respond with a JSON indicating successful task creation and task details
-        return JsonResponse({'status': 'success', 'message': message, 'task': {**task_details, 'tags': tags_list}, 'create_new_sprint_form': create_new_sprint_form})
+        return JsonResponse({'status': 'success', 'message': message, 'task': {**task_details, 'tags': tags_list}})
 
 
 
@@ -504,11 +505,16 @@ class HomeListView(View):
             HttpResponse: Rendered home page with any relevant context.
         """
         sprint_form = CreateNewSprintForm()
+
         # Check if there is an active sprint
         active_sprints = Sprint.objects.filter(is_completed=False).order_by('start_date')
+        if active_sprints.exists():
+            first_active_sprint = active_sprints.first()
+            return redirect(reverse("sprint_boards", args=[first_active_sprint.pk]),sprint_form)
+        else:
+            return redirect(reverse("project_backlog"))
 
 
-        return render(request, self.template_name, {"sprint_form": sprint_form})
 
     def post(self,request):
 

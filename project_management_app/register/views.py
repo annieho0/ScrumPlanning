@@ -219,7 +219,7 @@ class AdminGraphView(UserPassesTestMixin, View):
             context['graph_title'] = (f"Working hour of {person.first_name + ' ' + person.last_name} from "
                                       f"{list(plot_data.keys())[0]} to {list(plot_data.keys())[-1]}")
             context["x"] = list(plot_data.keys())
-            context["y"] = [working_hour / datetime.timedelta(hours=1) for working_hour in plot_data.values()]
+            context["y"] = [working_hour / datetime.timedelta(seconds=1) for working_hour in plot_data.values()]
 
             return render(request, 'admin/person_graph.html', context)
 
@@ -234,7 +234,7 @@ class AdminGraphView(UserPassesTestMixin, View):
 
             context['graph_title'] = f"Working hour of the whole team on {date}"
             context["x"] = list(plot_data.keys())
-            context["y"] = [working_hour / datetime.timedelta(hours=1) for working_hour in plot_data.values()]
+            context["y"] = [working_hour / datetime.timedelta(seconds=1) for working_hour in plot_data.values()]
             context["average"] = sum(context["y"]) / len(context["y"])
             return render(request, 'admin/date_graph.html', context)
 
