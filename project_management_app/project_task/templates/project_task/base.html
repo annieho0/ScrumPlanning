@@ -456,8 +456,18 @@
                          <p>This page displays a table of all sprints that have been archived, including when the sprint
                           started and ended.</p>`;
                     break;
+                case 'Sprint:':
+                modalBodyContent.innerHTML =
+                    `<h3>Selected Sprint</h3>
+                     <p>This page shows the task included in the selected sprint. Tasks are split into 3 categories:
+                     Incomplete, In progress and Complete. </p>`;
+                    break;
                 default:
-                    console.log('Default');
+                   modalBodyContent.innerHTML =
+                        `<h3>Selected Sprint</h3>
+                         <p>This page shows the task included in the selected sprint. Tasks are split into 3 categories:
+                         Incomplete, In progress and Complete. </p>`;
+                    break;
             }
             // show modal
             $('#helpModal').modal('show');

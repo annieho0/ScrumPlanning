@@ -30,6 +30,11 @@
                 <td>{{sprint.end_date}}</td>
 
             </tr>
+            {% empty %}
+            <!-- If no sprints are available -->
+            <tr id="task-row-empty">
+                <td colspan="6" class="text-center">No sprints available.</td>
+            </tr>
             {% endfor %}
         </tbody>
     </table>
