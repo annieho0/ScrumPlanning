@@ -6,42 +6,53 @@
 
 <!-- Header -->
 {% block header %}
-<h1>{{sprint.name}}</h1>
+<h1>Sprint: {{sprint.name}}</h1>
 {% endblock %}
 
 {% load crispy_forms_tags %}
 {% load crispy_forms_filters %}
 
 {% block content %}
-<!-- Create Graph Button -->
-{% if sprint.id %}
-    <button onclick="window.location='{% url 'create_graph' sprint.id %}'" class="btn btn-primary create-graph-btn" id="createGraphButton">Create Graph</button>
-{% endif %}
-
-<!-- View options -->
-<label for="view">View:</label>
-<select id="view" onchange="changeView()">
-    <option value="listView">List View</option>
-    <option value="kanbanView">Kanban View</option>
-</select>
-
-<!-- Filter options -->
-<label for="filter">Filter Tag(s):</label>
-<select id="filter" onchange="filterTasks()">
-    <option value="">All</option>
-    {% for tag in tags %}
-        {% if tag.name in selected_tags %}
-        <option value="{{ tag.name }}" selected>{{ tag.name }}</option>
-        {% else %}
-        <option value="{{ tag.name }}">{{ tag.name }}</option>
-        {% endif %}
-    {% endfor %}
-</select>
-
-
-<button id="addTaskButton" class="btn btn-primary" data-toggle="modal" data-target="#taskSelectionModal">
+<div class="container-sm container-md container-lg container-xl mb-4 mt-4">
+    <div class="row justify-content-start mb-2 mt-2">
+        <!-- Create Graph Button -->
+        <div class="col-sm-12 col-md-6 col-lg-2 col-xl-2 mb-2 mt-2">
+            {% if sprint.id %}
+                <button onclick="window.location='{% url 'create_graph' sprint.id %}'" class="btn btn-primary create-graph-btn" id="createGraphButton">Create Graph</button>
+            {% endif %}
+        </div>
+        <!-- Add Task to Sprint Button -->
+        <div class="col-sm-12 col-md-6 col-lg-2 col-xl-2 mb-2 mt-2">
+            <button id="addTaskButton" class="btn btn-primary" data-toggle="modal" data-target="#taskSelectionModal">
     Add Task to Sprint
 </button>
+        </div>
+    </div>
+    <div class="row justify-content-start mb-2 mt-2">
+        <!-- View options -->
+        <div class="col-sm-12 col-md-4 col-lg-2 col-xl-2 mb-2 mt-2">
+            <label for="view">View:</label>
+            <select id="view" onchange="changeView()">
+                <option value="listView">List View</option>
+                <option value="kanbanView">Kanban View</option>
+            </select>
+        </div>
+        <!-- Filter options -->
+        <div class="col-sm-12 col-md-6 col-lg-2 col-xl-2 mb-2 mt-2">
+            <label for="filter">Filter Tag(s):</label>
+            <select id="filter" onchange="filterTasks()">
+                <option value="">All</option>
+                {% for tag in tags %}
+                    {% if tag.name in selected_tags %}
+                    <option value="{{ tag.name }}" selected>{{ tag.name }}</option>
+                    {% else %}
+                    <option value="{{ tag.name }}">{{ tag.name }}</option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+</div>
 
 <!-- Modal -->
 <div class="modal" id="taskSelectionModal">
@@ -92,53 +103,49 @@
         <thead class="thead-dark">
             <tr>
                 <th colspan="4">{{status_title.1}}</th>
-                
-
             </tr>
         </thead>
-        
         <tbody id="backlogTable">
-            
             <!-- Rows will be dynamically added here -->
-            {% for task in tasks%}  
+            {% for task in tasks%}
             {% if task.status == status_title.0 %}
             <tr data-category="{% for tag in task.tags.all %}{{ tag }} {% endfor %}" data-task-id="{{ task.id }}">
-                
                 <td>
                     <a href="#" class="open-modal" data-toggle="modal" data-target="#editTaskModal" data-task-id="{{ task.id }}">{{ task.name }}</a>
-
                     <!-- <a href="#" data-toggle="modal" data-target="#editTaskModal" data-task-id="{{ task.id }}" data-task-type ="{{ task.type}}" data-task-description ="{{ task.description }}" data-task-priority = "{{ task.priority }}" data-task-stage = "{{ task.stage }}" data-task-created_date = "{{ task.created_date}}">{{ task.name }}</a> -->
                 </td>
-                <td>{{task.story_point}}</td>       
+                <td>{{task.story_point}}</td>
                 <td>{% for tag in task.tags.all %}
                     <span class="badge badge-info">{{ tag }}</span>
                 {% endfor %}
                 </td>
-                <td><span id="assignee">{{ task.assignee }}</span></td>       
-                
+                <td><span id="assignee">{{ task.assignee }}</span></td>
+
             </tr>
             {% endif %}
             {% endfor %}
         </tbody>
         {% endfor %}
-        
+
     </table>
 </div>
 
 
 <!-- Card View Section -->
 <div class="container-sm container-md container-lg container-xl p-3" id="kanbanView" style="display: none;">
-    <div class="row">        
+    <div class="row">
         {% for status_title in statuses %}
             <!-- {{ status_title.1 }} Column -->
-            <div class="col-sm-12 col-md-6 col-lg-4 col-xl-3">
+            <div class="col-sm-12 col-md-12 col-lg-12 col-xl-4 pb-4">
                 <div class="card">
-                    <div class="card-header"><h2>{{ status_title.1 }}</h2></div>
+                    <div class="card-header">
+                        <h2>{{ status_title.1 }}</h2>
+                    </div>
                     <div class="card-body">
                         {% for task in tasks %}
                             {% if task.status == status_title.0 %}
-                                <div class="col-sm-12 col-md-6 col-lg-4 col-xl-3">
-                                    <div class="card mb-3 mt-3" style="width: 10rem;" id="{{task.tags.name}}" >
+                                <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12 p-1">
+                                    <div class="card" id="{{task.tags.name}}" >
                                         <div class="card-body">
                                             <h5 class="card-title">
                                                 <a href="#"  class="open-modal" data-toggle="modal" data-target="#editTaskModal" data-task-id="{{ task.id }}">{{ task.name }}</a></h5>
@@ -147,7 +154,7 @@
                                             <h6 class="card-text mb-2 text-muted"><strong>Tags:</strong>{% for tag in task.tags.all %}
                                                     <span class="badge badge-info"> {{ tag }}</span>
                                                 {% endfor %}
-                                            </h6>                                                                      
+                                            </h6>
                                         </div>
                                     </div>
                                 </div>

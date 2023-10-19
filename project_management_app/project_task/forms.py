@@ -142,5 +142,4 @@ class SprintBoardTaskForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super(SprintBoardTaskForm, self).__init__(*args, **kwargs)
-        self.fields["assignee"].required = True
         self.fields["created_date"].disabled = True

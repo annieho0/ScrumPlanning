@@ -1,6 +1,27 @@
 <!-- View options and Create New Task button -->
 <div class="container-sm container-md container-lg container-xl mb-4 mt-4">
     <div class="row justify-content-start mb-2 mt-2">
+        <!-- Create New Task Button trigger modal -->
+        <div class="col-sm-12 col-md-6 col-lg-2 col-xl-2 mb-2 mt-2">
+            <button id="create-task-listview" type="button" class="btn btn-primary" data-toggle="modal" data-target="#createNewTaskModal">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus" viewBox="0 0 12 12">
+                  <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+                </svg>
+                New Task
+            </button>
+        </div>
+        <!-- Button to trigger the "Create New Sprint" modal -->
+        <div class="col-sm-12 col-md-6 col-lg-2 col-xl-2 mb-2 mt-2">
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#createNewSprint">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus" viewBox="0 0 12 12">
+                  <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+                </svg>
+                New Sprint
+            </button>
+        </div>
+    </div>
+
+    <div class="row justify-content-start mb-2 mt-2">
         <!-- View options -->
         <div class="col-sm-12 col-md-6 col-lg-2 col-xl-2 mb-2 mt-2">
             <label for="view">View:</label>
